@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: "./server"
+      dockerfile: Dockerfile
+    ports: 
+      - "7777:7777"
+    volumes:
+      - ./server:/app/backend
+      - /app/backend/node_modules
+    environment:
+      MONGO_URI: mongodb://mongo:27017/talibadatabase
+    depends_on:
+      - mongo
+    command: npm run dev
+  frontend:
+    build:
+      context: "./client"
+      dockerfile: Dockerfile
+    ports: 
+      - "5173:5173"
+    volumes:
+      - ./client:/app/frontend
+      - /app/frontend/node_modules
+    command: npm run dev
+  mongo:
+    image: mongo:latest
+    ports: 
+      - "27017:27017"
+    volumes:
+      - ./mongo_data:/data/db
+volumes:
+  mongo-data:
