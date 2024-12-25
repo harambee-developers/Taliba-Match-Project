@@ -399,3 +399,11 @@ FodyWeavers.xsd
 
 # dotenv environment variable files
 .env
+
+# mongo_data file
+mongo_data
+
+
+# docker ignore
+.dockerignore
+

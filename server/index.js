@@ -1,8 +1,13 @@
+require("dotenv").config();
 const express = require("express");
 const { FRONTEND_URL, BACKEND_URL } = process.env;
 const cors = require("cors");
 
+// Import and initialize the MongoDB connection
+require("./db")
+
 const paymentRoutes = require("./routes/paymentRoutes");
+const authRoutes = require("./routes/auth");
 const port = 7777;
 const app = express();
 
@@ -16,11 +21,8 @@ app.use(express.json())
 app.use(cors(corsOptions));
 
 app.use("/api/payment", paymentRoutes); // Modularized routes
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.use("/api/auth", authRoutes); // Modularized routes
 
 app.listen(port, () => {
-  console.log(`App listening at ${port}`);
+  console.log(`Server listening at ${port}`);
 });
