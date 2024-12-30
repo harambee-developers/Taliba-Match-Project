@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { STRIPE_PRIVATE_KEY, STRIPE_PRICE_ID, FRONTEND_URL } = process.env;
+const { STRIPE_PRIVATE_KEY, STRIPE_PRICE_ID, FRONTEND_URL, BACKEND_URL, STRIPE_WEBHOOK_SECRET_KEY } = process.env;
 const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(STRIPE_PRIVATE_KEY);
@@ -17,14 +17,14 @@ router.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "subscription",
-      success_url: `${FRONTEND_URL}`,
-      cancel_url: `${FRONTEND_URL}`,
+      success_url: `${BACKEND_URL}/payment/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/cancel`,
       metadata: {
         userId, // id needs to be linked here for the subscription data later
       },
     });
 
-    console.log("Session created at", session.id, session.url, session);
+    console.log("Session created:", session);
 
     res.json({ url: session.url }); // url will need to be sent to the frontend
   } catch (e) {
@@ -33,47 +33,10 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 });
 
-router.post(
-  "/webhook",
-  express.raw({ type: "application.json" }),
-  async (req, res) => {
-    const payload = req.body;
-    const sig = req.headers["stripe-signature"];
-
-    try {
-      const event = stripe.webhooks.constructEvent(
-        payload,
-        sig,
-        STRIPE_PRIVATE_KEY
-      );
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-
-        // userid from metadata to update your database
-        const userId = session.metadata.userId;
-        const subscriptionId = session.subscription;
-
-        await Subscription.findbyIdandupdate(
-          userId,
-          { subscription_type: "Premium", status_type: "Active" },
-          { new: true } // Returns the updated document
-        );
-        console.log(`Subscription updated for user: ${userId}`);
-      }
-    } catch (dbError) {
-      console.error("Database update failed: ", dbError);
-      return res.status(500).send("Database Error");
-    }
-    res.status(200)("Event reached!");
-  }
-);
-
-router.post("/payment-success", async (req, res) => {
+router.get("/payment-success", async (req, res) => {
   try {
-    const { sessionId } = req.body;
-
     // Retrieve the session. If you need more details, you can expand the line_items or customer
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
 
     if (session.payment_status === "paid") {
       res.status(200).json({ message: "Customer has paid" });
@@ -85,5 +48,56 @@ router.post("/payment-success", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.get('/customers/:customerId', async (req, res) => {
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: req.params.customerId,
+    return_url: `${FRONTEND_URL}`
+  })
+
+  console.log(portalSession)
+
+  res.redirect(portalSession.url)
+})
+
+router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET_KEY);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    // When event that subscription is started
+    case 'checkout.session.completed':
+      console.log("New subscription Started!")
+      console.log(event.data)
+      break;
+    // Event when payment is successful (Every subscription interval)
+    case 'invoice.paid':
+      console.log("Invoice paid!")
+      console.log(event.data)
+      break;
+    // Event when payment fails due to card problems or insufficent funds
+    case 'invoice.payment_failed':
+      console.log("Invoice failed!")
+      console.log(event.data)
+      break;
+    // Event when subscription is updated
+    case "customer.subscription.updated":
+    console.log('Subscription updated!')
+    console.log(event.data)
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+  // Return a 200 response to acknowledge
+  res.send() 
+})
 
 module.exports = router;

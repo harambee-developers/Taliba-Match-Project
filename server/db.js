@@ -1,21 +1,20 @@
-require('dotenv').config()
 const mongoose = require("mongoose");
-const {
-    MONGO_INITDB_ROOT_USERNAME,
-    MONGO_INITDB_ROOT_PASSWORD,
-  } = process.env;
+const MONGO_URI = `mongodb://mongo-server:27017/TalibaDatabase`;
 
-const MONGO_URI = `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/?authMechanism=DEFAULT`;
+const connectToDatabase = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, { 
+    });
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    process.exit(1); // Exit the process with failure
+  }
+};
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
-  });
+// Call the function to establish the connection
+connectToDatabase();
 
+// Export the mongoose connection
 module.exports = mongoose.connection;
+
