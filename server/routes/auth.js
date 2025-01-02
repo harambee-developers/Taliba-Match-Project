@@ -5,7 +5,32 @@ const User = require("../model/User");
 const router = express();
 
 router.post("/register", async (req, res) => {
-    const { username, email } = req.body;
+    const {
+        firstName,
+        lastName,
+        kunya,
+        dob,
+        email,
+        phone,
+        location,
+        openToHijrah,
+        hijrahDestination,
+        ethnicity,
+        nationality,
+        maritalStatus,
+        revert,
+        yearsRevert,
+        salahPattern,
+        sect,
+        islamicBooks,
+        quranMemorization,
+        dressingStyle,
+        islamicAmbitions,
+        children,
+        occupation,
+        personality,
+        dealBreakers
+    } = req.body;
 
     try {
         const existingUser = await User.findOne({ email });
@@ -16,12 +41,40 @@ router.post("/register", async (req, res) => {
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+        function generateProfile() {
+            return {
+                openToHijrah,
+                hijrahDestination, revert,
+                yearsRevert,
+                salahPattern, islamicBooks,
+                quranMemorization,
+                dressingStyle,
+                islamicAmbitions,
+                children, personality,
+                dealBreakers
+            }
+        }
+
+
         const user = new User({
-            username,
-            email,
+            userName: kunya,
+            firstName,
+            lastName,
             password: hashedPassword,
+            dob,
+            email,
+            phone,
+            location,
+            ethnicity,
+            nationality,
+            maritalStatus,
+            sect,
+            occupation,
+            profile: generateProfile()
         });
         await user.save();
+
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         console.error(error);

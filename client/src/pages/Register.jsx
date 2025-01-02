@@ -62,11 +62,11 @@ const customSelectStyles = {
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     firstName: '',
-    surname: '',
+    lastName: '',
     kunya: '',
     dob: '',
     email: '',
-    mobile: '',
+    phone: '',
     location: '',
     openToHijrah: '',
     hijrahDestination: '',
@@ -98,11 +98,6 @@ const RegisterPage = () => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleEthnicityChange = (selectedOptions) => {
-    const ethnicities = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    setFormData({ ...formData, ethnicity: ethnicities });
-  };
-
   const nextSection = () => {
     setCurrentSection((prev) => prev + 1);
   };
@@ -111,14 +106,50 @@ const RegisterPage = () => {
     setCurrentSection((prev) => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form Data Submitted:', formData);
-    //form submission logic
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Registration successful!");
+      } else {
+        alert("Registration failed: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again later.");
+    }
   };
 
   const countries = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+  ];
+
+  const ethnicityOptions = [
+    { label: "Arab (e.g., Egyptian, Lebanese, Saudi, etc)", value: "Arab" },
+    { label: "South Asian (e.g., Indian, Pakistani, Bangladeshi, etc.)", value: "South Asian" },
+    { label: "African (e.g., Nigerian, Somali, Sudanese, etc.)", value: "African" },
+    { label: "Southeast Asian (e.g., Malaysian, Indonesian, Filipino, etc.)", value: "Southeast Asian" },
+    { label: "Middle Eastern (non-Arab, e.g., Iranian, Turkish, Kurdish, etc.)", value: "Middle Eastern" },
+    { label: "Central Asian (e.g., Uzbek, Kazakh, Tajik, etc.)", value: "Central Asian" },
+    { label: "Caucasian/White", value: "White" },
+    { label: "Black/African American", value: "Black" },
+    { label: "Latino/Latina/Latinx", value: "Latina" },
+    { label: "Mixed Ethnicity", value: "Mixed" },
+    { label: "Other (please specify)", value: "Other" },
   ];
 
   const salahPatternOptions = [
@@ -145,8 +176,8 @@ const RegisterPage = () => {
   ];
 
   const childrenOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
+    { value: 'yes', label: 'yes' },
+    { value: 'no', label: 'no' },
   ];
 
   const countryOptions = countries.map((country) => ({
@@ -172,18 +203,18 @@ const RegisterPage = () => {
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                  placeholder="Enter your first name"
+                  placeholder="Enter your first name..."
                 />
               </div>
               <div className="flex flex-col w-1/2">
-                <label className="text-gray-600 mb-2">Surname</label>
+                <label className="text-gray-600 mb-2">Last Name</label>
                 <input
                   type="text"
-                  name="surname"
-                  value={formData.surname}
-                  onChange={(e) => handleInputChange('surname', e.target.value)}
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                  placeholder="Enter your surname"
+                  placeholder="Enter your lastname..."
                 />
               </div>
             </div>
@@ -220,14 +251,14 @@ const RegisterPage = () => {
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Please enter your Mobile</label>
+              <label className="text-gray-600 mb-2">Please enter your phone number</label>
               <input
                 type="text"
-                name="mobile"
-                value={formData.mobile}
-                onChange={(e) => handleInputChange('mobile', e.target.value)}
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter your mobile number"
+                placeholder="Enter your phone number"
               />
             </div>
             <div className="flex flex-col">
@@ -242,13 +273,13 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
-                options={[{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]}
+                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
                 placeholder="Select an option"
                 onChange={(option) => handleInputChange('openToHijrah', option ? option.value : '')}
                 styles={customSelectStyles}
               />
             </div>
-            {formData.openToHijrah === 'Yes' && (
+            {formData.openToHijrah === 'yes' && (
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">If so, where?</label>
                 <input
@@ -264,10 +295,10 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Ethnicity?</label>
               <Select
-                isMulti
-                options={countryOptions}
+                options={ethnicityOptions}
+                value={formData.ethnicity}
                 placeholder="Select ethnicity"
-                onChange={handleEthnicityChange}
+                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions?.value || '')}
                 styles={customSelectStyles}
               />
             </div>
@@ -283,7 +314,7 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you Married?</label>
               <Select
-                options={[{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]}
+                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
                 placeholder="Select an option"
                 onChange={(option) => handleInputChange('maritalStatus', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -299,19 +330,19 @@ const RegisterPage = () => {
           </>
         )}
 
-{currentSection === 2 && (
+        {currentSection === 2 && (
           <>
             <h1 className="text-2xl font-semibold text-center text-gray-800">Your Journey With Islam</h1>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you a Revert?</label>
               <Select
-                options={[{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]}
+                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
                 placeholder="Select an option"
                 onChange={(option) => handleInputChange('revert', option ? option.value : '')}
                 styles={customSelectStyles}
               />
             </div>
-            {formData.revert === 'Yes' && (
+            {formData.revert === 'yes' && (
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">If so, for how many years?</label>
                 <input
@@ -415,7 +446,7 @@ const RegisterPage = () => {
           </>
         )}
 
-{currentSection === 3 && (
+        {currentSection === 3 && (
           <>
             <h1 className="text-2xl font-semibold text-center text-gray-800">Let’s Get To Know You</h1>
             <div className="flex flex-col">

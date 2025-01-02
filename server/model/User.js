@@ -4,11 +4,22 @@ const { Schema } = mongoose;
 // Define the embedded schema for profile details
 const ProfileSchema = new Schema({
   height: { type: Number },
-  weight: { type: Number },
+  age: {type: Number},
   hobbies: { type: [String] },
   languages: { type: [String] },
   family_background: { type: String },
+  revert: { type: String, enum: ['yes', 'no'] },
+  yearsRevert: { type: Number },
   additional_info: { type: String },
+  salahPattern: { type: String },
+  islamicAmbitions: { type: String },
+  islamicBooks: { type: String },
+  openToHijrah: { type: String, enum: ['yes', 'no'] },
+  hijrahDestination: { type: String },
+  dealBreakers: { type: String },
+  children: { type: String, enum: ['yes', 'no'] },
+  dressingStyle: { type: String },
+  quranMemorization: { type: String },
   public_profile: { type: Boolean, default: true }, // Default to public
 });
 
@@ -30,20 +41,19 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  username: { type: String, required: true },
-  first_name: { type: String, required: true },
-  last_name: { type: String, required: true },
+  userName: { type: String, required: true, index:true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index:true },
   password: { type: String, required: true },
   dob: { type: Date },
   gender: { type: String },
+  sect: { type: String },
   education: { type: String },
   occupation: { type: String },
-  address: {
-    street: { type: String },
-    city: { type: String },
-    country: { type: String },
-  },
+  maritalStatus: {type: String, enum: ['yes', 'no']}, 
+  location: { type: String },
+  nationality: { type: String },
   phone: { type: String },
   created_at: { type: Date, default: Date.now },
   profile: ProfileSchema,
