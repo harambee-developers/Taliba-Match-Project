@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import talibahLogo from '../assets/talibahLogo.png';
 import hijabProfile from '../assets/hijabProfile.png';
 import manProfile from '../assets/manProfile.png';
 import chatIcon from '../assets/chatIcon.png';

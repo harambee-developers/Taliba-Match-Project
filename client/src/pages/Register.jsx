@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Select from 'react-select';
 import occupationData from '../data/Occupations.json';
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions } from '../data/fieldData'
 
 const customSelectStyles = {
   control: (provided) => ({
@@ -88,6 +89,7 @@ const RegisterPage = () => {
   });
 
   const [currentSection, setCurrentSection] = useState(1);
+  const [errors, setErrors] = useState({});
 
   const occupationOptions = occupationData.map((job) => ({
     value: job.title,
@@ -108,82 +110,55 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Data Submitted:', formData);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length === 0) {
+      console.log('Form Data Submitted:', formData);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert("Registration successful!");
+        } else {
+          alert("Registration failed: " + result.message);
         }
-      );
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert("Registration successful!");
-      } else {
-        alert("Registration failed: " + result.message);
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again later.");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again later.");
+    } else {
+      setErrors(validationErrors)
     }
   };
 
-  const countries = [
-    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-  ];
-
-  const ethnicityOptions = [
-    { label: "Arab (e.g., Egyptian, Lebanese, Saudi, etc)", value: "Arab" },
-    { label: "South Asian (e.g., Indian, Pakistani, Bangladeshi, etc.)", value: "South Asian" },
-    { label: "African (e.g., Nigerian, Somali, Sudanese, etc.)", value: "African" },
-    { label: "Southeast Asian (e.g., Malaysian, Indonesian, Filipino, etc.)", value: "Southeast Asian" },
-    { label: "Middle Eastern (non-Arab, e.g., Iranian, Turkish, Kurdish, etc.)", value: "Middle Eastern" },
-    { label: "Central Asian (e.g., Uzbek, Kazakh, Tajik, etc.)", value: "Central Asian" },
-    { label: "Caucasian/White", value: "White" },
-    { label: "Black/African American", value: "Black" },
-    { label: "Latino/Latina/Latinx", value: "Latina" },
-    { label: "Mixed Ethnicity", value: "Mixed" },
-    { label: "Other (please specify)", value: "Other" },
-  ];
-
-  const salahPatternOptions = [
-    { value: 'prays_mosque', label: 'Prays in the masjid' },
-    { value: 'prays_5_times', label: 'Prays 5 times a day on time' },
-    { value: 'prays_most', label: 'Prays most prayers' },
-    { value: 'prays_occasional', label: 'Prays occasionally' },
-  ];
-
-  const sectOptions = [
-    { value: 'sunni', label: 'Sunni' },
-    { value: 'shia', label: 'Shia' },
-    { value: 'salafi', label: 'Salafi' },
-    { value: 'sufi', label: 'Sufi' },
-    { value: 'other', label: 'Other' },
-  ];
-
-  const quranMemorizationOptions = [
-    { value: 'hafidh', label: 'Hafidh/Haafidah' },
-    { value: '10_plus', label: '10 Juz +' },
-    { value: '5_to_10', label: '5-10 Juz' },
-    { value: '2_to_5', label: '2-5 Juz' },
-    { value: '1_or_less', label: '1 Juz or less' },
-  ];
-
-  const childrenOptions = [
-    { value: 'yes', label: 'yes' },
-    { value: 'no', label: 'no' },
-  ];
+  const validate = () => {
+    const errors = {};
+    if (!formData.kunya) errors.kunya = "Kunya is required";
+    if (!formData.firstName) errors.firstName = "First Name is required";
+    if (!formData.lastName) errors.lastName = "Last Name is required";
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+    return errors;
+  };
 
   const countryOptions = countries.map((country) => ({
     value: country,
     label: country,
   }));
+
 
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center">
@@ -205,6 +180,9 @@ const RegisterPage = () => {
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
                   placeholder="Enter your first name..."
                 />
+                {errors.firstName && (
+                  <p className="mt-2 text-sm text-yellow-500">{errors.firstName}</p>
+                )}
               </div>
               <div className="flex flex-col w-1/2">
                 <label className="text-gray-600 mb-2">Last Name</label>
@@ -216,6 +194,9 @@ const RegisterPage = () => {
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
                   placeholder="Enter your lastname..."
                 />
+                {errors.lastName && (
+                  <p className="mt-2 text-sm text-yellow-500">{errors.lastName}</p>
+                )}
               </div>
             </div>
             <div className="flex flex-col">
@@ -226,8 +207,11 @@ const RegisterPage = () => {
                 value={formData.kunya}
                 onChange={(e) => handleInputChange('kunya', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter your Kunya"
+                placeholder="Enter your Kunya..."
               />
+              {errors.kunya && (
+                <p className="mt-2 text-sm text-yellow-500">{errors.kunya}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Date of Birth (DOB)</label>
@@ -247,8 +231,11 @@ const RegisterPage = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter your email"
+                placeholder="Enter your email..."
               />
+              {errors.email && (
+                <p className="mt-2 text-sm text-yellow-500">{errors.email}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Please enter your phone number</label>
@@ -258,14 +245,14 @@ const RegisterPage = () => {
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter your phone number"
+                placeholder="Enter your phone number..."
               />
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Which Country Do You Currently Live In?</label>
               <Select
                 options={countryOptions}
-                placeholder="Select location"
+                placeholder="Select location..."
                 onChange={(option) => handleInputChange('location', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -273,8 +260,8 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
-                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
-                placeholder="Select an option"
+                options={childrenOptions}
+                placeholder="Select an option..."
                 onChange={(option) => handleInputChange('openToHijrah', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -288,7 +275,7 @@ const RegisterPage = () => {
                   value={formData.hijrahDestination}
                   onChange={(e) => handleInputChange('hijrahDestination', e.target.value)}
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                  placeholder="Enter potential hijrah destination"
+                  placeholder="Enter potential hijrah destination..."
                 />
               </div>
             )}
@@ -296,12 +283,24 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">What is your Ethnicity?</label>
               <Select
                 options={ethnicityOptions}
-                value={formData.ethnicity}
-                placeholder="Select ethnicity"
-                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions?.value || '')}
+                value={ethnicityOptions.find(option => option.value === formData.ethnicity) || null}
+                placeholder="Select ethnicity..."
+                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions.value || '')}
                 styles={customSelectStyles}
               />
             </div>
+            {formData.ethnicity === 'Other' && (
+              <div className="flex flex-col">
+                <label className="text-gray-600 mb-2">Specify Ethnicity</label>
+                <input
+                  type="text"
+                  name="ethnicity"
+                  onChange={(e) => handleInputChange('ethnicity', e.target.value)}
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                  placeholder="Specify ethnicity...."
+                />
+              </div>
+            )}
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Nationality?</label>
               <Select
@@ -314,8 +313,8 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you Married?</label>
               <Select
-                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
-                placeholder="Select an option"
+                options={childrenOptions}
+                placeholder="Select an option..."
                 onChange={(option) => handleInputChange('maritalStatus', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -336,8 +335,8 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you a Revert?</label>
               <Select
-                options={[{ value: 'yes', label: 'yes' }, { value: 'no', label: 'no' }]}
-                placeholder="Select an option"
+                options={childrenOptions}
+                placeholder="Select an option..."
                 onChange={(option) => handleInputChange('revert', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -351,7 +350,7 @@ const RegisterPage = () => {
                   value={formData.yearsRevert}
                   onChange={(e) => handleInputChange('yearsRevert', e.target.value)}
                   className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                  placeholder="Enter number of years"
+                  placeholder="Enter number of years..."
                 />
               </div>
             )}
@@ -359,7 +358,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Pattern of Salah</label>
               <Select
                 options={salahPatternOptions}
-                placeholder="Select salah pattern"
+                placeholder="Select salah pattern..."
                 onChange={(option) => handleInputChange('salahPattern', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -369,7 +368,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <Select
                   options={sectOptions}
-                  placeholder="Select sect"
+                  placeholder="Select Sect..."
                   onChange={(option) => handleInputChange('sect', option ? option.value : '')}
                   styles={customSelectStyles}
                 />
@@ -380,7 +379,7 @@ const RegisterPage = () => {
                     value={formData.sectOther || ''}
                     onChange={(e) => handleInputChange('sectOther', e.target.value)}
                     className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white w-full"
-                    placeholder="Specify other sect"
+                    placeholder="Specify other sect..."
                   />
                 )}
               </div>
@@ -393,14 +392,14 @@ const RegisterPage = () => {
                 value={formData.islamicBooks}
                 onChange={(e) => handleInputChange('islamicBooks', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter books or mutuun studied"
+                placeholder="Enter books or mutuun studied..."
               />
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Quran Memorization (Hifdh Status, Surahs Known)</label>
               <Select
                 options={quranMemorizationOptions}
-                placeholder="Select memorization status"
+                placeholder="Select memorization status..."
                 onChange={(option) => handleInputChange('quranMemorization', option ? option.value : '')}
                 styles={customSelectStyles}
               />
@@ -413,7 +412,7 @@ const RegisterPage = () => {
                 value={formData.dressingStyle}
                 onChange={(e) => handleInputChange('dressingStyle', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter dressing style"
+                placeholder="Enter dressing style..."
               />
             </div>
             <div className="flex flex-col">
@@ -424,7 +423,7 @@ const RegisterPage = () => {
                 value={formData.islamicAmbitions}
                 onChange={(e) => handleInputChange('islamicAmbitions', e.target.value)}
                 className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                placeholder="Enter your ambitions (e.g., Quran memorization, Arabic learning)"
+                placeholder="Enter your ambitions (e.g., Quran memorization, Arabic learning)..."
               />
             </div>
             <div className="flex justify-between space-x-4 mt-4">
