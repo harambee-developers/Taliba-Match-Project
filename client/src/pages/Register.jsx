@@ -61,31 +61,34 @@ const customSelectStyles = {
 };
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    kunya: '',
-    dob: '',
-    email: '',
-    phone: '',
-    location: '',
-    openToHijrah: '',
-    hijrahDestination: '',
-    ethnicity: [],
-    nationality: '',
-    maritalStatus: '',
-    revert: '',
-    yearsRevert: '',
-    salahPattern: '',
-    sect: '',
-    islamicBooks: '',
-    quranMemorization: '',
-    dressingStyle: '',
-    islamicAmbitions: '',
-    children: '',
-    occupation: '',
-    personality: '',
-    dealBreakers: '',
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem('formData');
+    return savedData ? JSON.parse(savedData) : {
+      firstName: '',
+      lastName: '',
+      kunya: '',
+      dob: '',
+      email: '',
+      phone: '',
+      location: '',
+      openToHijrah: '',
+      hijrahDestination: '',
+      ethnicity: [],
+      nationality: '',
+      maritalStatus: '',
+      revert: '',
+      yearsRevert: '',
+      salahPattern: '',
+      sect: '',
+      islamicBooks: '',
+      quranMemorization: '',
+      dressingStyle: '',
+      islamicAmbitions: '',
+      children: '',
+      occupation: '',
+      personality: '',
+      dealBreakers: '',
+    }
   });
 
   const [currentSection, setCurrentSection] = useState(1);
@@ -97,7 +100,11 @@ const RegisterPage = () => {
   }));
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData((prev) => {
+      const updatedData = { ...prev, [field]: value };
+      localStorage.setItem('formData', JSON.stringify(updatedData)); // Save to localStorage
+      return updatedData;
+    });
   };
 
   const nextSection = () => {
@@ -158,7 +165,6 @@ const RegisterPage = () => {
     value: country,
     label: country,
   }));
-
 
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center">
@@ -252,6 +258,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Which Country Do You Currently Live In?</label>
               <Select
                 options={countryOptions}
+                value={countryOptions.find(option => option.value === formData.location) || null}
                 placeholder="Select location..."
                 onChange={(option) => handleInputChange('location', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -261,6 +268,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
                 options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.openToHijrah) || null}
                 placeholder="Select an option..."
                 onChange={(option) => handleInputChange('openToHijrah', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -305,6 +313,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">What is your Nationality?</label>
               <Select
                 options={countryOptions}
+                value={countryOptions.find(option => option.value === formData.nationality) || null}
                 placeholder="Select nationality"
                 onChange={(option) => handleInputChange('nationality', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -314,6 +323,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Are you Married?</label>
               <Select
                 options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.maritalStatus) || null}
                 placeholder="Select an option..."
                 onChange={(option) => handleInputChange('maritalStatus', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -336,6 +346,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Are you a Revert?</label>
               <Select
                 options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.revert) || null}
                 placeholder="Select an option..."
                 onChange={(option) => handleInputChange('revert', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -358,6 +369,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Pattern of Salah</label>
               <Select
                 options={salahPatternOptions}
+                value={salahPatternOptions.find(option => option.value === formData.salahPattern) || null}
                 placeholder="Select salah pattern..."
                 onChange={(option) => handleInputChange('salahPattern', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -368,6 +380,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <Select
                   options={sectOptions}
+                  value={sectOptions.find(option => option.value === formData.sect) || null}
                   placeholder="Select Sect..."
                   onChange={(option) => handleInputChange('sect', option ? option.value : '')}
                   styles={customSelectStyles}
@@ -399,6 +412,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Quran Memorization (Hifdh Status, Surahs Known)</label>
               <Select
                 options={quranMemorizationOptions}
+                value={quranMemorizationOptions.find(option => option.value === formData.quranMemorization) || null}
                 placeholder="Select memorization status..."
                 onChange={(option) => handleInputChange('quranMemorization', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -452,6 +466,7 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Do you have children?</label>
               <Select
                 options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.children) || null}
                 placeholder="Select an option"
                 onChange={(option) => handleInputChange('children', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -462,6 +477,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <Select
                   options={occupationOptions}
+                  value={occupationOptions.find(option => option.value === formData.occupation) || null}
                   placeholder="Select occupation"
                   onChange={(option) => handleInputChange('occupation', option ? option.value : '')}
                   styles={customSelectStyles}

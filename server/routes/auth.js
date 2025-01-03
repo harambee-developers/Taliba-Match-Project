@@ -56,7 +56,6 @@ router.post("/register", async (req, res) => {
             }
         }
 
-
         const user = new User({
             userName: kunya,
             firstName,
@@ -74,7 +73,7 @@ router.post("/register", async (req, res) => {
             profile: generateProfile()
         });
         await user.save();
-
+        console.log(user)
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         console.error(error);
