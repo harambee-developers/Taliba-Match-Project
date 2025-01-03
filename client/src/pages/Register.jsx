@@ -61,34 +61,35 @@ const customSelectStyles = {
 };
 
 const RegisterPage = () => {
+  const defaultFormData = {
+    firstName: '',
+    lastName: '',
+    kunya: '',
+    dob: '',
+    email: '',
+    phone: '',
+    location: '',
+    openToHijrah: '',
+    hijrahDestination: '',
+    ethnicity: [],
+    nationality: '',
+    maritalStatus: '',
+    revert: '',
+    yearsRevert: '',
+    salahPattern: '',
+    sect: '',
+    islamicBooks: '',
+    quranMemorization: '',
+    dressingStyle: '',
+    islamicAmbitions: '',
+    children: '',
+    occupation: '',
+    personality: '',
+    dealBreakers: '',
+  };
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem('formData');
-    return savedData ? JSON.parse(savedData) : {
-      firstName: '',
-      lastName: '',
-      kunya: '',
-      dob: '',
-      email: '',
-      phone: '',
-      location: '',
-      openToHijrah: '',
-      hijrahDestination: '',
-      ethnicity: [],
-      nationality: '',
-      maritalStatus: '',
-      revert: '',
-      yearsRevert: '',
-      salahPattern: '',
-      sect: '',
-      islamicBooks: '',
-      quranMemorization: '',
-      dressingStyle: '',
-      islamicAmbitions: '',
-      children: '',
-      occupation: '',
-      personality: '',
-      dealBreakers: '',
-    }
+    return savedData ? JSON.parse(savedData) : defaultFormData
   });
 
   const [currentSection, setCurrentSection] = useState(1);
@@ -136,6 +137,7 @@ const RegisterPage = () => {
 
         if (response.ok) {
           alert("Registration successful!");
+          setFormData(defaultFormData)
         } else {
           alert("Registration failed: " + result.message);
         }
