@@ -3,6 +3,7 @@ import hijabProfile from '../assets/hijabProfile.png';
 import manProfile from '../assets/manProfile.png';
 import chatIcon from '../assets/chatIcon.png';
 import marriedIcon from '../assets/marriedIcon.png';
+import { useNavigate } from 'react-router-dom';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -13,10 +14,12 @@ const usePageTitle = (title) => {
 const LandingPage = () => {
   // For the FAQ toggles
   const [openIndex, setOpenIndex] = useState(null);
+  const navigate = useNavigate()
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
 
   usePageTitle("Welcome to Taliba Match!")
 
@@ -24,16 +27,22 @@ const LandingPage = () => {
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row w-full min-h-screen z-20">
-        
+
         {/* Left Section (Pink) */}
         <div className="lg:w-1/2 bg-[#FFF1FE] flex flex-col items-center justify-center p-6">
           <h1 className="text-5xl lg:text-6xl font-semibold font-[Manrope] text-[#800020] text-center mb-4">
             Where Marriage Meets Knowledge
           </h1>
+          {/* Get Started Button */}
+          <button className="bg-[#800020] text-white text-lg font-semibold py-4 px-6 mt-4 hover:bg-[#A52A2A] transition duration-300"
+            onClick={() => { navigate("/register") }}>
+            Get Started Now
+          </button>
         </div>
 
+
         {/* Right Section (Blue) */}
-        <div className="lg:w-[50%] bg-[#03054F] flex flex-col justify-center px-10 py-8 text-white relative rounded-l-lg">
+        <div className="lg:w-[50%] bg-[#03054F] flex flex-col justify-center px-10 py-8 text-white relative rounded-lg">
           <div className="relative max-w-md mx-auto space-y-8">
             {[
               { icon: hijabProfile, title: "Create your profile" },
@@ -52,30 +61,82 @@ const LandingPage = () => {
                 <h3 className="text-xl lg:text-2xl font-semibold font-[Manrope]">
                   {step.title}
                 </h3>
-                <div
-                  className="absolute right-[-2.5rem] w-6 h-6 bg-white rounded-full"
-                  style={{ top: '50%', transform: 'translateY(-50%)' }}
-                />
               </div>
             ))}
-            <div
-              className="absolute right-[-2rem]"
-              style={{ top: '18px', bottom: '28px', width: '8px' , backgroundColor: 'white',
-              }}
-            />
           </div>
         </div>
       </div>
 
       {/* Mission Statement Section */}
-      <section className="w-[85%] lg:w-[75%] bg-[#800020] text-white py-12 px-8  mt-8 md:mt-6 lg:mt-10  z-20 flex justify-center rounded-xl shadow-lg mx-auto">
-        <div className="max-w-4xl text-center">
-          <p className="text-lg lg:text-xl leading-relaxed font-[Manrope]">
-            At Talibah Match, we believe that marriage is not only a sacred bond but also a means of strengthening your connection to Allah and fulfilling a vital part of your deen. Our mission is to unite individuals who prioritise faith, knowledge, and the journey towards Jannah.
-          </p>
-          <p className="text-lg lg:text-xl leading-relaxed mt-6 font-[Manrope]">
-            Seeking knowledge is a lifelong obligation for every Muslim, and with Allah’s permission, Talibah Match aims to ease this path by connecting you with like-minded individuals who share your values. Together, you can complete half your deen and support each other in your pursuit of faith, knowledge, and a fulfilling marital life.
-          </p>
+      <section className="w-full bg-gradient-to-r from-[#800020] to-[#990033] text-white py-16 px-6 md:px-12 lg:px-20 flex justify-center shadow-lg rounded-lg">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          {/* Section Title */}
+          <header>
+            <h1 className="text-5xl font-extrabold tracking-wide mb-4">
+              About Us
+            </h1>
+            <p className="text-lg lg:text-xl font-medium leading-relaxed">
+              At Talibah Match, we believe marriage is more than a milestone—it’s a partnership designed to bring you closer to Allah and complete half your deen. Our mission is simple: to unite individuals striving for the same goal—seeking Allah’s pleasure through love, knowledge, and mutual support on the journey to Jannah.
+            </p>
+          </header>
+
+          {/* Mission Statement */}
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-3xl font-semibold mb-3">
+                Who We Are
+              </h2>
+              <p className="text-lg lg:text-xl leading-relaxed">
+                “Talibah” represents a seeker of knowledge, and at Talibah Match, we honor this identity by connecting individuals who prioritize the deen and the pursuit of sacred knowledge. Regardless of where you stand on your journey, whether you’re just beginning or are well-versed, this platform is for anyone with the shared ambition of striving towards faith, growth, and a fulfilling marriage.
+              </p>
+            </div>
+
+            {/* Why Talibah Match */}
+            <div>
+              <h2 className="text-3xl font-semibold mb-3">
+                Why Talibah Match?
+              </h2>
+              <p className="text-lg lg:text-xl leading-relaxed">
+                In a world filled with distractions, Talibah Match is a place for those who value purpose-driven connections. With Allah’s permission, we strive to make the path of marriage easier for those who wish to find tranquility in a spouse who will not only share in their joy but also in their aspirations for the Hereafter. Our platform is rooted in sincerity, trust, and the belief that every believer deserves a partner who nurtures their iman, strengthens their character, and walks with them towards Jannah.
+              </p>
+            </div>
+
+            {/* A Journey Built on Faith */}
+            <div>
+              <h2 className="text-3xl font-semibold mb-3">
+                A Journey Built on Faith
+              </h2>
+              <p className="text-lg lg:text-xl leading-relaxed mb-6">
+                Marriage is described in the Qur’an as a source of peace, love, and mercy, and we hold these values at the core of our service:
+              </p>
+              <blockquote className="bg-white/10 rounded-lg p-6 italic text-lg lg:text-xl">
+                “And of His signs is that He created for you from yourselves mates that you may find tranquility in them; and He placed between you affection and mercy. Indeed, in that are signs for a people who give thought.” — <span className="font-semibold">Surah Ar-Rum (30:21)</span>
+              </blockquote>
+              <p className="text-lg lg:text-xl leading-relaxed mt-6">
+                At Talibah Match, we facilitate relationships that embody this sacred tranquility, affection, and mercy. Like clothing, you and your spouse are meant to protect, comfort, and beautify one another:
+              </p>
+              <blockquote className="bg-white/10 rounded-lg p-6 italic text-lg lg:text-xl mt-6">
+                “…They are clothing for you, and you are clothing for them…” — <span className="font-semibold">Surah Al-Baqarah (2:187)</span>
+              </blockquote>
+            </div>
+
+            {/* Vision */}
+            <div>
+              <h2 className="text-3xl font-semibold mb-3">
+                Our Vision
+              </h2>
+              <p className="text-lg lg:text-xl leading-relaxed">
+                Talibah Match isn’t just about marriage; it’s about building a union that prioritizes spiritual growth, fosters a love for knowledge, and ensures that both partners remain steadfast in their deen. We are committed to helping you find a spouse who shares your values, supports your goals, and walks with you hand in hand toward the ultimate destination—Jannah.
+              </p>
+            </div>
+          </div>
+
+          {/* Closing Statement */}
+          <footer>
+            <p className="text-lg lg:text-xl italic leading-relaxed font-medium">
+              "Welcome to Talibah Match—where knowledge meets marriage."
+            </p>
+          </footer>
         </div>
       </section>
 
@@ -128,7 +189,7 @@ const LandingPage = () => {
                 </span>
               </button>
               {openIndex === index && (
-                <div className="p-4 text-sm font-[Manrope]">{faq.answer}</div>
+                <div className="p-2 text-sm font-[Manrope]">{faq.answer}</div>
               )}
             </div>
           ))}
