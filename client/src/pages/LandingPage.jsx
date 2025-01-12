@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import hijabProfile from '../assets/hijabProfile.png';
 import manProfile from '../assets/manProfile.png';
 import chatIcon from '../assets/chatIcon.png';
 import marriedIcon from '../assets/marriedIcon.png';
+
+const usePageTitle = (title) => {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+};
 
 const LandingPage = () => {
   // For the FAQ toggles
@@ -11,6 +17,8 @@ const LandingPage = () => {
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  usePageTitle("Welcome to Taliba Match!")
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">

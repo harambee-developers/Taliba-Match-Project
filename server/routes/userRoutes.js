@@ -4,15 +4,15 @@ const router = express.Router();
 
 router.get("/users", async (req, res) => {
     try {
-      const tutors = await User.find({});
-      res.json(tutors);
+      const user = await User.find({});
+      res.json(user);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
   
-  router.get("/user/:id", async (req, res) => {
+router.get("/user/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const user = await User.findById(id);

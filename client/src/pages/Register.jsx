@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import occupationData from '../data/Occupations.json';
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions } from '../data/fieldData'
+import Alert from '../components/Alert';
+import axios from 'axios'
+
+const usePageTitle = (title) => {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+};
 
 const customSelectStyles = {
   control: (provided) => ({
@@ -88,12 +96,15 @@ const RegisterPage = () => {
     dealBreakers: '',
   };
   const [formData, setFormData] = useState(() => {
+    // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
+    // accidental page refresh.
     const savedData = localStorage.getItem('formData');
     return savedData ? JSON.parse(savedData) : defaultFormData
   });
-
+  const [alert, setAlert] = useState(null); // For managing the alert message
   const [currentSection, setCurrentSection] = useState(1);
   const [errors, setErrors] = useState({});
+  usePageTitle("Register with us now!")
 
   const occupationOptions = occupationData.map((job) => ({
     value: job.title,
@@ -116,37 +127,54 @@ const RegisterPage = () => {
     setCurrentSection((prev) => prev - 1);
   };
 
+  const handleAlertClose = () => (
+    setAlert(null)
+  )
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationErrors = validate();
-    if (Object.keys(validationErrors).length === 0) {
-      console.log('Form Data Submitted:', formData);
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          }
-        );
+    if (Object.keys(validationErrors).length > 0) {
+      setAlert({ message: "Some required fields are missing!", type: "warning" });
+      setErrors(validationErrors);
+      return;
+    }
 
-        const result = await response.json();
+    console.log("Form Data Submitted:", formData);
 
-        if (response.ok) {
-          alert("Registration successful!");
-          setFormData(defaultFormData)
-        } else {
-          alert("Registration failed: " + result.message);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred. Please try again later.");
+      );
+
+      if (response.status === 201) {
+        setAlert({ message: "Registration successful!", type: "success" });
+        setFormData(defaultFormData);
+        // Optionally hide the alert after a few seconds
+        setTimeout(() => {
+          setAlert(null);
+        }, 3000);
+      } else {
+        setAlert({ message: `Registration failed: ${response.data.message}`, type: "error" });
+        // Optionally hide the alert after a few seconds
+        setTimeout(() => {
+          setAlert(null);
+        }, 3000);
       }
-    } else {
-      setErrors(validationErrors)
+    } catch (error) {
+      console.error("Error:", error);
+      setAlert({ message: "An error occurred. Please try again later.", type: "error" });
+      // Optionally hide the alert after a few seconds
+      setTimeout(() => {
+        setAlert(null);
+      }, 3000);
     }
   };
 
@@ -169,7 +197,16 @@ const RegisterPage = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center">
+    <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
+      {alert && (
+        <div className="fixed top-4 right-4">
+          <Alert
+            message={alert.message}
+            type={alert.type}
+            onClose={handleAlertClose}
+          />
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         className="w-[90%] md:w-[50%] lg:w-[40%] p-8 rounded-lg space-y-6"

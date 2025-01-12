@@ -8,16 +8,16 @@ const ProfileSchema = new Schema({
   hobbies: { type: [String] },
   languages: { type: [String] },
   family_background: { type: String },
-  revert: { type: String, enum: ['yes', 'no'] },
+  revert: { type: String, enum: ['yes', 'no', ''] },
   yearsRevert: { type: Number },
   additional_info: { type: String },
   salahPattern: { type: String },
   islamicAmbitions: { type: String },
   islamicBooks: { type: String },
-  openToHijrah: { type: String, enum: ['yes', 'no'] },
+  openToHijrah: { type: String, enum: ['yes', 'no', ''] },
   hijrahDestination: { type: String },
   dealBreakers: { type: String },
-  children: { type: String, enum: ['yes', 'no'] },
+  children: { type: String, enum: ['yes', 'no', ''] },
   dressingStyle: { type: String },
   quranMemorization: { type: String },
   public_profile: { type: Boolean, default: true }, // Default to public
@@ -41,7 +41,7 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  userName: { type: String, required: true, index:true },
+  userName: { type: String, required: true, index:true, unique: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index:true },
@@ -51,7 +51,7 @@ const UserSchema = new Schema({
   sect: { type: String },
   education: { type: String },
   occupation: { type: String },
-  maritalStatus: {type: String, enum: ['yes', 'no']}, 
+  maritalStatus: {type: String, enum: ['yes', 'no', '']}, 
   location: { type: String },
   nationality: { type: String },
   phone: { type: String },
