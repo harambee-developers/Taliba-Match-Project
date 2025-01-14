@@ -5,7 +5,7 @@ export default {
     theme: {
       extend: {
         fontFamily: {
-          sans: ['Manrope', 'sans-serif'], // Default font family for Tailwind
+          sans: ['Montserrat', 'sans-serif'], // Default font family for Tailwind
         },
       },
     },

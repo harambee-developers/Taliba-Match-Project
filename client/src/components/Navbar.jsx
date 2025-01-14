@@ -12,7 +12,7 @@ const Navbar = () => {
           className="w-12 h-12"  // Increased logo size
         />
       </Link>
-      <h1 className="text-2xl font-semibold text-[#800020] ml-4 font-[Manrope]">  {/* Increased font size and made semibold */}
+      <h1 className="text-2xl font-bold text-[#800020] ml-4 font-[Montserrat]">  {/* Increased font size and made semibold */}
         Talibah Match
       </h1>
     </div>
