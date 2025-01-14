@@ -20,7 +20,6 @@ const LandingPage = () => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-
   usePageTitle("Welcome to Taliba Match!")
 
   return (

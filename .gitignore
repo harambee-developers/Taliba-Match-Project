@@ -398,7 +398,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 # dotenv environment variable files
-.env
+.env*
 
 # mongo_data file
 mongo_data
