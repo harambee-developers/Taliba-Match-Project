@@ -16,7 +16,7 @@ const port = 7777;
 const app = express();
 
 const corsOptions = {
-  origin: ["https://talibamatch.com", "http://localhost"],
+  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"], // Ensure all necessary methods are allowed
 };

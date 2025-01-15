@@ -195,8 +195,6 @@ const RegisterPage = () => {
     value: country,
     label: country,
   }));
-  
-  console.log("Backend URL:", `${import.meta.env.VITE_BACKEND_URL}api/auth/register`);
 
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
