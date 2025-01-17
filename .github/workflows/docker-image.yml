@@ -20,13 +20,13 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Start Docker Compose (without daemon mode)
-        run: docker-compose -f docker-compose.prod.yml up -d
+        run: docker compose -f docker-compose.prod.yml up -d
 
       - name: Run backend tests
-        run: docker-compose -f docker-compose.prod.yml exec -T backend npm test
+        run: docker compose -f docker-compose.prod.yml exec -T backend npm test
 
       - name: Stop and Remove Containers
-        run: docker-compose -f docker-compose.prod.yml down
+        run: docker compose -f docker-compose.prod.yml down
 
   push-to-docker-hub:
     needs: build-test
