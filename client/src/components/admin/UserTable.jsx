@@ -12,6 +12,9 @@ import {
   Paper,
   TextField,
   CircularProgress,
+  Card,
+  CardContent,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
 
@@ -30,22 +33,23 @@ const UserTable = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-UK', {
-      day: '2-digit',
-      month: 'short', // 'short' for 3-letter month abbreviation (e.g., Jan, Feb)
-      year: 'numeric', // 'numeric' for full year (e.g., 2026)
-    }).replace(',', '-'); // Remove the comma between the month and year
+    return date.toLocaleDateString("en-UK", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).replace(",", "-");
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}api/user/users`
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/users`
         );
         setData(response.data);
         setFilteredData(response.data);
       } catch (err) {
+        console.error(err);
         setError("Failed to fetch data");
       } finally {
         setLoading(false);
@@ -102,7 +106,6 @@ const UserTable = () => {
 
   return (
     <div>
-      {/* Search Bar */}
       <TextField
         label="Search Users"
         variant="outlined"
@@ -112,84 +115,84 @@ const UserTable = () => {
         onChange={(e) => setSearch(e.target.value)}
         style={{ marginBottom: "20px" }}
       />
-
-      {/* Table Container */}
-      <TableContainer component={Paper} style={{ overflowX: "auto" }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell
-                onClick={() => handleSort("userName")}
-                style={{ cursor: "pointer" }}
-              >
-                Kunya {sortField === "userName" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-              </TableCell>
-              <TableCell
-                onClick={() => handleSort("firstName")}
-                style={{ cursor: "pointer" }}
-              >
-                First Name {sortField === "firstName" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-              </TableCell>
-              <TableCell
-                onClick={() => handleSort("lastName")}
-                style={{ cursor: "pointer" }}
-              >
-                Last Name {sortField === "lastName" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-              </TableCell>
-              <TableCell
-                onClick={() => handleSort("email")}
-                style={{ cursor: "pointer" }}
-              >
-                Email {sortField === "email" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-              </TableCell>
-              <TableCell
-                onClick={() => handleSort("occupation")}
-                style={{ cursor: "pointer" }}
-              >
-                Occupation {sortField === "occupation" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-              </TableCell>
-              <TableCell>Date of Birth</TableCell>
-              {!isSmallScreen && <TableCell>Sect</TableCell>}
-              {!isSmallScreen && <TableCell>Gender</TableCell>}
-              {!isSmallScreen && <TableCell>Marital Status</TableCell>}
-              {!isSmallScreen && <TableCell>Phone</TableCell>}
-              {!isSmallScreen && <TableCell>Location</TableCell>}
-              {!isSmallScreen && <TableCell>Nationality</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell>{user.userName}</TableCell>
-                  <TableCell>{user.firstName}</TableCell>
-                  <TableCell>{user.lastName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.occupation}</TableCell>
-                  <TableCell>{formatDate(user.dob)}</TableCell>
-                  {!isSmallScreen && <TableCell>{user.sect}</TableCell>}
-                  {!isSmallScreen && <TableCell>{user.gender}</TableCell>}
-                  {!isSmallScreen && <TableCell>{user.maritalStatus}</TableCell>}
-                  {!isSmallScreen && <TableCell>{user.phone}</TableCell>}
-                  {!isSmallScreen && <TableCell>{user.location}</TableCell>}
-                  {!isSmallScreen && <TableCell>{user.nationality}</TableCell>}
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-        <TableFooter>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredData.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handlePageChange}
-            onRowsPerPageChange={handleRowsPerPageChange}
-          />
-        </TableFooter>
-      </TableContainer>
+      {isSmallScreen ? (
+        // Card View for Mobile
+        filteredData
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((user) => (
+            <Card key={user._id} style={{ marginBottom: "15px" }}>
+              <CardContent>
+                <Typography variant="h6">{user.userName}</Typography>
+                <Typography variant="body2">
+                  Name: {user.firstName} {user.lastName}
+                </Typography>
+                <Typography variant="body2">Email: {user.email}</Typography>
+                <Typography variant="body2">
+                  Occupation: {user.occupation}
+                </Typography>
+                <Typography variant="body2">
+                  DOB: {formatDate(user.dob)}
+                </Typography>
+                <Typography variant="body2">
+                  Sect: {user.sect}
+                </Typography>
+                <Typography variant="body2">
+                  Gender: {user.gender}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))
+      ) : (
+        // Table View for Larger Screens
+        <TableContainer component={Paper} style={{ overflowX: "auto" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  onClick={() => handleSort("userName")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Kunya {sortField === "userName" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
+                </TableCell>
+                <TableCell>First Name</TableCell>
+                <TableCell>Last Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Gender</TableCell>
+                <TableCell>Sect</TableCell>
+                <TableCell>Occupation</TableCell>
+                <TableCell>Date of Birth</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredData
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((user) => (
+                  <TableRow key={user._id}>
+                    <TableCell>{user.userName}</TableCell>
+                    <TableCell>{user.firstName}</TableCell>
+                    <TableCell>{user.lastName}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.gender}</TableCell>
+                    <TableCell>{user.sect}</TableCell>
+                    <TableCell>{user.occupation}</TableCell>
+                    <TableCell>{formatDate(user.dob)}</TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+          <TableFooter>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={filteredData.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handlePageChange}
+              onRowsPerPageChange={handleRowsPerPageChange}
+            />
+          </TableFooter>
+        </TableContainer>
+      )}
     </div>
   );
 };

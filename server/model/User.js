@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 // Define the embedded schema for profile details
 const ProfileSchema = new Schema({
   height: { type: Number },
-  age: {type: Number},
+  age: { type: Number },
   hobbies: { type: [String] },
   languages: { type: [String] },
   family_background: { type: String },
@@ -41,17 +41,18 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  userName: { type: String, required: true, index:true, unique: true },
+  userName: { type: String, required: true, index: true, unique: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true, index:true },
+  email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
+  role: { type: String, required: true, enum: ['admin', 'user'] },
   dob: { type: Date },
   gender: { type: String },
   sect: { type: String },
   education: { type: String },
   occupation: { type: String },
-  maritalStatus: {type: String, enum: ['yes', 'no', '']}, 
+  maritalStatus: { type: String, enum: ['yes', 'no', ''] },
   location: { type: String },
   nationality: { type: String },
   phone: { type: String },

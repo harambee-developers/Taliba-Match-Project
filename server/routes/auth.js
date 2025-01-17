@@ -3,6 +3,7 @@ const express = require("express");
 const User = require("../model/User");
 const cookieParser = require('cookie-parser')
 const { body, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
 
 const router = express();
 router.use(cookieParser())
@@ -117,6 +118,7 @@ router.post(
                 userId: user._id,
                 username: user.userName,
                 email: user.email,
+                role: user.role
             });
 
             // Set the token in a secure, httpOnly cookie
@@ -127,7 +129,7 @@ router.post(
                 maxAge: 60 * 60 * 1000 // 7 days when rememberMe is implemented, but 1 hour when not
             });
 
-            res.json({ token });
+            res.json({ token, redirect: user.role === "admin" ? "/admin/dashboard" : "/" });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Internal server error" });
@@ -154,6 +156,7 @@ router.get("/verify-token", async (req, res) => {
             userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
+            role: decoded.role
         });
     } catch (error) {
         console.error("Token verification error:", error);

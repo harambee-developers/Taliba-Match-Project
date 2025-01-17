@@ -1,21 +1,34 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import Settings from "../components/admin/Settings";
 import { FaCogs, FaUserCircle, FaArrowLeft, FaBars } from "react-icons/fa";
 import Dashboard from "../components/admin/Dashboard";
 import UserTable from "../components/admin/UserTable";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
 
 const AdminDashboard = () => {
   const [selectedTab, setSelectedTab] = useState("Dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate()
-
+  const { user, logout } = useAuth()
   const tabs = ["Dashboard", "Settings", "Users", "Logout"];
 
-  const handleOnClick = (value) => {
-    setSelectedTab(value);
-    setIsSidebarOpen(false); // Close sidebar after selection on mobile
-  };
+  useEffect(() => {
+    if (user?.role !== 'admin' || !user) {
+      navigate('/admin')
+      console.error("Unauthorized User!")
+    }
+  }, [user, navigate])
+
+  const handleOnClick = async (value) => {
+    if (value === "Logout") {
+      await logout(); // Call the logout function from `useAuth`
+      navigate("/admin"); // Redirect to the login page after logout
+    } else {
+      setSelectedTab(value);
+      setIsSidebarOpen(false); // Close sidebar after selection on mobile
+    }
+  }
 
   const renderIcon = (option) => {
     switch (option) {
@@ -41,7 +54,7 @@ const AdminDashboard = () => {
       case "Settings":
         return <Settings />;
       default:
-        return navigate('/admin');
+        return null;
     }
   };
 
@@ -57,9 +70,8 @@ const AdminDashboard = () => {
 
       {/* Sidebar */}
       <nav
-        className={`${
-          isSidebarOpen ? "block" : "hidden"
-        } lg:block bg-[#800020] text-white flex-shrink-0 w-full lg:w-64 absolute lg:static z-10`}
+        className={`${isSidebarOpen ? "block" : "hidden"
+          } lg:block bg-[#800020] text-white flex-shrink-0 w-full lg:w-64 absolute lg:static z-10`}
       >
         <div className="p-6">
           <h2 className="text-lg font-semibold">Admin Dashboard</h2>

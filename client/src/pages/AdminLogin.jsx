@@ -2,12 +2,14 @@ import { React, useState } from 'react'
 import { FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Alert from '../components/Alert';
+import { useAuth } from '../components/AuthContext';
 
 const AdminLogin = () => {
 
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [alert, setAlert] = useState(null); // For managing the alert message
+    const { login } = useAuth()
     const navigate = useNavigate()
 
     const handleAlertClose = () => (
@@ -16,18 +18,12 @@ const AdminLogin = () => {
 
     const handleLogin = async () => {
         try {
-            // Check if username and password match the hardcoded credentials
-            if (username === "admin" && password === "adminpassword123") {
-                setAlert({ message: "Successful Login!", type: "success" });
-
-                // Navigate to the /admin/dashboard route after successful login
-                setTimeout(() => {
-                    navigate('/admin/dashboard');
-                }, 2000); // Optional: Delay the navigation by 2 seconds for UX purposes
-            } else {
-                // Incorrect credentials
-                setAlert({ message: "Invalid username or password", type: "error" });
-            }
+            await login(email, password)
+            setAlert({ message: "You have successfully logged in!", type: "success" });
+            // Navigate to the /admin/dashboard route after successful login
+            setTimeout(() => {
+                navigate('/admin/dashboard');
+            }, 2000); // Optional: Delay the navigation by 2 seconds for UX purposes
         } catch (error) {
             setAlert({ message: error.message, type: "error" });
             console.error("Login failed:", error);
@@ -51,17 +47,17 @@ const AdminLogin = () => {
                     Admin Console
                 </h1>
                 <div className="mt-3">
-                    <label htmlFor="username" className="block text-sm mb-2 font-semibold text-white">
+                    <label htmlFor="email" className="block text-sm mb-2 font-semibold text-white">
                         {" "}
-                        Username
+                        Email
                     </label>
                     <input
                         type="text"
-                        name="username"
-                        placeholder="Enter Username..."
-                        onChange={(e) => setUsername(e.target.value)}
-                        value={username}
-                        id="username"
+                        name="email"
+                        placeholder="Enter email..."
+                        onChange={(e) => setEmail(e.target.value)}
+                        value={email}
+                        id="email"
                         className="border focus:border-2 w-full text-sm px-2 py-2 focus:outline-none focus:ring-0 focus:border-blue-600 rounded-md"
                         required
                     />
