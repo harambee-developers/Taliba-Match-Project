@@ -1,22 +1,51 @@
-name: Docker Image CI
+name: Docker Compose CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
-
-  build:
-
+  build-test:
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Start Docker Compose (without daemon mode)
+        run: docker-compose -f docker-compose.prod.yml up -d
+
+      - name: Run backend tests
+        run: docker-compose -f docker-compose.prod.yml exec -T backend npm test
+
+      - name: Stop and Remove Containers
+        run: docker-compose -f docker-compose.prod.yml down
+
+  push-to-docker-hub:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v4 
-    - name: Login to DockerHub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-    
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t hmohammed2/taliba-match-backend:latest -f server/Dockerfile.prod ./server
+          docker push hmohammed2/taliba-match-backend:latest
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t hmohammed2/taliba-match-frontend:latest -f client/Dockerfile.prod ./client
+          docker push hmohammed2/taliba-match-frontend:latest
