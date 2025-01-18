@@ -3,7 +3,7 @@ const MONGO_URI = `mongodb://mongo-server:27017/TalibaDatabase`;
 
 const connectToDatabase = async () => {
   try {
-    await mongoose.connect(MONGO_URI, { 
+    await mongoose.connect(MONGO_URI, {
     });
     console.log("Connected to MongoDB");
   } catch (error) {

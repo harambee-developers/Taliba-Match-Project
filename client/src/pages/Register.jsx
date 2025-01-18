@@ -195,7 +195,6 @@ const RegisterPage = () => {
     value: country,
     label: country,
   }));
-  
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
       {alert && (
