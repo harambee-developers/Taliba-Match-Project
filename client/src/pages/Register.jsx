@@ -213,8 +213,8 @@ const RegisterPage = () => {
         {currentSection === 1 && (
           <>
             <h1 className="text-2xl font-semibold text-center text-gray-800">Start by telling us a bit about yourself</h1>
-            <div className="flex space-x-4">
-              <div className="flex flex-col w-1/2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">First Name</label>
                 <input
                   type="text"
@@ -228,7 +228,7 @@ const RegisterPage = () => {
                   <p className="mt-2 text-sm text-yellow-500">{errors.firstName}</p>
                 )}
               </div>
-              <div className="flex flex-col w-1/2">
+              <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Last Name</label>
                 <input
                   type="text"
