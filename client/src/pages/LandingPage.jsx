@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import hijabProfile from '../assets/hijabProfile.png';
-import manProfile from '../assets/manProfile.png';
-import chatIcon from '../assets/chatIcon.png';
-import marriedIcon from '../assets/marriedIcon.png';
+import chat from '../assets/chat.png';
+import logo from '../assets/logo.png';
+import heart from '../assets/heart.png';
+import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
 
 const usePageTitle = (title) => {
@@ -29,11 +29,11 @@ const LandingPage = () => {
 
         {/* Left Section (Pink) */}
         <div className="lg:w-1/2 bg-[#FFF1FE] flex flex-col items-center justify-center p-6">
-          <h1 className="text-5xl lg:text-6xl font-semibold font-[Montserrat] text-[#800020] text-center mb-4">
+          <h1 className="text-5xl lg:text-6xl font-semibold font-[Montserrat] text-[#E01D42] text-center mb-4">
             Where Marriage Meets Knowledge
           </h1>
           {/* Get Started Button */}
-          <button className="bg-[#800020] text-white text-lg font-semibold py-4 px-6 mt-4 hover:bg-[#A52A2A] transition duration-300 rounded-lg"
+          <button className="bg-[#E01D42] text-white text-lg font-semibold py-4 px-6 mt-4 hover:bg-[#A52A2A] transition duration-300 rounded-lg"
             onClick={() => { navigate("/register") }}>
             Get Started Now
           </button>
@@ -44,10 +44,10 @@ const LandingPage = () => {
         <div className="w-[85%] lg:w-[50%] bg-[#14485A] flex flex-col justify-center px-10 py-8 text-white relative mx-auto rounded-2xl lg:rounded-none mb-4 lg:mb-0 ">
           <div className="relative max-w-md mx-auto space-y-8">
             {[
-              { icon: hijabProfile, title: "Create your profile" },
-              { icon: manProfile, title: "Find your match" },
-              { icon: chatIcon, title: "Halal Conversation" },
-              { icon: marriedIcon, title: "Marriage" },
+              { icon: logo, title: "Create your profile" },
+              { icon: puzzle, title: "Find your match" },
+              { icon: chat, title: "Halal Conversation" },
+              { icon: heart, title: "Marriage" },
             ].map((step, index) => (
               <div key={index} className="flex items-center space-x-6 relative">
                 <div className="bg-white rounded-full flex items-center justify-center w-20 h-20">
@@ -67,7 +67,7 @@ const LandingPage = () => {
       </div>
 
       {/* Mission Statement Section */}
-      <section className="w-[85%] lg:w-[100%] bg-gradient-to-r from-[#800020] to-[#990033] text-white py-16 px-6 md:px-12 lg:px-20 flex justify-center shadow-lg mx-auto rounded-2xl lg:rounded-none ">
+      <section className="w-[85%] lg:w-[100%] bg-gradient-to-r from-[#E01D42] to-[#990033] text-white py-16 px-6 md:px-12 lg:px-20 flex justify-center shadow-lg mx-auto rounded-2xl lg:rounded-none ">
         <div className="max-w-5xl mx-auto text-center space-y-12">
           {/* Section Title */}
           <header>
@@ -114,28 +114,28 @@ const LandingPage = () => {
             </div>
 
             {/* Vision */}
-            <div>
+            {/* <div>
               <h2 className="text-3xl font-semibold mb-3">
                 Our Vision
               </h2>
               <p className="text-lg lg:text-xl leading-relaxed">
                 Talibah Match isn’t just about marriage; it’s about building a union that prioritizes spiritual growth, fosters a love for knowledge, and ensures that both partners remain steadfast in their deen. We are committed to helping you find a spouse who shares your values, supports your goals, and walks with you hand in hand toward the ultimate destination—Jannah.
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Closing Statement */}
-          <footer>
+          {/* <footer>
             <p className="text-lg lg:text-xl italic leading-relaxed font-medium">
               "Welcome to Talibah Match—where knowledge meets marriage."
             </p>
-          </footer>
+          </footer> */}
         </div>
       </section>
 
       {/* FAQ Section */}
       <div className="w-full p-8 bg-[#FFF1FE] mt-8">
-        <h2 className="text-4xl font-bold text-[#800020] text-center mb-6 font-[Montserrat]">
+        <h2 className="text-4xl font-bold text-[#E01D42] text-center mb-6 font-[Montserrat]">
           Commonly Asked Questions
         </h2>
         <div className="space-y-4 max-w-4xl mx-auto">
@@ -168,7 +168,7 @@ const LandingPage = () => {
           ].map((faq, index) => (
             <div
               key={index}
-              className="bg-[#800020] border border-[#800020] text-white rounded-2xl"
+              className="bg-[#E01D42] border border-[#E01D42] text-white rounded-2xl"
             >
               <button
                 onClick={() => toggleFAQ(index)}

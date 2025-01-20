@@ -14,7 +14,7 @@ const LandingNavbar = () => {
                         className="w-12 h-12 mx-auto lg:mx-0"
                     />
                 </Link>
-                <h1 className="text-2xl font-bold text-[#800020] mt-2 lg:mt-0 lg:ml-4 font-[Montserrat] text-center lg:text-left">
+                <h1 className="text-2xl font-bold text-[#E01D42] mt-2 lg:mt-0 lg:ml-4 font-[Montserrat] text-center lg:text-left">
                     Talibah Match
                 </h1>
             </div>
