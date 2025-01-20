@@ -14,8 +14,8 @@ const usePageTitle = (title) => {
 const customSelectStyles = {
   control: (provided) => ({
     ...provided,
-    backgroundColor: '#800020',
-    borderColor: '#800020',
+    backgroundColor: '#E01D42',
+    borderColor: '#E01D42',
     color: '#FFFFFF',
     input: {
       color: '#FFFFFF',
@@ -31,11 +31,11 @@ const customSelectStyles = {
   }),
   menu: (provided) => ({
     ...provided,
-    backgroundColor: '#800020',
+    backgroundColor: '#E01D42',
   }),
   option: (provided, state) => ({
     ...provided,
-    backgroundColor: state.isSelected ? '#9A1C30' : '#800020',
+    backgroundColor: state.isSelected ? '#9A1C30' : '#E01D42',
     color: '#FFFFFF',
     '&:hover': {
       backgroundColor: '#9A1C30',
@@ -213,30 +213,30 @@ const RegisterPage = () => {
         {currentSection === 1 && (
           <>
             <h1 className="text-2xl font-semibold text-center text-gray-800">Start by telling us a bit about yourself</h1>
-            <div className="flex space-x-4">
-              <div className="flex flex-col w-1/2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">First Name</label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                   placeholder="Enter your first name..."
                 />
                 {errors.firstName && (
                   <p className="mt-2 text-sm text-yellow-500">{errors.firstName}</p>
                 )}
               </div>
-              <div className="flex flex-col w-1/2">
+              <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Last Name</label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
-                  placeholder="Enter your lastname..."
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  placeholder="Enter your last name..."
                 />
                 {errors.lastName && (
                   <p className="mt-2 text-sm text-yellow-500">{errors.lastName}</p>
@@ -250,7 +250,7 @@ const RegisterPage = () => {
                 name="kunya"
                 value={formData.kunya}
                 onChange={(e) => handleInputChange('kunya', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter your Kunya..."
               />
               {errors.kunya && (
@@ -264,7 +264,7 @@ const RegisterPage = () => {
                 name="dob"
                 value={formData.dob}
                 onChange={(e) => handleInputChange('dob', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
               />
             </div>
             <div className="flex flex-col">
@@ -274,7 +274,7 @@ const RegisterPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter your email..."
               />
               {errors.email && (
@@ -288,7 +288,7 @@ const RegisterPage = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter your phone number..."
               />
             </div>
@@ -320,7 +320,7 @@ const RegisterPage = () => {
                   name="hijrahDestination"
                   value={formData.hijrahDestination}
                   onChange={(e) => handleInputChange('hijrahDestination', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                   placeholder="Enter potential hijrah destination..."
                 />
               </div>
@@ -342,7 +342,7 @@ const RegisterPage = () => {
                   type="text"
                   name="ethnicity"
                   onChange={(e) => handleInputChange('ethnicity', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                   placeholder="Specify ethnicity...."
                 />
               </div>
@@ -370,7 +370,7 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={nextSection}
-              className="w-full py-3 bg-[#800020] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+              className="w-full py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
             >
               Next
             </button>
@@ -398,7 +398,7 @@ const RegisterPage = () => {
                   name="yearsRevert"
                   value={formData.yearsRevert}
                   onChange={(e) => handleInputChange('yearsRevert', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                   placeholder="Enter number of years..."
                 />
               </div>
@@ -429,7 +429,7 @@ const RegisterPage = () => {
                     name="sectOther"
                     value={formData.sectOther || ''}
                     onChange={(e) => handleInputChange('sectOther', e.target.value)}
-                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white w-full"
+                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white w-full"
                     placeholder="Specify other sect..."
                   />
                 )}
@@ -442,7 +442,7 @@ const RegisterPage = () => {
                 name="islamicBooks"
                 value={formData.islamicBooks}
                 onChange={(e) => handleInputChange('islamicBooks', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter books or mutuun studied..."
               />
             </div>
@@ -463,7 +463,7 @@ const RegisterPage = () => {
                 name="dressingStyle"
                 value={formData.dressingStyle}
                 onChange={(e) => handleInputChange('dressingStyle', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter dressing style..."
               />
             </div>
@@ -474,7 +474,7 @@ const RegisterPage = () => {
                 name="islamicAmbitions"
                 value={formData.islamicAmbitions}
                 onChange={(e) => handleInputChange('islamicAmbitions', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter your ambitions (e.g., Quran memorization, Arabic learning)..."
               />
             </div>
@@ -482,14 +482,14 @@ const RegisterPage = () => {
               <button
                 type="button"
                 onClick={prevSection}
-                className="w-1/2 py-3 bg-[#9A1C30] text-white font-semibold rounded-md hover:bg-[#800020] transition"
+                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={nextSection}
-                className="w-1/2 py-3 bg-[#800020] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
               >
                 Next
               </button>
@@ -526,7 +526,7 @@ const RegisterPage = () => {
                     name="occupationOther"
                     value={formData.occupationOther || ''}
                     onChange={(e) => handleInputChange('occupationOther', e.target.value)}
-                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white w-full"
+                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white w-full"
                     placeholder="Specify other occupation"
                   />
                 )}
@@ -539,7 +539,7 @@ const RegisterPage = () => {
                 name="personality"
                 value={formData.personality}
                 onChange={(e) => handleInputChange('personality', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter your personality (e.g., Funny, Patient)"
               />
             </div>
@@ -550,7 +550,7 @@ const RegisterPage = () => {
                 name="dealBreakers"
                 value={formData.dealBreakers}
                 onChange={(e) => handleInputChange('dealBreakers', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#800020] bg-[#800020] text-white placeholder-white"
+                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
                 placeholder="Enter deal breakers and non-negotiables"
               />
             </div>
@@ -558,13 +558,13 @@ const RegisterPage = () => {
               <button
                 type="button"
                 onClick={prevSection}
-                className="w-1/2 py-3 bg-[#9A1C30] text-white font-semibold rounded-md hover:bg-[#800020] transition"
+                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#800020] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
               >
                 Submit
               </button>
