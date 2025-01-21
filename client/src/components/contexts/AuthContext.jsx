@@ -49,8 +49,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    const lowerCaseEmail = email.trim().toLowerCase(); // Convert email to lowercase and trim spaces
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email: lowerCaseEmail, password });
       if (response.status === 200) {
         await verifyTokenAndFetchData(); // Re-verify token and fetch user data after login
       } else {
@@ -73,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

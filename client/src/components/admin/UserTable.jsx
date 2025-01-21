@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import ExcelJS from "exceljs"; // Import exceljs
+import { saveAs } from "file-saver"; // For downloading
 import axios from "axios";
 import {
   Table,
@@ -15,6 +17,7 @@ import {
   Card,
   CardContent,
   Typography,
+  Button,
   useMediaQuery,
 } from "@mui/material";
 
@@ -28,7 +31,6 @@ const UserTable = () => {
   const [sortField, setSortField] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
   const isSmallScreen = useMediaQuery("(max-width: 768px)");
 
   const formatDate = (dateString) => {
@@ -91,6 +93,84 @@ const UserTable = () => {
     setPage(0);
   };
 
+  // Function to export data using exceljs
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Users");
+
+    // Define columns
+    worksheet.columns = [
+      { header: "Kunya", key: "userName" },
+      { header: "First Name", key: "firstName" },
+      { header: "Last Name", key: "lastName" },
+      { header: "Email", key: "email" },
+      { header: "Gender", key: "gender" },
+      { header: "Sect", key: "sect" },
+      { header: "Occupation", key: "occupation" },
+      { header: "Date of Birth", key: "dob" },
+      { header: "Location", key: "location" },
+      { header: "Nationality", key: "nationality" },
+      { header: "Phone No", key: "phone" },
+      { header: "Revert", key: "revert" },
+      { header: "Salah Pattern", key: "salahPattern" },
+      { header: "Islamic Ambition", key: "islamicAmbitions" },
+      { header: "Islamic Books", key: "islamicBooks" },
+      { header: "Open to Hijrah", key: "openToHijrah" },
+      { header: "Hijrah Destination", key: "hijrahDestination" },
+      { header: "Deal Breakers?", key: "dealBreakers" },
+      { header: "Children?", key: "children" },
+      { header: "Dressing Style", key: "dressingStyle" },
+      { header: "Quran Memorization", key: "quranMemorization" },
+    ];
+
+    // Add user data
+    filteredData.forEach((user) => {
+      worksheet.addRow({
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        gender: user.gender || "N/A",
+        sect: user.sect || "N/A",
+        occupation: user.occupation || "N/A",
+        dob: user.dob ? new Date(user.dob).toLocaleDateString("en-UK") : "N/A",
+        location: user.location || "N/A",
+        nationality: user.nationality || "N/A",
+        phone: user.phone || "N/A",
+        // 🟢 Fields from `profile`
+        revert: user.profile?.revert ?? "N/A",
+        salahPattern: user.profile?.salahPattern ?? "N/A",
+        islamicAmbitions: user.profile?.islamicAmbitions ?? "N/A",
+        islamicBooks: user.profile?.islamicBooks ?? "N/A",
+        openToHijrah: user.profile?.openToHijrah ?? "N/A",
+        hijrahDestination: user.profile?.hijrahDestination ?? "N/A",
+        quranMemorization: user.profile?.quranMemorization ?? "N/A",
+        children: user.profile?.children ?? "N/A",
+        dealBreakers: user.profile?.dealBreakers ?? "N/A",
+        dressingStyle: user.profile?.dressingStyle ?? "N/A",
+        // 🟠 Arrays (convert to string so Excel can display them)
+        hobbies: user.profile?.hobbies?.length ? user.profile.hobbies.join(", ") : "N/A",
+        languages: user.profile?.languages?.length ? user.profile.languages.join(", ") : "N/A",
+      });
+    });
+
+    // Auto-adjust column width based on the longest text in each column
+    worksheet.columns.forEach((column) => {
+      let maxLength = 0;
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        maxLength = Math.max(maxLength, cellValue.length);
+      });
+      column.width = maxLength + 2; // Adding some padding
+    });
+
+    // Create a Blob and trigger download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, "UserData.xlsx");
+  };
+
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "20px" }}>
@@ -115,8 +195,15 @@ const UserTable = () => {
         onChange={(e) => setSearch(e.target.value)}
         style={{ marginBottom: "20px" }}
       />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={exportToExcel}
+        style={{ marginBottom: "20px" }}
+      >
+        Download as Excel
+      </Button>
       {isSmallScreen ? (
-        // Card View for Mobile
         filteredData
           .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
           .map((user) => (
@@ -143,15 +230,11 @@ const UserTable = () => {
             </Card>
           ))
       ) : (
-        // Table View for Larger Screens
         <TableContainer component={Paper} style={{ overflowX: "auto" }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell
-                  onClick={() => handleSort("userName")}
-                  style={{ cursor: "pointer" }}
-                >
+                <TableCell onClick={() => handleSort("userName")} style={{ cursor: "pointer" }}>
                   Kunya {sortField === "userName" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
                 </TableCell>
                 <TableCell>First Name</TableCell>

@@ -4,8 +4,8 @@ const User = require("../model/User");
 const cookieParser = require('cookie-parser')
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
-
 const router = express();
+
 router.use(cookieParser())
 
 if (!process.env.JWT_SECRET_TOKEN) {
@@ -16,7 +16,7 @@ if (!process.env.JWT_SECRET_TOKEN) {
 // Utility function for token generation
 const generateToken = (payload) => {
     return jwt.sign(payload, process.env.JWT_SECRET_TOKEN, { expiresIn: "1h" });
-  };
+};
 
 router.post("/register", async (req, res) => {
     const {
@@ -47,6 +47,9 @@ router.post("/register", async (req, res) => {
     } = req.body;
 
     try {
+
+        const lowerCaseEmail = email.trim().toLowerCase(); // Convert email to lowercase and remove spaces
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
@@ -74,8 +77,9 @@ router.post("/register", async (req, res) => {
             firstName,
             lastName,
             password: hashedPassword,
+            role: "user",
             dob,
-            email,
+            email: lowerCaseEmail,
             phone,
             location,
             ethnicity,

@@ -4,6 +4,8 @@ import occupationData from '../data/Occupations.json';
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions } from '../data/fieldData'
 import Alert from '../components/Alert';
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
+import { useAlert } from '../components/contexts/AlertContext';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -101,9 +103,10 @@ const RegisterPage = () => {
     const savedData = localStorage.getItem('formData');
     return savedData ? JSON.parse(savedData) : defaultFormData
   });
-  const [alert, setAlert] = useState(null); // For managing the alert message
+  const { alert, showAlert } = useAlert()
   const [currentSection, setCurrentSection] = useState(1);
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate()
   usePageTitle("Register with us now!")
 
   const occupationOptions = occupationData.map((job) => ({
@@ -127,16 +130,12 @@ const RegisterPage = () => {
     setCurrentSection((prev) => prev - 1);
   };
 
-  const handleAlertClose = () => (
-    setAlert(null)
-  )
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
-      setAlert({ message: "Some required fields are missing!", type: "warning" });
+      showAlert("Some required fields are missing!", 'warning');
       setErrors(validationErrors);
       return;
     }
@@ -155,26 +154,17 @@ const RegisterPage = () => {
       );
 
       if (response.status === 201) {
-        setAlert({ message: "Registration successful!", type: "success" });
+        showAlert("Registration successful!", "success");
         setFormData(defaultFormData);
-        // Optionally hide the alert after a few seconds
-        setTimeout(() => {
-          setAlert(null);
-        }, 3000);
+        navigate(
+          "/register-success"
+        )
       } else {
-        setAlert({ message: `Registration failed: ${response.data.message}`, type: "error" });
-        // Optionally hide the alert after a few seconds
-        setTimeout(() => {
-          setAlert(null);
-        }, 3000);
+        showAlert(`Registration failed: ${response.data.message}`, "error");
       }
     } catch (error) {
       console.error("Error:", error);
-      setAlert({ message: "An error occurred. Please try again later.", type: "error" });
-      // Optionally hide the alert after a few seconds
-      setTimeout(() => {
-        setAlert(null);
-      }, 3000);
+      showAlert(`${error.response.data.message}`, "error");
     }
   };
 
@@ -197,15 +187,8 @@ const RegisterPage = () => {
   }));
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
-      {alert && (
-        <div className="fixed top-4 right-4">
-          <Alert
-            message={alert.message}
-            type={alert.type}
-            onClose={handleAlertClose}
-          />
-        </div>
-      )}
+      {/* Render alert component */}
+      {alert && <Alert />}
       <form
         onSubmit={handleSubmit}
         className="w-[90%] md:w-[50%] lg:w-[40%] p-8 rounded-lg space-y-6"

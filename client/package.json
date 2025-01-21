@@ -14,6 +14,8 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.0",
     "axios": "^1.7.7",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.4.0",
@@ -33,6 +35,7 @@
     "globals": "^15.11.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vite-plugin-remove-console": "^2.2.0"
   }
 }

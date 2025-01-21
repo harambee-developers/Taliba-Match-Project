@@ -408,5 +408,5 @@ mongo_data
 .dockerignore
 
 # ignore seed file
-seedAdmin.js
+seed*
 
