@@ -8,7 +8,7 @@ const Subscription = () => {
       const response = await axios.post(
         `${
           import.meta.env.VITE_BACKEND_URL
-        }/payment/create-checkout-session/`
+        }api/payment/create-checkout-session/`
       );
       console.log("Response data:", response.data); // Debugging line
       if (response.data.url) {
