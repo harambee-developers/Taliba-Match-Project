@@ -160,11 +160,11 @@ const RegisterPage = () => {
           "/register-success"
         )
       } else {
-        showAlert(`Registration failed: ${response.data.message}`, "error");
+        showAlert(`Registration failed: ${response?.data?.message}`, "error");
       }
     } catch (error) {
       console.error("Error:", error);
-      showAlert(`${error.response.data.message}`, "error");
+      showAlert(`${error.response?.data?.message}`, "error");
     }
   };
 

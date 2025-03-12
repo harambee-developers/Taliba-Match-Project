@@ -11,7 +11,6 @@ services:
       - ./server/.env.production
     environment:
       - NODE_ENV=production
-      - CHOKIDAR_USEPOLLING=true
   frontend:
     container_name: frontend
     build:
@@ -24,8 +23,3 @@ services:
       - "80:80"
     environment:
       - NODE_ENV=production
-  mongo:
-    image: mongo:latest
-    container_name: mongo-server
-    ports: 
-      - "27017:27017" 

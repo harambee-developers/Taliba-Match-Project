@@ -12,6 +12,7 @@ console.log(envFile)
 const paymentRoutes = require("./routes/paymentRoutes");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/userRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 const port = 7777;
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(cors(corsOptions));
 app.use("/api/payment", paymentRoutes); // Modularized routes
 app.use("/api/auth", authRoutes); // Modularized routes
 app.use("/api/user", userRoutes); // Modularized routes
+app.use("/api/analytics", analyticsRoutes)
 
 app.get('/', async (req, res) => {
   res.json({ message: "Hello world" })
