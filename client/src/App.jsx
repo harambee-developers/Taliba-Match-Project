@@ -8,6 +8,9 @@ import LandingNavbar from "./components/LandingNavbar"; // Import LandingNavbar
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import RegisterSuccess from "./pages/RegisterSuccess";
+import ChatApp from "./components/ChatApp";
+import Match from "./components/Match";
+import PendingMatches from "./components/PendingMatches";
 
 function App() {
   // Custom component to switch navbars based on the route
@@ -35,6 +38,9 @@ function App() {
           <Route path="/register-success" element={<RegisterSuccess />} /> {/* Subscription */}
           <Route path="/admin" element={<AdminLogin />} />{" "}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />{" "}
+          <Route path="/chat/:conversationId" element={<ChatApp />} />{" "}
+          <Route path="/matches" element={<Match />} />{" "}
+          <Route path="/pending-matches" element={<PendingMatches/>} />{" "}
         </Routes>
       </Layout>
     </BrowserRouter>

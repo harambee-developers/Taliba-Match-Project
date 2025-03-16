@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
-    <div className="flex items-center w-full px-8 py-4 z-20 bg-[#FFF1FE]">
+    <div className="flex items-center w-full px-8 py-4 z-20 bg-[#E01D42]">
       <Link to='/'>
         <img
           src={talibahLogo}
@@ -12,9 +12,6 @@ const Navbar = () => {
           className="w-12 h-12"  // Increased logo size
         />
       </Link>
-      <h1 className="text-2xl font-bold text-[#E01D42] ml-4 font-[Montserrat]">  {/* Increased font size and made semibold */}
-        Talibah Match
-      </h1>
     </div>
   )
 }

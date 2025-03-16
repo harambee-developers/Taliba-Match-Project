@@ -1,0 +1,163 @@
+import { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
+import { Send, User } from "lucide-react";
+import io from 'socket.io-client';
+import axios from 'axios';
+
+const socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
+    withCredentials: true,
+    transports: ["websocket"]
+});
+
+export default function ChatApp() {
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const userId = '678fc05a77cea1f247ec17d0'; // Hardcoded for now
+    // 6787d00179aeeb89a091eb10
+    const [receiverName, setReceiverName] = useState(null)
+    const [receiverId, setReceiverId] = useState(null)
+    const { conversationId } = useParams(); // This will pull the conversationId param from the URL
+
+    const sendMessage = () => {
+        if (!input.trim()) return; // Prevent sending empty messages
+        if (!receiverId) {
+            console.error("Receiver ID is missing!");
+            return;
+        }
+
+        const messageData = {
+            text: input,
+            sender_id: userId,
+            receiver_id: receiverId,
+            conversation_id: conversationId,
+            createdAt: new Date().toISOString()
+        };
+
+        console.log("Sending message: ", messageData);
+        // Prevent duplicate messages by immediately updating state first
+        setMessages((prevMessages) => [...prevMessages, messageData]);
+        // ✅ Ensure message is sent only once
+        socket.emit("send_message", messageData);
+        setInput(""); // Clear input after sending
+    };
+
+    const fetchConversationDetails = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${conversationId}/details`);
+            if (!response.data || !response.data.participants) {
+                console.error("Invalid conversation data received");
+                return;
+            }
+
+            // Find the receiver (the participant that is NOT the current user)
+            const receiver = response.data.participants.find(user => user._id !== userId);
+
+            if (receiver && receiver._id !== receiverId) { //  Update state only if it changes
+                setReceiverId(receiver._id);
+                setReceiverName(receiver.userName);
+            }
+        } catch (error) {
+            console.error("Error fetching conversation details:", error);
+        }
+    };
+
+    const fetchMessages = async (conversationId) => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${conversationId}/messages`);
+            setMessages(response.data.messages);
+        } catch (error) {
+            console.error('Error fetching messages', error.message);
+        }
+    };
+
+    useEffect(() => {
+        if (!conversationId) return; // Prevent running if conversationId is not set
+
+        fetchMessages(conversationId);
+        fetchConversationDetails();
+
+        socket.emit("join_chat", { userId, conversationId });
+
+        const handleNewMessage = (newMessage) => {
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
+        };
+
+        socket.on("message", handleNewMessage);
+
+        return () => {
+            socket.off("message", handleNewMessage); // ✅ Cleanup listener on unmount
+        };
+    }, [conversationId, userId]); // ✅ Runs only when `conversationId` changes
+
+    return (
+        <div className="flex flex-col h-screen bg-white w-full border-4 border-[#203449]">
+
+            {/* Fixed User Name at the Top */}
+            <div className="p-2 text-xl font-bold bg-[#FFF1FE] text-black border-4 border-[#E01D42] rounded-xl inline-flex items-center space-x-4 m-6">
+                {/* User Image */}
+                <User className="w-12 h-12 text-black" />
+
+                {/* User Name */}
+                <span className="text-lg">{receiverName}</span>
+            </div>
+            {/* Message Area */}
+            <div className="flex-1 p-10 md:ml-5 overflow-y-auto">
+                {messages.length === 0 ? (
+                    <div className="flex justify-center items-center h-full">
+                        <p className="text-gray-400 text-center">Why not introduce yourself?</p>
+                    </div>
+                ) : (
+                    messages.map((msg, index) => (
+                        <div key={index} className={`flex ${msg.sender_id === userId ? "justify-end" : "justify-start"} mb-4`}>
+                            {/* Sender Name & Message Container */}
+                            <div className="flex items-start space-x-2 w-full">
+                                {/* Sender's name */}
+                                <div className="text-sm font-semibold text-black">
+                                    {msg.sender_id === userId ? "You:" : `${receiverName}:`} {/* Replace with actual name if possible */}
+                                </div>
+
+                                {/* Message Container */}
+                                <div className={`w-full max-w-7xl rounded-xl ${msg.sender_id === userId ? "bg-[#FFF1FE] text-black border-4 border-[#203449]" : "bg-[#FFF1FE] text-black border-4 border-red-600"}`}>
+                                    <p className="font-semibold p-2">{msg.text}</p>
+                                </div>
+
+                                {/* Timestamp and Status (stacked vertically) */}
+                                <div className="flex flex-col items-start ml-2 text-base font-semibold text-black">
+                                    {/* Timestamp */}
+                                    <span className="text-sm">
+                                        {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </span>
+
+                                    {/* Conditionally render Status only for the most recent message */}
+                                    {index === messages.length - 1 && (
+                                        <p className="text-xs text-gray-500">{msg.status}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            {/* Fixed Send Message Section */}
+            <div className="md:p-10 flex items-center bg-white m-6">
+                <input
+                    type="text"
+                    className="flex-1 p-2 bg-[#fef2f2] text-black rounded-lg focus:outline-none border-4 hover:bg-white transition-all duration-300"
+                    placeholder="Type a message..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                />
+                <button
+                    onClick={sendMessage}
+                    className="ml-2 mr-2 p-2 bg-white text-[#203449] rounded-lg "
+                >
+                    <Send className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
+}
