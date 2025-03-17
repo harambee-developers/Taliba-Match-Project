@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const MatchSchema = new Schema({
-  user1_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  user2_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  sender_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, 
+  receiver_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   match_status: {
     type: String,
     enum: ['Interested', 'Rejected', 'Blocked', 'pending'],
@@ -12,18 +12,18 @@ const MatchSchema = new Schema({
   matched_at: { type: Date, default: Date.now },
 });
 
-MatchSchema.virtual("user1", {
+MatchSchema.virtual("sender", {
   ref: "User", // Name of the User model
-  localField: "user1_id", // Local field in the Match model
-  foreignField: "_id", // Foreign field for the first user (user1_id)
-  justOne: true, // We want both users to be populated
+  localField: "sender_id", // Local field in the Match model
+  foreignField: "_id", // Foreign field for the sender (sender_id)
+  justOne: true, // Single user for sender
 });
 
-MatchSchema.virtual("user2", {
+MatchSchema.virtual("receiver", {
   ref: "User", // Name of the User model
-  localField: "user2_id", // Local field in the Match model
-  foreignField: "_id", // Foreign field for the second user (user2_id)
-  justOne: true, // Single user for the second one
+  localField: "receiver_id", // Local field in the Match model
+  foreignField: "_id", // Foreign field for the receiver (receiver_id)
+  justOne: true, // Single user for receiver
 });
 
 // Enable virtuals in JSON and Object output

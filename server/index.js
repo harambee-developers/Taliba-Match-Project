@@ -33,10 +33,10 @@ app.use(express.json())
 app.use(cors(corsOptions));
 
 // Modularized routes
-app.use("/api/payment", paymentRoutes); 
-app.use("/api/auth", authRoutes); 
-app.use("/api/user", userRoutes); 
-app.use("/api/message", messageRoutes); 
+app.use("/api/payment", paymentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/message", messageRoutes);
 app.use("/api/match", matchRoutes);
 
 // WebSocket server on the same port as Express
@@ -47,9 +47,40 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log(`Client has connected`, socket.id)
 
-  socket.on("join_chat", ({ conversationId, userId }) => {
+  socket.on("join_chat", async ({ conversationId, userId }) => {
     socket.join(conversationId);
-    console.log(`User ${userId} joined chat ${conversationId}`);
+
+    try {
+      // Update all messages where the receiver is the user who just joined
+      await Message.updateMany(
+        {
+          conversation_id: conversationId,
+          receiver_id: userId,
+          status: "Sent"
+        },
+        {
+          $set: { status: "Read" }
+        }
+      );
+
+      console.log(`User ${userId} joined chat ${conversationId}, marking messages as read.`);
+
+      // Optionally, notify the sender that messages were read
+      socket.to(conversationId).emit("messages_read", { conversationId, receiverId: userId });
+
+    } catch (error) {
+      console.error("Error updating message status:", error);
+    }
+  });
+
+  // Handle "typing" event
+  socket.on("typing", ({ conversationId, senderId }) => {
+    socket.to(conversationId).emit("typing", { senderId });
+  });
+
+  // Handle "stop_typing" event
+  socket.on("stop_typing", ({ conversationId, senderId }) => {
+    socket.to(conversationId).emit("stop_typing", { senderId });
   });
 
   socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text }) => {
@@ -67,6 +98,7 @@ io.on('connection', (socket) => {
       // Update lastMessage in the Conversation document
       await Conversation.findByIdAndUpdate(conversation_id, {
         last_message: text,  // Update last message
+        last_sender_id: sender_id,
         updatedAt: new Date(), // Update timestamp
       });
 

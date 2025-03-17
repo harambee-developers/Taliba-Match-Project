@@ -12,11 +12,10 @@ const socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
 export default function ChatApp() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const userId = '678fc05a77cea1f247ec17d0'; // Hardcoded for now
-    // 6787d00179aeeb89a091eb10
     const [receiverName, setReceiverName] = useState(null)
     const [receiverId, setReceiverId] = useState(null)
-    const { conversationId } = useParams(); // This will pull the conversationId param from the URL
+    const { conversationId, userId } = useParams(); // This will pull the conversationId param from the URL
+    const [isTyping, setIsTyping] = useState(false);
 
     const sendMessage = () => {
         if (!input.trim()) return; // Prevent sending empty messages
@@ -34,10 +33,12 @@ export default function ChatApp() {
         };
 
         console.log("Sending message: ", messageData);
-        // Prevent duplicate messages by immediately updating state first
-        setMessages((prevMessages) => [...prevMessages, messageData]);
+
         // ✅ Ensure message is sent only once
         socket.emit("send_message", messageData);
+
+        // ✅ Emit "stop_typing" when sending a message
+        socket.emit("stop_typing", { conversationId, senderId: userId });
         setInput(""); // Clear input after sending
     };
 
@@ -70,6 +71,18 @@ export default function ChatApp() {
         }
     };
 
+    // Emit "typing" event when user starts typing
+    const handleTyping = () => {
+        socket.emit("typing", { conversationId, senderId: userId });
+    };
+
+    // Emit "stop_typing" event when user stops typing
+    const handleStopTyping = () => {
+        setTimeout(() => {
+            socket.emit("stop_typing", { conversationId, senderId: userId });
+        }, 1000);
+    };
+
     useEffect(() => {
         if (!conversationId) return; // Prevent running if conversationId is not set
 
@@ -84,8 +97,22 @@ export default function ChatApp() {
 
         socket.on("message", handleNewMessage);
 
+        socket.on('typing', (data) => {
+            if (data.senderId !== userId) {
+                setIsTyping(true);
+            }
+        })
+
+        socket.on('stop_typing', (data) => {
+            if (data.senderId !== userId) {
+                setIsTyping(false);
+            }
+        })
+
         return () => {
             socket.off("message", handleNewMessage); // ✅ Cleanup listener on unmount
+            socket.off("typing");
+            socket.off("stop_typing");
         };
     }, [conversationId, userId]); // ✅ Runs only when `conversationId` changes
 
@@ -100,6 +127,7 @@ export default function ChatApp() {
                 {/* User Name */}
                 <span className="text-lg">{receiverName}</span>
             </div>
+
             {/* Message Area */}
             <div className="flex-1 p-10 md:ml-5 overflow-y-auto">
                 {messages.length === 0 ? (
@@ -130,15 +158,17 @@ export default function ChatApp() {
                                             minute: "2-digit",
                                         })}
                                     </span>
-
-                                    {/* Conditionally render Status only for the most recent message */}
-                                    {index === messages.length - 1 && (
+                                    {index === messages.length - 1 && msg.sender_id === userId && (
                                         <p className="text-xs text-gray-500">{msg.status}</p>
                                     )}
                                 </div>
                             </div>
                         </div>
                     ))
+                )}
+                {/* ✅ Show Typing Indicator */}
+                {isTyping && (
+                    <div className="text-gray-400 text-sm italic">💬 {receiverName} is typing...</div>
                 )}
             </div>
             {/* Fixed Send Message Section */}
@@ -148,7 +178,7 @@ export default function ChatApp() {
                     className="flex-1 p-2 bg-[#fef2f2] text-black rounded-lg focus:outline-none border-4 hover:bg-white transition-all duration-300"
                     placeholder="Type a message..."
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => { setInput(e.target.value); handleTyping(); handleStopTyping(); }}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />
                 <button

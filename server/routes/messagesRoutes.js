@@ -47,4 +47,30 @@ router.get("/:conversationId/messages", async (req, res) => {
     }
 });
 
+router.post("/new", async (req, res) => {
+    try {
+        const { user1, user2 } = req.body;
+
+        // Check if a conversation already exists between the users
+        let conversation = await Conversation.findOne({
+            participants: { $all: [user1, user2] }
+        });
+
+        if (!conversation) {
+            // If no conversation exists, create a new one
+            conversation = new Conversation({
+                participants: [user1, user2],
+                last_message: "",
+            });
+
+            await conversation.save();
+        }
+
+        res.status(201).json({ conversation });
+    } catch (error) {
+        console.error("Error creating conversation:", error);
+        res.status(500).json({ error: "Error creating conversation" });
+    }
+});
+
 module.exports = router;

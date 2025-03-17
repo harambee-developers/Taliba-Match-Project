@@ -4,7 +4,8 @@ const { Schema } = mongoose;
 const ConversationSchema = new Schema(
   {
     participants: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
-    last_message: { type: String, default: "" }, // Stores actual text, not ObjectId
+    last_sender_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    last_message: { type: String, default: "" },
   },
   { timestamps: true } // Automatically handles createdAt & updatedAt
 );
