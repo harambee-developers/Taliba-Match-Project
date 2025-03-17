@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);
     const [pendingReceivedRequests, setPendingReceivedRequests] = useState([])
-    const [matches, setMatches] = useState([]);
     const navigate = useNavigate()
     const userId = '67d701e0b422cb32154b0254'; // Hardcoded for now
 
@@ -16,7 +15,6 @@ const PendingMatches = () => {
     useEffect(() => {
         fetchSentPendingRequests()
         fetchReceivedPendingRequests()
-        fetchMatches()
     }, []);
 
     // Fetch pending requests (for the current user, either as sender or receiver)
@@ -39,21 +37,14 @@ const PendingMatches = () => {
         }
     };
 
-    // Fetch accepted matches (for the current user, only those who accepted the match)
-    const fetchMatches = async () => {
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${userId}`);
-            setMatches(response.data); // Assuming response.data is the list of accepted matches
-        } catch (error) {
-            console.error('Error fetching matches: ', error);
-        }
-    };
-
     // Accept match request
     const acceptRequest = async (matchId) => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/match/accept/${matchId}`);
-            fetchMatches(); // Refresh matches after accepting
+            // Remove the accepted match from pending requests
+            setPendingReceivedRequests((prevRequests) =>
+                prevRequests.filter(request => request._id !== matchId)
+            );
             console.log('Match accepted:', response.data);
         } catch (error) {
             console.error('Error accepting match:', error);
@@ -64,6 +55,10 @@ const PendingMatches = () => {
     const rejectRequest = async (matchId) => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/match/reject/${matchId}`);
+            // Remove the accepted match from pending requests
+            setPendingReceivedRequests((prevRequests) =>
+                prevRequests.filter(request => request._id !== matchId)
+            );
             console.log('Match rejected:', response.data);
         } catch (error) {
             console.error('Error rejecting match:', error);

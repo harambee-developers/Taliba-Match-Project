@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Send, User } from "lucide-react";
 import io from 'socket.io-client';
 import axios from 'axios';
+import { format, isToday, isYesterday } from "date-fns";
 
 const socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
     withCredentials: true,
@@ -62,10 +63,32 @@ export default function ChatApp() {
         }
     };
 
+    const groupMessagesByDate = (messages) => {
+        return messages.reduce((acc, message) => {
+            const messageDate = new Date(message.createdAt);
+
+            let formattedDate;
+            if (isToday(messageDate)) {
+                formattedDate = "Today";
+            } else if (isYesterday(messageDate)) {
+                formattedDate = "Yesterday";
+            } else {
+                formattedDate = format(messageDate, "EEEE, MMMM d"); // Example: "Thursday, March 14"
+            }
+
+            if (!acc[formattedDate]) {
+                acc[formattedDate] = []; // ✅ Ensure it is an array
+            }
+            acc[formattedDate].push(message);
+            return acc;
+        }, {}); // ✅ Ensure it returns an object
+    };
+
     const fetchMessages = async (conversationId) => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${conversationId}/messages`);
-            setMessages(response.data.messages);
+            const groupMessage = groupMessagesByDate(response.data.messages)
+            setMessages(groupMessage);
         } catch (error) {
             console.error('Error fetching messages', error.message);
         }
@@ -92,7 +115,15 @@ export default function ChatApp() {
         socket.emit("join_chat", { userId, conversationId });
 
         const handleNewMessage = (newMessage) => {
-            setMessages((prevMessages) => [...prevMessages, newMessage]);
+            setMessages((prevMessages) => {
+                if (!prevMessages || typeof prevMessages !== "object") {
+                    prevMessages = {}; // ✅ Ensure it's always an object
+                }
+                
+                // ✅ Group messages correctly after adding a new one
+                const updatedMessages = groupMessagesByDate([...Object.values(prevMessages).flat(), newMessage]);
+                return updatedMessages;
+            });
         };
 
         socket.on("message", handleNewMessage);
@@ -116,6 +147,7 @@ export default function ChatApp() {
         };
     }, [conversationId, userId]); // ✅ Runs only when `conversationId` changes
 
+
     return (
         <div className="flex flex-col h-screen bg-white w-full border-4 border-[#203449]">
 
@@ -130,42 +162,52 @@ export default function ChatApp() {
 
             {/* Message Area */}
             <div className="flex-1 p-10 md:ml-5 overflow-y-auto">
-                {messages.length === 0 ? (
+                {Object.keys(messages).length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
                     </div>
                 ) : (
-                    messages.map((msg, index) => (
-                        <div key={index} className={`flex ${msg.sender_id === userId ? "justify-end" : "justify-start"} mb-4`}>
-                            {/* Sender Name & Message Container */}
-                            <div className="flex items-start space-x-2 w-full">
-                                {/* Sender's name */}
-                                <div className="text-sm font-semibold text-black">
-                                    {msg.sender_id === userId ? "You:" : `${receiverName}:`} {/* Replace with actual name if possible */}
-                                </div>
+                    Object.entries(messages).map(([date, msgs], dateIndex) => (
+                        <div key={dateIndex}>
+                            {/* Date Separator */}
+                            <div className="text-center text-gray-500 font-semibold my-4">{date}</div>
 
-                                {/* Message Container */}
-                                <div className={`w-full max-w-7xl rounded-xl ${msg.sender_id === userId ? "bg-[#FFF1FE] text-black border-4 border-[#203449]" : "bg-[#FFF1FE] text-black border-4 border-red-600"}`}>
-                                    <p className="font-semibold p-2">{msg.text}</p>
-                                </div>
+                            {msgs.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender_id === userId ? "justify-end" : "justify-start"} mb-4`}>
+                                    {/* Sender Name & Message Container */}
+                                    <div className="flex items-start space-x-2 w-full">
+                                        {/* Sender's name */}
+                                        <div className="text-sm font-semibold text-black">
+                                            {msg.sender_id === userId ? "You:" : `${receiverName}:`}
+                                        </div>
 
-                                {/* Timestamp and Status (stacked vertically) */}
-                                <div className="flex flex-col items-start ml-2 text-base font-semibold text-black">
-                                    {/* Timestamp */}
-                                    <span className="text-sm">
-                                        {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </span>
-                                    {index === messages.length - 1 && msg.sender_id === userId && (
-                                        <p className="text-xs text-gray-500">{msg.status}</p>
-                                    )}
+                                        {/* Message Container */}
+                                        <div className={`w-full max-w-7xl rounded-xl ${msg.sender_id === userId ? "bg-[#FFF1FE] text-black border-4 border-[#203449]" : "bg-[#FFF1FE] text-black border-4 border-red-600"}`}>
+                                            <p className="font-semibold p-2">{msg.text}</p>
+                                        </div>
+
+                                        {/* Timestamp and Status */}
+                                        <div className="flex flex-col items-start ml-2 text-base font-semibold text-black">
+                                            {/* Timestamp */}
+                                            <span className="text-sm">
+                                                {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
+                                            </span>
+
+                                            {/* ✅ Show message status for the last sent message */}
+                                            {index === msgs.length - 1 && msg.sender_id === userId && (
+                                                <p className="text-xs text-gray-500">{msg.status}</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     ))
                 )}
+
                 {/* ✅ Show Typing Indicator */}
                 {isTyping && (
                     <div className="text-gray-400 text-sm italic">💬 {receiverName} is typing...</div>
