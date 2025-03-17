@@ -54,8 +54,6 @@ const Match = () => {
     );
   };
 
-  console.log(selectedMatch)
-
   return (
     <div className="min-h-screen bg-white flex flex-col border-t-4 border-[#203449]">
       <div className="w-full max-w-7xl mx-auto p-8 min-h-[50vh]">
