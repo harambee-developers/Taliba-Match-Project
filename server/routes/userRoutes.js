@@ -5,7 +5,86 @@ const cookieParser = require("cookie-parser");
 const router = express.Router();
 
 router.use(cookieParser())
-router.use(adminAuthMiddleware)
+
+// Public routes
+router.get("/search", async (req, res) => {
+  try {
+
+    const { ageRange, location, ethnicity } = req.query;
+    console.log('Search params:', { ageRange, location, ethnicity });
+    
+    let query = { role: "user" };
+    
+    if (location) {
+      query.location = location;
+    }
+    
+    if (ethnicity) {
+      query.ethnicity = ethnicity;
+    }
+
+    console.log('MongoDB query:', query);
+    
+
+
+    const users = await User.find(query)
+      .select('userName dob location nationality photos profile')
+      .lean() // Convert to plain JavaScript objects
+      .exec();
+
+    console.log('Found users:', users.length);
+    
+    if (!users) {
+      console.log('No users found');
+      return res.json([]);
+    }
+    
+    const profiles = users.map(user => {
+      try {
+        const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+        return {
+          id: user._id,
+          name: user.userName,
+          age,
+          location: user.location || 'Not specified',
+          nationality: user.nationality || 'Not specified',
+          image: user.photos && user.photos.length > 0 ? user.photos[0].url : null
+        };
+      } catch (err) {
+        console.error('Error processing user:', user._id, err);
+        return null;
+      }
+    }).filter(Boolean); // Remove any null entries from errors
+
+    let filteredProfiles = profiles;
+    
+    // Filter by age range after calculating ages
+    if (ageRange && ageRange !== '') {
+      const [minAge, maxAge] = ageRange.split("-").map(Number);
+      console.log('Filtering by age range:', minAge, '-', maxAge);
+      filteredProfiles = profiles.filter(profile => 
+        profile.age && profile.age >= minAge && profile.age <= maxAge
+      );
+    }
+
+    console.log('Filtered profiles:', filteredProfiles.length);
+    res.json(filteredProfiles.slice(0, 20)); // Limit to 20 results after filtering
+
+  } catch (error) {
+    console.error('Search error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: "Internal server error",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Admin routes
+router.use(adminAuthMiddleware);
 
 router.get("/users", async (req, res) => {
   try {

@@ -1,42 +1,36 @@
 import React from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import "./app.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Subscription from "./pages/Subscription";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
-import Navbar from "./components/Navbar";
-import LandingNavbar from "./components/LandingNavbar"; // Import LandingNavbar
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import RegisterSuccess from "./pages/RegisterSuccess";
+import Profile from "./pages/Profile";
+import Matches from "./pages/Matches";
+import Search from "./pages/Search";
+import Library from "./pages/Library";
+import axios from "axios";
 
 function App() {
-  // Custom component to switch navbars based on the route
-  const Layout = ({ children }) => {
-    const location = useLocation();
-
-    // Conditional rendering of Navbar
-    const isLandingPage = location.pathname === "/";
-
-    return (
-      <>
-        {isLandingPage ? <LandingNavbar /> : <Navbar />}
-        {children}
-      </>
-    );
-  };
-
+  
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<LandingPage />} /> {/* Landing Page */}
-          <Route path="/register" element={<Register />} /> {/* Register */}
-          <Route path="/subscribe" element={<Subscription />} /> {/* Subscription */}
-          <Route path="/register-success" element={<RegisterSuccess />} /> {/* Subscription */}
-          <Route path="/admin" element={<AdminLogin />} />{" "}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />{" "}
-        </Routes>
-      </Layout>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/subscribe" element={<Subscription />} />
+        <Route path="/register-success" element={<RegisterSuccess />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/matches" element={<Matches />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/library" element={<Library />} />
+      </Routes>
     </BrowserRouter>
   );
 }
