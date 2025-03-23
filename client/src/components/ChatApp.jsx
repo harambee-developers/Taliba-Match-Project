@@ -13,9 +13,9 @@ const socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
 export default function ChatApp() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [receiverName, setReceiverName] = useState(null)
+    const [receiverName, setReceiverName] = useState([])
     const [receiverId, setReceiverId] = useState(null)
-    const { conversationId, userId } = useParams(); // This will pull the conversationId param from the URL
+    const {conversationId, userId } = useParams(); // This will pull the conversationId and current userId param from the URL
     const [isTyping, setIsTyping] = useState(false);
 
     const sendMessage = () => {
@@ -35,10 +35,10 @@ export default function ChatApp() {
 
         console.log("Sending message: ", messageData);
 
-        // ✅ Ensure message is sent only once
+        // Ensure message is sent only once
         socket.emit("send_message", messageData);
 
-        // ✅ Emit "stop_typing" when sending a message
+        // Emit "stop_typing" when sending a message
         socket.emit("stop_typing", { conversationId, senderId: userId });
         setInput(""); // Clear input after sending
     };
@@ -56,7 +56,7 @@ export default function ChatApp() {
 
             if (receiver && receiver._id !== receiverId) { //  Update state only if it changes
                 setReceiverId(receiver._id);
-                setReceiverName(receiver.userName);
+                setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
             }
         } catch (error) {
             console.error("Error fetching conversation details:", error);
@@ -77,11 +77,11 @@ export default function ChatApp() {
             }
 
             if (!acc[formattedDate]) {
-                acc[formattedDate] = []; // ✅ Ensure it is an array
+                acc[formattedDate] = []; // Ensure it is an array
             }
             acc[formattedDate].push(message);
             return acc;
-        }, {}); // ✅ Ensure it returns an object
+        }, {}); // Ensure it returns an object
     };
 
     const fetchMessages = async (conversationId) => {
@@ -119,7 +119,7 @@ export default function ChatApp() {
                 if (!prevMessages || typeof prevMessages !== "object") {
                     prevMessages = {}; // ✅ Ensure it's always an object
                 }
-                
+
                 // ✅ Group messages correctly after adding a new one
                 const updatedMessages = groupMessagesByDate([...Object.values(prevMessages).flat(), newMessage]);
                 return updatedMessages;
@@ -141,27 +141,26 @@ export default function ChatApp() {
         })
 
         return () => {
-            socket.off("message", handleNewMessage); // ✅ Cleanup listener on unmount
+            socket.off("message", handleNewMessage); // Cleanup listener on unmount
             socket.off("typing");
             socket.off("stop_typing");
         };
-    }, [conversationId, userId]); // ✅ Runs only when `conversationId` changes
-
+    }, [conversationId, userId]); // Runs only when `conversationId` or 'userId' changes                                                                           
 
     return (
         <div className="flex flex-col h-screen bg-white w-full border-4 border-[#203449]">
 
             {/* Fixed User Name at the Top */}
-            <div className="p-2 text-xl font-bold bg-[#FFF1FE] text-black border-4 border-[#E01D42] rounded-xl inline-flex items-center space-x-4 m-6">
+            <div className="ml-10 p-2 text-xl font-bold bg-[#FFF1FE] text-black border-4 border-[#E01D42] rounded-xl inline-flex items-center space-x-4 m-6 w-fit">
                 {/* User Image */}
                 <User className="w-12 h-12 text-black" />
 
                 {/* User Name */}
-                <span className="text-lg">{receiverName}</span>
+                <span className="text-lg max-w-max truncate mr-2">{receiverName[1]} {receiverName[2]}</span>
             </div>
 
             {/* Message Area */}
-            <div className="flex-1 p-10 md:ml-5 overflow-y-auto">
+            <div className="flex-1 p-10 md:ml-10 overflow-y-auto">
                 {Object.keys(messages).length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
@@ -173,34 +172,28 @@ export default function ChatApp() {
                             <div className="text-center text-gray-500 font-semibold my-4">{date}</div>
 
                             {msgs.map((msg, index) => (
-                                <div key={index} className={`flex ${msg.sender_id === userId ? "justify-end" : "justify-start"} mb-4`}>
-                                    {/* Sender Name & Message Container */}
-                                    <div className="flex items-start space-x-2 w-full">
-                                        {/* Sender's name */}
-                                        <div className="text-sm font-semibold text-black">
-                                            {msg.sender_id === userId ? "You:" : `${receiverName}:`}
-                                        </div>
+                                <div key={index} className="flex items-start mb-4 w-full">
+                                    {/* Sender Name - Fixed on the left */}
+                                    <div className="text-sm font-semibold text-black min-w-max pr-2">
+                                        {msg.sender_id === userId ? "You:" : receiverName[1]}
+                                    </div>
 
-                                        {/* Message Container */}
-                                        <div className={`w-full max-w-7xl rounded-xl ${msg.sender_id === userId ? "bg-[#FFF1FE] text-black border-4 border-[#203449]" : "bg-[#FFF1FE] text-black border-4 border-red-600"}`}>
-                                            <p className="font-semibold p-2">{msg.text}</p>
-                                        </div>
+                                    {/* Message Container - Expands fully to the right */}
+                                    <div className={`flex-1 rounded-xl px-3 py-2 ${msg.sender_id === userId ? "bg-[#FFF1FE] text-black border-4 border-[#203449]" : "bg-[#FFF1FE] text-black border-4 border-red-600"}`}>
+                                        <p className="font-semibold">{msg.text}</p>
+                                    </div>
 
-                                        {/* Timestamp and Status */}
-                                        <div className="flex flex-col items-start ml-2 text-base font-semibold text-black">
-                                            {/* Timestamp */}
-                                            <span className="text-sm">
-                                                {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
-                                            </span>
-
-                                            {/* ✅ Show message status for the last sent message */}
-                                            {index === msgs.length - 1 && msg.sender_id === userId && (
-                                                <p className="text-xs text-gray-500">{msg.status}</p>
-                                            )}
-                                        </div>
+                                    {/* Timestamp & Status - Aligned to the right */}
+                                    <div className="ml-2 text-sm text-gray-600">
+                                        <span>
+                                            {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </span>
+                                        {index === msgs.length - 1 && msg.sender_id === userId && (
+                                            <p className="text-xs text-[#203449]">{msg.status}</p>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -210,7 +203,7 @@ export default function ChatApp() {
 
                 {/* ✅ Show Typing Indicator */}
                 {isTyping && (
-                    <div className="text-gray-400 text-sm italic">💬 {receiverName} is typing...</div>
+                    <div className="text-[#203449] text-sm italic">💬 {receiverName} is typing...</div>
                 )}
             </div>
             {/* Fixed Send Message Section */}

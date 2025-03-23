@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
-    <div className="flex items-center w-full px-8 py-4 z-20 bg-[#E01D42]">
+    <div className="flex items-center w-full px-8 py-4 z-20 bg-[#FFF1FE] ">
       <Link to='/'>
         <img
           src={talibahLogo}

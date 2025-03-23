@@ -7,12 +7,11 @@ import Alert from '../components/Alert';
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);
     const [pendingReceivedRequests, setPendingReceivedRequests] = useState([])
-    const navigate = useNavigate()
-    const userId = '67d701e0b422cb32154b0254'; // Hardcoded for now
+    const userId = '67d865d4f33b666fd7ebe581'; // Hardcoded for now
     const { alert, showAlert } = useAlert()
 
-    // 67d5d9a6a1cca2d96762e4be
-    // 67d701e0b422cb32154b0254
+    // 67d865d4f33b666fd7ebe581
+    // 67d865d4f33b666fd7ebe57f
 
     // Fetch data when the component mounts
     useEffect(() => {
@@ -20,21 +19,21 @@ const PendingMatches = () => {
         fetchReceivedPendingRequests()
     }, []);
 
-    // Fetch pending requests (for the current user, either as sender or receiver)
+    // Fetch pending requests for the current user as a sender
     const fetchSentPendingRequests = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/sent/${userId}`);
-            setPendingSentRequests(response.data); // Assuming response.data is the list of pending requests
+            setPendingSentRequests(response.data);
         } catch (error) {
             console.error('Error fetching pending requests: ', error);
         }
     };
 
-    // Fetch pending requests (for the current user, either as sender or receiver)
+    // Fetch pending requests (for the current user as a receiver)
     const fetchReceivedPendingRequests = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/received/${userId}`);
-            setPendingReceivedRequests(response.data); // Assuming response.data is the list of pending requests
+            setPendingReceivedRequests(response.data); 
         } catch (error) {
             console.error('Error fetching pending requests: ', error);
         }
@@ -56,11 +55,11 @@ const PendingMatches = () => {
             } else {
                 pingSound.currentTime = 0; // Restart the sound if already playing
             }
-
-            showAlert('Match accepted', 'success')
+            showAlert('Match accepted!', 'success')
             console.log('Match accepted:', response.data);
         } catch (error) {
             console.error('Error accepting match:', error);
+            showAlert('Error accepting match', 'error')
         }
     };
 
@@ -72,9 +71,11 @@ const PendingMatches = () => {
             setPendingReceivedRequests((prevRequests) =>
                 prevRequests.filter(request => request._id !== matchId)
             );
+            showAlert('Match rejected!', 'success')
             console.log('Match rejected:', response.data);
         } catch (error) {
             console.error('Error rejecting match:', error);
+            showAlert('Error rejecting match', 'error')
         }
     };
 
@@ -98,18 +99,10 @@ const PendingMatches = () => {
                                         <p className="text-gray-500">{request.sender.userName}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={() => acceptRequest(request._id)}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-                                        >
-                                            Accept
-                                        </button>
-                                        <button
-                                            onClick={() => rejectRequest(request._id)}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                                        >
-                                            Reject
-                                        </button>
+                                        <img src='/assets/greenTick.svg' alt='acceptTick' onClick={() => acceptRequest(request._id)} className="w-16 h-16 object-contain bg-white shadow-lg rounded-md cursor-pointer">
+                                        </img>
+                                        <img src='/assets/redTick.svg' alt='rejectTick' onClick={() => rejectRequest(request._id)} className="w-16 h-16 object-contain bg-white shadow-lg rounded-md cursor-pointer">
+                                        </img>
                                     </div>
                                 </div>
                             ))}
@@ -124,7 +117,7 @@ const PendingMatches = () => {
                     )}
                 </div>
 
-                {/* Pending Requests Section*/}
+                {/* Pending Sent Requests Section*/}
                 <div className="flex-1 bg-[#FFF1FE] p-6 rounded-lg shadow-md border-[#203449] border-4 min-h-[50vh]">
                     <h2 className="text-2xl font-semibold mb-4">Pending Requests</h2>
                     {pendingSentRequests.length > 0 ? (
@@ -137,7 +130,6 @@ const PendingMatches = () => {
                                             <p className="text-gray-500">{request.receiver.userName}</p>
                                         </div>
                                         <div className="flex justify-center items-center ml-4">
-                                            {/* Hourglass icon showing pending status */}
                                             <span className="text-yellow-500 text-3xl">⌛</span>
                                         </div>
                                     </div>

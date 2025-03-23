@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error:", error);
       throw new Error("Login process failed!");
     }
-  };
+  };  
 
   /**
    * Logs out the user and clears authentication state.
