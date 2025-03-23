@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+router.use(express.json())
 const Match = require('../model/Match')
 
 router.get('/pending/sent/:userId', async (req, res) => {
@@ -11,7 +12,7 @@ router.get('/pending/sent/:userId', async (req, res) => {
             sender_id: userId,
             match_status: 'pending'
         })
-        .populate("receiver");
+            .populate("receiver");
 
         if (sentRequests.length === 0) {
             return res.status(404).json({ message: 'No pending sent requests found' });
@@ -34,7 +35,7 @@ router.get('/pending/received/:userId', async (req, res) => {
             receiver_id: userId,
             match_status: 'pending'
         })
-        .populate("sender");
+            .populate("sender");
 
         if (receivedRequests.length === 0) {
             return res.status(404).json({ message: 'No pending received requests found' });
@@ -58,8 +59,8 @@ router.get('/matches/:userId', async (req, res) => {
             $or: [{ sender_id: userId }, { receiver_id: userId }],
             match_status: 'Interested',
         })
-        .populate("sender")
-        .populate("receiver");
+            .populate("sender")
+            .populate("receiver");
 
         if (matches.length === 0) {
             return res.status(404).json({ message: 'No matches found' });
@@ -72,6 +73,42 @@ router.get('/matches/:userId', async (req, res) => {
     }
 });
 
+// send match request
+router.post('/send-request', async (req, res) => {
+    const { sender_id, receiver_id } = req.body
+
+    try {
+        if (!sender_id) {
+            return res.status(400).json({ message: 'Sender ID is required' });
+        }
+        if (!receiver_id) {
+            return res.status(400).json({ message: 'Receiver ID is required' });
+        }
+
+        // Prevent duplicate match requests
+        const existingMatch = await Match.findOne({
+            sender_id,
+            receiver_id,
+            match_status: "pending"
+        });
+
+        if (existingMatch) {
+            return res.status(409).json({ message: 'Match request already sent' });
+        }
+
+        const match = await Match.create({
+            sender_id,
+            receiver_id,
+            match_status: "pending",
+            matched_at: Date.now()
+        });
+
+        res.status(201).json({ message: 'Match request sent successfully', match });
+    } catch (error) {
+        console.error('Error sending match:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+})
 
 // Accept match
 router.put('/accept/:matchId', async (req, res) => {

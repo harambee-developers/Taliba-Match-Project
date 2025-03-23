@@ -23,7 +23,7 @@ router.get("/:conversationId/details", async (req, res) => {
 
         // ✅ Find the conversation by _id and populate participant details
         const conversation = await Conversation.findById(conversationId)
-            .populate("participants", "userName email");
+            .populate("participants", "userName email firstName lastName");
 
         if (!conversation) {
             return res.status(404).json({ error: "Conversation not found" });

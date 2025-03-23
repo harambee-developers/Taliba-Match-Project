@@ -10,7 +10,7 @@ const AdminLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const { alert, showAlert } = useAlert()
-    const { login } = useAuth()
+    const { login, } = useAuth()
     const navigate = useNavigate()
 
     const handleLogin = async () => {
@@ -20,7 +20,9 @@ const AdminLogin = () => {
             navigate('/admin/dashboard');
             // Navigate to the /admin/dashboard route after successful login
         } catch (error) {
-            showAlert(error.message, "error");
+            // Check if the error comes from the backend and has a response message.
+            const errMessage = error.response?.data?.message || error.message || "Login failed";
+            showAlert(errMessage, "error");
             console.error("Login failed:", error);
         }
     };

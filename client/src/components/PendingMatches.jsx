@@ -1,28 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
 import Alert from '../components/Alert';
+import { useAuth } from './contexts/AuthContext';
 
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);
     const [pendingReceivedRequests, setPendingReceivedRequests] = useState([])
-    const userId = '67d865d4f33b666fd7ebe581'; // Hardcoded for now
+    const { user } = useAuth()
     const { alert, showAlert } = useAlert()
-
-    // 67d865d4f33b666fd7ebe581
-    // 67d865d4f33b666fd7ebe57f
 
     // Fetch data when the component mounts
     useEffect(() => {
-        fetchSentPendingRequests()
-        fetchReceivedPendingRequests()
-    }, []);
+        if (user) {  // Wait for user to be available
+            fetchSentPendingRequests();
+            fetchReceivedPendingRequests();
+        }
+    }, [user]);
 
     // Fetch pending requests for the current user as a sender
     const fetchSentPendingRequests = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/sent/${userId}`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/sent/${user.userId}`);
             setPendingSentRequests(response.data);
         } catch (error) {
             console.error('Error fetching pending requests: ', error);
@@ -32,8 +31,8 @@ const PendingMatches = () => {
     // Fetch pending requests (for the current user as a receiver)
     const fetchReceivedPendingRequests = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/received/${userId}`);
-            setPendingReceivedRequests(response.data); 
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/received/${user.userId}`);
+            setPendingReceivedRequests(response.data);
         } catch (error) {
             console.error('Error fetching pending requests: ', error);
         }

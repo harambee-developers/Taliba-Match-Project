@@ -41,7 +41,7 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  userName: { type: String, required: true, index: true},
+  userName: { type: String, required: true, index: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
@@ -52,6 +52,7 @@ const UserSchema = new Schema({
   sect: { type: String },
   education: { type: String },
   occupation: { type: String },
+  ethnicity: { type: String },
   maritalStatus: { type: String, enum: ['yes', 'no', ''] },
   location: { type: String },
   nationality: { type: String },

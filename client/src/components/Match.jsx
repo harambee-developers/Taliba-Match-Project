@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, User } from "lucide-react";
+import { User } from "lucide-react";
 import axios from 'axios';
 import ClippedIcon from './ClippedIcons';
+import { useAuth } from './contexts/AuthContext';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
@@ -10,7 +11,7 @@ const Match = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const navigate = useNavigate();
-  const userId = '67d865d4f33b666fd7ebe57f';
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchMatches();
@@ -19,7 +20,7 @@ const Match = () => {
 
   const fetchMatches = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${userId}`);
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${user.userId}`);
       setMatches(response.data);
     } catch (error) {
       console.error('Error fetching matches: ', error);
@@ -28,7 +29,7 @@ const Match = () => {
 
   const fetchConversations = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${userId}`);
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`);
       setConversations(response.data);
     } catch (error) {
       console.error('Error fetching conversations: ', error);
@@ -37,7 +38,7 @@ const Match = () => {
 
   const handleNewConversation = async () => {
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new`, { user1: selectedMatch._id, user2: userId });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new`, { user1: selectedMatch._id, user2: user.userId });
       console.log(response.data);
     } catch (error) {
       console.error('Error creating new conversation', error);
@@ -61,10 +62,10 @@ const Match = () => {
 
       <div className="flex flex-col md:flex-row border-4 border-[#203449] rounded-lg shadow-md">
         {/* Matches List */}
-        <div className={`${isMobileOpen ? 'block' : 'hidden'} md:block w-full md:w-1/3 bg-[#FFF1FE] p-4 border-r-4 border-[#203449]`}> 
+        <div className={`${isMobileOpen ? 'block' : 'hidden'} md:block w-full md:w-1/3 bg-[#FFF1FE] p-4 border-r-4 border-[#203449]`}>
           {matches.length > 0 ? (
             matches.map((match, index) => {
-              const opponent = match.sender._id !== userId ? match.sender : match.receiver;
+              const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
               return (
                 <div
                   key={index}
@@ -99,10 +100,10 @@ const Match = () => {
                   </h2>
                   <div
                     className="p-4 bg-white rounded-lg shadow-sm border-4 border-[#203449] hover:bg-[#fef2f2] hover:scale-105 transition-all duration-300 cursor-pointer"
-                    onClick={() => navigate(`/chat/${conversation._id}/${userId}`)}
+                    onClick={() => navigate(`/chat/${conversation._id}/${user.userId}`)}
                   >
                     <div className='flex justify-start items-center'>
-                      <p className='text-sm text-black'>{conversation.last_sender_id === userId ? "You" : selectedMatch.firstName}: </p>
+                      <p className='text-sm text-black'>{conversation.last_sender_id === user.userId ? "You" : selectedMatch.firstName}: </p>
                       <p className="ml-2 text-sm text-black">{conversation.last_message}</p>
                     </div>
                   </div>

@@ -5,8 +5,15 @@ const cookieParser = require('cookie-parser')
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const router = express();
+const rateLimit = require("express-rate-limit");
 
 router.use(cookieParser())
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 login attempts per windowMs
+    message: "Too many login attempts from this IP, please try again after 15 minutes."
+  });
 
 if (!process.env.JWT_SECRET_TOKEN) {
     console.error("Missing JWT_SECRET in environment variables.");
@@ -90,7 +97,6 @@ router.post("/register", async (req, res) => {
             profile: generateProfile()
         });
         await user.save();
-        console.log(user)
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         console.error(error);
@@ -100,7 +106,7 @@ router.post("/register", async (req, res) => {
 
 router.post(
     "/login",
-    [body("email").notEmpty(), body("password").notEmpty()],
+    [body("email").notEmpty(), body("password").notEmpty()], loginLimiter,
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

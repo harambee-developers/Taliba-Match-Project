@@ -5,6 +5,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const Message = require('./model/Message')
 const Conversation = require('./model/Conversation')
+const axios = require('axios')
 
 // Import and initialize the MongoDB connection
 require("./db")
@@ -24,7 +25,7 @@ const app = express();
 const server = http.createServer(app)
 
 const corsOptions = {
-  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173"],
+  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173", "http://127.0.0.1:3100"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"], // Ensure all necessary methods are allowed
 };
@@ -101,6 +102,14 @@ io.on('connection', (socket) => {
         last_sender_id: sender_id,
         updatedAt: new Date(), // Update timestamp
       });
+
+      // Send the message to the AI Chatbot API
+      try {
+        const response = await axios.post('http://127.0.0.1:3100/chatbot', { message: text });
+        socket.emit('bot-response', response.data.response);
+      } catch (error) {
+        console.error('Error communicating with chatbot:', error);
+      }
 
       // Broadcast message to the receiver in the same conversation
       io.to(conversation_id).emit("message", message);

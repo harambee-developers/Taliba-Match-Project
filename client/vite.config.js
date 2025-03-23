@@ -14,5 +14,12 @@ export default defineConfig({
     },
     host: '0.0.0.0',  // Make sure Vite listens on all interfaces
     port: 5173,        // Ensure the correct port
+    proxy: {
+      '/api/user': {
+        target: 'http://localhost:7777',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 })
