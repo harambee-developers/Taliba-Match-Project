@@ -55,6 +55,7 @@ const LandingPage = () => {
                     src={step.icon}
                     alt={step.title}
                     className="w-12 h-12 object-contain"
+                    loading='lazy'
                   />
                 </div>
                 <h3 className="text-xl lg:text-2xl font-semibold font-[Montserrat]">

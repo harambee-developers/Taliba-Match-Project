@@ -28,11 +28,10 @@ function App() {
         <Route path="/register-success" element={<RegisterSuccess />} /> {/* Subscription */}
         <Route path="/admin" element={<AdminLogin />} />{" "}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />{" "}
-        <Route path="/chat/:conversationId/:userId" element={<ChatApp />} />{" "}
+        <Route path="/chat/:conversationId" element={<ChatApp />} />{" "}
         <Route path="/matches" element={<Match />} />{" "}
         <Route path="/pending-matches" element={<PendingMatches />} />{" "}
         <Route path="/profile" element={<Profile />} />
-        <Route path="/matches" element={<Matches />} />
         <Route path="/search" element={<Search />} />
         <Route path="/library" element={<Library />} />
       </Routes>

@@ -14,9 +14,11 @@ const Match = () => {
   const { user } = useAuth()
 
   useEffect(() => {
-    fetchMatches();
-    fetchConversations();
-  }, []);
+    if (user) {
+      fetchMatches();
+      fetchConversations();
+    }
+  }, [user]);
 
   const fetchMatches = async () => {
     try {
@@ -39,21 +41,26 @@ const Match = () => {
   const handleNewConversation = async () => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new`, { user1: selectedMatch._id, user2: user.userId });
-      console.log(response.data);
+      const newConversation = response.data; // Get the newly created conversation
+      // Update the conversations state to include the new conversation
+      setConversations((prevConversations) => [...prevConversations, newConversation]);
+      console.log("New conversation created:", newConversation);
     } catch (error) {
       console.error('Error creating new conversation', error);
     }
   };
 
   const getConversationWithMatch = (match) => {
+    if (!conversations || conversations.length === 0) return null; // ✅ Prevent undefined
+
     return conversations.find((conversation) =>
-      conversation.participants.some((p) => p._id === match._id)
-    );
+      conversation?.participants?.some((p) => p._id === match._id) // ✅ Optional chaining
+    ) || null; // ✅ Return `null` if no conversation is found
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col border-t-4 border-[#203449] p-4 md:p-8">
-      <h1 className="text-3xl font-bold text-left mb-4">Matches</h1>
+      <h1 className="text-3xl font-bold text-left mb-4">Matched</h1>
 
       {/* Toggle Button for Mobile */}
       <button className="md:hidden p-2 bg-[#203449] text-white rounded mb-4" onClick={() => setIsMobileOpen(!isMobileOpen)}>
@@ -100,7 +107,7 @@ const Match = () => {
                   </h2>
                   <div
                     className="p-4 bg-white rounded-lg shadow-sm border-4 border-[#203449] hover:bg-[#fef2f2] hover:scale-105 transition-all duration-300 cursor-pointer"
-                    onClick={() => navigate(`/chat/${conversation._id}/${user.userId}`)}
+                    onClick={() => navigate(`/chat/${conversation._id}`)}
                   >
                     <div className='flex justify-start items-center'>
                       <p className='text-sm text-black'>{conversation.last_sender_id === user.userId ? "You" : selectedMatch.firstName}: </p>
@@ -110,7 +117,7 @@ const Match = () => {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <h2 className="text-xl font-semibold mb-4">No conversation yet with {selectedMatch.firstName}</h2>
+                  <h2 className="text-xl font-semibold mb-4">No chat with {selectedMatch.firstName}. Click here to give salam first</h2>
                   <button onClick={handleNewConversation}>
                     <ClippedIcon />
                   </button>
