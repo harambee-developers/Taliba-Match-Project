@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AuthProvider } from './components/contexts/AuthContext.jsx'
 import { AlertProvider } from './components/contexts/AlertContext.jsx'
+import { SocketProvider } from './components/contexts/SocketContext.jsx'
 import './index.css'
 import App from './App.jsx'
 
@@ -9,9 +10,11 @@ import App from './App.jsx'
 const AppProviders = ({ children }) => {
   return (
     <AuthProvider>
-      <AlertProvider>
-        {children}
-      </AlertProvider>
+      <SocketProvider>
+        <AlertProvider>
+          {children}
+        </AlertProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 };

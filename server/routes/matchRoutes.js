@@ -89,7 +89,6 @@ router.post('/send-request', async (req, res) => {
         const existingMatch = await Match.findOne({
             sender_id,
             receiver_id,
-            match_status: "pending"
         });
 
         if (existingMatch) {

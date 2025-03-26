@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom';
 import { Send, User } from "lucide-react";
-import io from 'socket.io-client';
 import axios from 'axios';
 import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from './contexts/AuthContext';
-
-const socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
-    withCredentials: true,
-    transports: ["websocket"]
-});
+import { useSocket } from "./contexts/SocketContext";
 
 export default function ChatApp() {
     const [messages, setMessages] = useState([]);
@@ -17,6 +12,7 @@ export default function ChatApp() {
     const [receiverName, setReceiverName] = useState([])
     const [receiverId, setReceiverId] = useState(null)
     const { user } = useAuth()
+    const { socket } = useSocket()
     const { conversationId } = useParams(); // This will pull the conversationId and current userId param from the URL
     const [isTyping, setIsTyping] = useState(false);
     const [isOnline, setIsOnline] = useState(false)
@@ -121,6 +117,10 @@ export default function ChatApp() {
     };
 
     useEffect(() => {
+        if (!socket) {
+            console.warn("Socket not connected yet.");
+            return;
+        }
         if (!conversationId || !user || !user.userId) return; // Prevent running if conversationId or user data is not available
 
         fetchMessages(conversationId);
@@ -171,25 +171,14 @@ export default function ChatApp() {
             }
         })
 
-        // Function to emit user_offline event
-        const emitUserOffline = () => {
-            socket.emit("user_offline", {
-                userId: user.userId,
-                conversationId,
-                lastSeen: new Date().toISOString(),
-            });
-        };
-
         return () => {
-            emitUserOffline(); // Emit on component unmount
-            window.removeEventListener("beforeunload", emitUserOffline);
             socket.off("message", handleNewMessage); // Cleanup listener on unmount
             socket.off("typing");
             socket.off("stop_typing");
             socket.off("user_online");
             socket.off("user_offline");
         };
-    }, [conversationId, user, receiverId]); // Runs only when `conversationId` or 'userId' changes                                                                           
+    }, [conversationId, user, receiverId, socket]); // Runs only when `conversationId` or 'userId' changes                                                                           
 
     // If user is not yet available, render a loading state or nothing.
     if (!user) {

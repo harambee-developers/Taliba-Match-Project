@@ -1,26 +1,51 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { useAuth } from "./AuthContext"; // Make sure AuthContext is correctly imported
 
-const SocketContext = createContext();
+const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
-  const [socket, setSocket] = useState(null);
+    const { user } = useAuth();
+    const [socket, setSocket] = useState(null);
 
-  useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-      withCredentials: true,
-    });
+    useEffect(() => {
+        if (!user || !user.userId) {
+            console.warn("⚠️ No user logged in, not connecting to socket.");
+            return;
+        }
 
-    setSocket(newSocket);
+        console.log("🚀 Connecting to socket...");
+        const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
+            transports: ["websocket", "polling"], // Ensures stable connection
+            withCredentials: true, // Allows sending auth cookies (if needed)
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000
+        });
 
-    return () => {
-      newSocket.disconnect(); // Cleanup on unmount
-    };
-  }, []);
+        setSocket(newSocket);
 
-  return (
-    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
-  );
+        newSocket.on("connect", () => {
+            console.log("✅ Socket connected:", newSocket.id);
+        });
+
+        newSocket.on("disconnect", () => {
+            console.warn("❌ Socket disconnected");
+        });
+
+        return () => {
+            console.log("🛑 Cleaning up socket...");
+            newSocket.disconnect(); // Prevent multiple sockets
+        };
+    }, [user]);
+
+    return (
+        <SocketContext.Provider value={{ socket }}>
+            {children}
+        </SocketContext.Provider>
+    );
 };
 
-export const useSocket = () => useContext(SocketContext);
+export const useSocket = () => {
+    return useContext(SocketContext);
+};

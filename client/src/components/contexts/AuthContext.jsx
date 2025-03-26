@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
+import { SocketProvider, useSocket } from "./SocketContext";
 
 /**
  * Context for authentication management.
@@ -19,6 +20,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const socket = useSocket();  // Access socket from SocketContext here
 
   // Ensure Axios sends cookies with every request
   axios.defaults.withCredentials = true;
@@ -100,7 +102,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error:", error);
       throw new Error("Login process failed!");
     }
-  };  
+  };
 
   /**
    * Logs out the user and clears authentication state.
@@ -111,6 +113,12 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`);
+
+      // Emit the disconnect event before logging out
+      if (socket) {
+        socket.emit('disconnect');  // This will trigger the backend to handle user disconnection
+      }
+
       setUser(null); // Clear user state
       console.log("Logout successful!");
     } catch (error) {

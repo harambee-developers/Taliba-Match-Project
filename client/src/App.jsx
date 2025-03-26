@@ -12,7 +12,6 @@ import ChatApp from "./components/ChatApp";
 import Match from "./components/Match";
 import PendingMatches from "./components/PendingMatches";
 import Profile from "./pages/Profile";
-import Matches from "./pages/Matches";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 

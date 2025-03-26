@@ -25,8 +25,6 @@ router.get("/search", async (req, res) => {
 
     console.log('MongoDB query:', query);
     
-
-
     const users = await User.find(query)
       .select('userName dob location nationality photos profile')
       .lean() // Convert to plain JavaScript objects
