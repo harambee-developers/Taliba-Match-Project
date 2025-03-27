@@ -94,7 +94,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email: lowerCaseEmail, password });
       if (response.status === 200) {
+        // Emit the disconnect event before logging out
         await verifyTokenAndFetchData(); // Re-verify token and fetch user data after login
+        
+        if (socket && user) {
+          socket.emit('user_connected', { userId: user.userId });  // This will trigger the backend to handle user disconnection
+        }
       } else {
         throw new Error("Login failed!");
       }

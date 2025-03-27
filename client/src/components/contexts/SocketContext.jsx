@@ -24,9 +24,10 @@ export const SocketProvider = ({ children }) => {
         });
 
         setSocket(newSocket);
-
         newSocket.on("connect", () => {
             console.log("✅ Socket connected:", newSocket.id);
+            // Notify server that user is online
+            newSocket.emit("user_connected", { userId: user.userId });
         });
 
         newSocket.on("disconnect", () => {

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { useAuth } from './contexts/AuthContext';
 import { useAlert } from './contexts/AlertContext';
+import Alert from './Alert';
 
 const LoginModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const { showAlert } = useAlert();
+    const { showAlert, alert } = useAlert();
     const { login } = useAuth();
 
     const resetForm = () => {
@@ -37,6 +38,8 @@ const LoginModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-gray-300 bg-opacity-50 flex items-center justify-center z-50">
+            {/* Render alert component */}
+            {alert && <Alert />}
             <div className="w-[85%] lg:w-96 p-6 shadow-lg bg-[#E01D42] rounded-lg relative">
                 <button
                     onClick={() => {

@@ -4,12 +4,13 @@ import { User } from "lucide-react";
 import axios from 'axios';
 import ClippedIcon from './ClippedIcons';
 import { useAuth } from './contexts/AuthContext';
+import { format, isToday } from 'date-fns';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [] = useState(null)
   const navigate = useNavigate();
   const { user } = useAuth()
 
@@ -50,6 +51,13 @@ const Match = () => {
     }
   };
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return null;
+    return isToday(new Date(timestamp))
+      ? format(new Date(timestamp), 'HH:mm')
+      : format(new Date(timestamp), 'dd/MMM/yyyy');
+  };
+
   const getConversationWithMatch = (match) => {
     if (!conversations || conversations.length === 0) return null; // ✅ Prevent undefined
 
@@ -62,31 +70,60 @@ const Match = () => {
     <div className="min-h-screen bg-white flex flex-col border-t-4 border-[#203449] p-4 md:p-8">
       <h1 className="text-3xl font-bold text-left mb-4">Matched</h1>
 
-      {/* Toggle Button for Mobile */}
-      <button className="md:hidden p-2 bg-[#203449] text-white rounded mb-4" onClick={() => setIsMobileOpen(!isMobileOpen)}>
-        {isMobileOpen ? 'Close Matches' : 'Open Matches'}
-      </button>
-
       <div className="flex flex-col md:flex-row border-4 border-[#203449] rounded-lg shadow-md">
-        {/* Matches List */}
-        <div className={`${isMobileOpen ? 'block' : 'hidden'} md:block w-full md:w-1/3 bg-[#FFF1FE] p-4 border-r-4 border-[#203449]`}>
+        {/* Matches List - Always Visible */}
+        <div className="w-full md:w-1/3 bg-[#FFF1FE] p-4 border-r-4 border-[#203449] min-h-screen">
           {matches.length > 0 ? (
             matches.map((match, index) => {
               const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
+              const conversation = getConversationWithMatch(opponent);
+              const lastMessageTime = conversation ? formatTimestamp(conversation.updatedAt) : null;
+
               return (
                 <div
                   key={index}
-                  className={`p-4 mb-2 cursor-pointer rounded-lg border-4 border-[#E01D42] ${selectedMatch?._id === opponent._id ? "bg-[#FFF1FE] text-black" : "bg-white"} hover:bg-[#FFF1FE] transition-all duration-300`}
+                  className="flex items-center p-4 mb-2 cursor-pointer rounded-lg border-4 border-[#E01D42] bg-white hover:bg-[#FFF1FE] transition-all duration-300"
                   onClick={() => {
-                    setSelectedMatch(opponent);
-                    setIsMobileOpen(false);
+                    if (window.innerWidth < 768) {
+                      // On mobile, navigate directly to chat
+                      if (conversation) {
+                        navigate(`/chat/${conversation._id}`);
+                      } else {
+                        handleNewConversation(opponent);
+                      }
+                    } else {
+                      // On desktop, use the selected match approach
+                      setSelectedMatch(opponent);
+                    }
                   }}
                 >
-                  <User className="w-8 h-8 text-black" />
-                  <div>
-                    <h3 className="font-semibold">{opponent.firstName} {opponent.lastName}</h3>
-                    <p className="text-sm text-gray-500">{opponent.userName}</p>
+                  {/* User Icon */}
+                  <User className="w-10 h-10 text-black mr-4" />
+
+                  {/* User Details */}
+                  <div className="flex-1">
+                    <div className='flex justify-between items-center w-full'>
+                      <h3 className="font-semibold">{opponent.firstName} {opponent.lastName}</h3>
+                      {/* Timestamp - Aligned to the right */}
+                      {lastMessageTime && (
+                        <p className="text-sm text-gray-500 ml-auto">
+                          {lastMessageTime}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {conversation ? (
+                        <>
+                          <span className="font-semibold">
+                            {conversation.last_sender_id === user.userId ? "You" : opponent.firstName}:
+                          </span> {conversation.last_message}
+                        </>
+                      ) : (
+                        "No messages yet"
+                      )}
+                    </p>
                   </div>
+
                 </div>
               );
             })
@@ -95,8 +132,8 @@ const Match = () => {
           )}
         </div>
 
-        {/* Conversation Panel */}
-        <div className="w-full md:w-2/3 bg-white p-4">
+        {/* Conversation Panel - Only Shows on Desktop */}
+        <div className="hidden md:block w-2/3 bg-white p-4">
           {selectedMatch ? (
             (() => {
               const conversation = getConversationWithMatch(selectedMatch);
@@ -118,7 +155,7 @@ const Match = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full">
                   <h2 className="text-xl font-semibold mb-4">No chat with {selectedMatch.firstName}. Click here to give salam first</h2>
-                  <button onClick={handleNewConversation}>
+                  <button onClick={() => handleNewConversation(selectedMatch)}>
                     <ClippedIcon />
                   </button>
                 </div>

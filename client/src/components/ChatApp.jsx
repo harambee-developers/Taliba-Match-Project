@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom';
 import { Send, User } from "lucide-react";
-import axios from 'axios';
 import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from './contexts/AuthContext';
 import { useSocket } from "./contexts/SocketContext";
+import axios from 'axios';
 
 export default function ChatApp() {
     const [messages, setMessages] = useState([]);
@@ -40,6 +40,7 @@ export default function ChatApp() {
 
         // Emit "stop_typing" when sending a message
         socket.emit("stop_typing", { conversationId, senderId: user.userId });
+
         setInput(""); // Clear input after sending
     };
 
@@ -117,6 +118,7 @@ export default function ChatApp() {
     };
 
     useEffect(() => {
+
         if (!socket) {
             console.warn("Socket not connected yet.");
             return;
@@ -127,6 +129,7 @@ export default function ChatApp() {
         fetchConversationDetails();
 
         socket.emit("join_chat", { userId: user.userId, conversationId });
+
         // Emit event to check if the recipient is online
         socket.emit("check_user_online", { userId: receiverId });
 
@@ -142,6 +145,8 @@ export default function ChatApp() {
             });
         };
 
+        socket.on("message", handleNewMessage);
+
         // Listen for online status updates
         socket.on("user_online", (data) => {
             if (data.userId === receiverId) {
@@ -150,6 +155,7 @@ export default function ChatApp() {
             }
         });
 
+        // Listen for offline status updates
         socket.on("user_offline", (data) => {
             if (data.userId === receiverId) {
                 setIsOnline(false);
@@ -157,7 +163,24 @@ export default function ChatApp() {
             }
         });
 
-        socket.on("message", handleNewMessage);
+        // Listen for offline status updates
+        socket.on("messages_read", ({ conversationId, receiverId }) => {
+            // Update local state to mark messages as read in the UI
+            setMessages((prevMessages) => {
+                if (!prevMessages || typeof prevMessages !== "object") return prevMessages;
+
+                // Loop through and update message status where applicable
+                const updatedMessages = Object.keys(prevMessages).reduce((acc, key) => {
+                    acc[key] = prevMessages[key].conversation_id === conversationId &&
+                        prevMessages[key].receiver_id === receiverId
+                        ? { ...prevMessages[key], status: "Read" }
+                        : prevMessages[key];
+                    return acc;
+                }, {});
+
+                return updatedMessages;
+            });
+        });
 
         socket.on('typing', (data) => {
             if (data.senderId !== user.userId) {
@@ -173,6 +196,8 @@ export default function ChatApp() {
 
         return () => {
             socket.off("message", handleNewMessage); // Cleanup listener on unmount
+            socket.off("messages_read")
+            socket.off("check_users_online")
             socket.off("typing");
             socket.off("stop_typing");
             socket.off("user_online");
@@ -266,6 +291,8 @@ export default function ChatApp() {
             <div className="md:p-10 flex items-center bg-white m-6">
                 <input
                     type="text"
+                    name="chatbox"
+                    id="chatbox"
                     className="flex-1 p-2 bg-[#fef2f2] text-black rounded-lg focus:outline-none border-4 hover:bg-white transition-all duration-300"
                     placeholder="Type a message..."
                     value={input}
