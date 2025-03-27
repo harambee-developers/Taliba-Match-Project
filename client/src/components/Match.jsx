@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from "lucide-react";
 import axios from 'axios';
-import ClippedIcon from './ClippedIcons';
 import { useAuth } from './contexts/AuthContext';
 import { format, isToday } from 'date-fns';
+import ChatApp from './ChatApp';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [] = useState(null)
+  const [lastMessage, setLastMessage] = useState("")
   const navigate = useNavigate();
   const { user } = useAuth()
 
@@ -56,6 +56,17 @@ const Match = () => {
     return isToday(new Date(timestamp))
       ? format(new Date(timestamp), 'HH:mm')
       : format(new Date(timestamp), 'dd/MMM/yyyy');
+  };
+
+  // This function will be called by ChatApp to update the last message.
+  const handleLastMessageUpdate = (conversationId, newLastMessage) => {
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv._id === conversationId
+          ? { ...conv, last_message: newLastMessage, updatedAt: new Date().toISOString() }
+          : conv
+      )
+    );
   };
 
   const getConversationWithMatch = (match) => {
@@ -137,29 +148,7 @@ const Match = () => {
           {selectedMatch ? (
             (() => {
               const conversation = getConversationWithMatch(selectedMatch);
-              return conversation ? (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">
-                    Message with {selectedMatch.firstName} {selectedMatch.lastName}
-                  </h2>
-                  <div
-                    className="p-4 bg-white rounded-lg shadow-sm border-4 border-[#203449] hover:bg-[#fef2f2] hover:scale-105 transition-all duration-300 cursor-pointer"
-                    onClick={() => navigate(`/chat/${conversation._id}`)}
-                  >
-                    <div className='flex justify-start items-center'>
-                      <p className='text-sm text-black'>{conversation.last_sender_id === user.userId ? "You" : selectedMatch.firstName}: </p>
-                      <p className="ml-2 text-sm text-black">{conversation.last_message}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <h2 className="text-xl font-semibold mb-4">No chat with {selectedMatch.firstName}. Click here to give salam first</h2>
-                  <button onClick={() => handleNewConversation(selectedMatch)}>
-                    <ClippedIcon />
-                  </button>
-                </div>
-              );
+              return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />
             })()
           ) : (
             <p className="text-center text-gray-500">Select a match to view the conversation.</p>
