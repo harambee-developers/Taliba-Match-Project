@@ -10,7 +10,6 @@ const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [lastMessage, setLastMessage] = useState("")
   const navigate = useNavigate();
   const { user } = useAuth()
 
@@ -55,15 +54,19 @@ const Match = () => {
     if (!timestamp) return null;
     return isToday(new Date(timestamp))
       ? format(new Date(timestamp), 'HH:mm')
-      : format(new Date(timestamp), 'dd/MMM/yyyy');
+      : format(new Date(timestamp), 'dd/MM/yyyy');
   };
 
   // This function will be called by ChatApp to update the last message.
-  const handleLastMessageUpdate = (conversationId, newLastMessage) => {
+  const handleLastMessageUpdate = (conversationId, newLastMessage, senderId) => {
     setConversations((prevConversations) =>
       prevConversations.map((conv) =>
         conv._id === conversationId
-          ? { ...conv, last_message: newLastMessage, updatedAt: new Date().toISOString() }
+          ? { ...conv, 
+            last_message: newLastMessage, 
+            last_sender_id: senderId, // ✅ Update sender ID
+            updatedAt: new Date().toISOString() 
+          }
           : conv
       )
     );
@@ -78,7 +81,7 @@ const Match = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col border-t-4 border-[#203449] p-4 md:p-8">
+    <div className="min-h-screen flex flex-col p-4 md:p-8">
       <h1 className="text-3xl font-bold text-left mb-4">Matched</h1>
 
       <div className="flex flex-col md:flex-row border-4 border-[#203449] rounded-lg shadow-md">
@@ -144,7 +147,7 @@ const Match = () => {
         </div>
 
         {/* Conversation Panel - Only Shows on Desktop */}
-        <div className="hidden md:block w-2/3 bg-white p-4">
+        <div className="hidden md:block w-2/3">
           {selectedMatch ? (
             (() => {
               const conversation = getConversationWithMatch(selectedMatch);

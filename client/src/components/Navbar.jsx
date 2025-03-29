@@ -21,7 +21,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between w-full px-8 py-4 z-20 bg-[#FFF1FE]">
+      <div className="flex items-center justify-between w-full px-8 py-4 z-20 bg-[#FFF1FE] shadow-lg">
         {/* Left side - Logo and Title */}
         <div className="flex items-center">
           {user && (

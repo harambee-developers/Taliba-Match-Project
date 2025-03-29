@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext"; // Make sure AuthContext is correctly imported
 
@@ -40,8 +40,10 @@ export const SocketProvider = ({ children }) => {
         };
     }, [user]);
 
+    // 🔥 Memoizing the context value to prevent unnecessary re-renders
+    const contextValue = useMemo(() => ({ socket }), [socket]);
     return (
-        <SocketContext.Provider value={{ socket }}>
+        <SocketContext.Provider value={contextValue}>
             {children}
         </SocketContext.Provider>
     );
