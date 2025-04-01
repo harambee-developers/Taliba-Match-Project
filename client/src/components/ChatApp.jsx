@@ -292,16 +292,16 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     ? "url('/wallpaper_man.svg')"
                     : "url('/wallpaper_woman.svg')"
             }}>
-            <div className={`p-2 text-xl font-bold ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} text-black ${borderClass} inline-flex items-center space-x-4`}>
+            <div className={`p-[0.65rem] text-xl font-bold ${borderClass} ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} bg-opacity-60 text-black inline-flex items-center space-x-4`}>
                 <div className={`rounded-full bg-white overflow-hidden w-16 h-16`} >
-                    <img src="/icon_woman.svg" alt="icon_woman" className="w-full h-full object-cover" />
+                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg": "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman": "icon_man"}`} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col items-start">
                     <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
                     {!isOnline && lastSeen && (
-                        <span className="text-sm text-gray-500">{formattedLastSeen}</span>
+                        <span className="text-sm text-white">{formattedLastSeen}</span>
                     )}
                 </div>
                 {/* Status Dot (Green or Grey) */}

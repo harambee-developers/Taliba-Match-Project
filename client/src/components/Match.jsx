@@ -93,11 +93,10 @@ const Match = () => {
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8">
-      <div className={`flex flex-col md:flex-row ${borderClass} rounded-lg shadow-md`}>
-        {/* Matches List - Always Visible */}
+      <div className={`flex flex-col md:flex-row ${borderClass} items-stretch rounded-lg shadow-md`}>
         <div className={`w-full md:w-1/3 ${borderClass} min-h-screen`}>
           {/* Full-width Title with Border */}
-          <h1 className={`bg-[#FFF1FE] text-3xl font-bold text-left py-6 px-4 border-b-2 ${borderClass}`}>
+          <h1 className={`${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} bg-opacity-60 text-3xl font-bold text-left pt-[1.5rem] pb-[1.45rem] px-4 ${borderClass}`}>
             Matched
           </h1>
           <div className='p-4'>
@@ -128,8 +127,8 @@ const Match = () => {
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">
                       <img
-                        src="icon_woman.svg"
-                        alt={`${opponent.firstName}'s profile`}
+                        src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} 
+                        alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
