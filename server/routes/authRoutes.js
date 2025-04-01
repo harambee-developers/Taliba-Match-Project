@@ -127,6 +127,7 @@ router.post(
             const token = generateToken({
                 userId: user._id,
                 username: user.userName,
+                gender: user.gender,
                 email: user.email,
                 role: user.role
             });
@@ -165,6 +166,7 @@ router.get("/verify-token", async (req, res) => {
             valid: true,
             userId: decoded.userId,
             username: decoded.username,
+            gender: decoded.gender,
             email: decoded.email,
             role: decoded.role
         });

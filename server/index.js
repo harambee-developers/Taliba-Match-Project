@@ -15,7 +15,7 @@ const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".en
 dotenv.config({ path: envFile });
 
 const paymentRoutes = require("./routes/paymentRoutes");
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messagesRoutes");
 const matchRoutes = require("./routes/matchRoutes");
@@ -25,7 +25,7 @@ const app = express();
 const server = http.createServer(app)
 
 const corsOptions = {
-  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173", "http://127.0.0.1:3100"],
+  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
@@ -56,14 +56,21 @@ io.on('connection', (socket) => {
     if (!userId) return;
 
     try {
-      await User.findByIdAndUpdate(userId, {
+      // Add socket ID to the user’s active socket list
+      if (!onlineUsers.has(userId)) {
+        onlineUsers.set(userId, new Set());
+      }
+      onlineUsers.get(userId).add(socket.id);
+
+      const user = await User.findByIdAndUpdate(userId, {
         isOnline: true,
         lastSeen: null, // Reset last seen when they come online
         socketId: socket.id
       });
 
       console.log(`✅ User ${userId} is now ONLINE`);
-      io.emit("user_online", { userId });
+
+      io.emit("user_online", { userId, username: user?.userName });
     } catch (error) {
       console.error("❌ Error updating online status:", error);
     }
@@ -71,69 +78,61 @@ io.on('connection', (socket) => {
 
   socket.on("join_chat", async ({ conversationId, userId }) => {
     socket.join(conversationId);
-    socket._id = userId
 
     console.log(`User ${userId} joined chat ${conversationId}.`);
 
     try {
-      // Update all messages where the receiver is the user who just joined
+      // Update messages as read in DB
       await Message.updateMany(
         {
           conversation_id: conversationId,
           receiver_id: userId,
-          status: "Sent"
+          status: "Sent",
         },
         {
-          $set: { status: "Read" }
+          $set: { status: "Read" },
         }
       );
 
-      console.log(`Marking messages as read.`);
+      console.log(`✅ Marking messages as read for user ${userId} in chat ${conversationId}`);
 
-      // Optionally, notify the sender that messages were read
-      socket.to(conversationId).emit("messages_read", { conversationId, receiverId: userId });
+      // Emit event to ALL users in the conversation, including the sender
+      io.to(conversationId).emit("messages_read", { conversationId, receiverId: userId });
 
     } catch (error) {
-      console.error("Error updating message status:", error);
+      console.error("❌ Error updating message status:", error);
     }
   });
 
-  // Handle "typing" event
+  socket.removeAllListeners("typing");
   socket.on("typing", ({ conversationId, senderId }) => {
     socket.to(conversationId).emit("typing", { senderId });
   });
 
-  // Handle "stop_typing" event
+  socket.removeAllListeners("stop_typing");
   socket.on("stop_typing", ({ conversationId, senderId }) => {
     socket.to(conversationId).emit("stop_typing", { senderId });
   });
 
   socket.on("check_user_online", ({ userId }) => {
     const isOnline = onlineUsers.has(userId);
-    // Emit back to the requesting socket only:
     socket.emit("user_online", { userId, online: isOnline });
   });
 
-  // Handle "user_online" event from the client.
-  // This could be used if the client wants to explicitly notify the server of its online status.
-  socket.on("user_online", ({ userId, conversationId }) => {
-    onlineUsers.set(userId, socket.id);
-    // Broadcast to other sockets that this user is now online.
-    io.to(conversationId).emit("user_online", { userId, conversationId });
-    console.log(`User ${userId} is online.`);
-  });
-
   // Handle "user_offline" event from the client.
-  socket.on("user_offline", ({ userId, conversationId }) => {
+  socket.on("user_offline", async ({ userId }) => {
+    if (!userId) return;
+
     onlineUsers.delete(userId);
-    // Broadcast to other sockets that this user went offline,
-    // along with a timestamp to indicate "last seen" time.
-    io.to(conversationId).emit("user_offline", { userId, lastSeen: new Date().toISOString() });
-    console.log(`User ${userId} is offline.`);
+    await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
+
+    console.log(`🚫 User ${userId} is now OFFLINE`);
+    io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
   });
 
   socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text }) => {
     try {
+
       // Save message to MongoDB
       const message = await Message.create({
         conversation_id,
@@ -173,21 +172,31 @@ io.on('connection', (socket) => {
     console.log("Client disconnected:", socket.id);
 
     try {
-      const user = await User.findOneAndUpdate(
-        { socketId: socket.id },
-        { isOnline: false, lastSeen: new Date() },
-        { new: true }
-      );
+      let userIdToRemove = null;
 
-      if (user) {
-        console.log(`User ${user._id} is now offline`);
-        io.emit("user_offline", { userId: user._id, lastSeen: user.lastSeen });
+      // Find the user that owns this socket
+      for (const [userId, sockets] of onlineUsers.entries()) {
+        if (sockets.has(socket.id)) {
+          sockets.delete(socket.id);
+          userIdToRemove = userId;
+
+          // If user has no more active sockets, mark them offline
+          if (sockets.size === 0) {
+            onlineUsers.delete(userId);
+            await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
+
+            console.log(`🚫 User ${userId} is now OFFLINE`);
+            io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
+            socket.removeAllListeners(); // 🚀 Remove all listeners for this socket
+          }
+          break;
+        }
       }
     } catch (error) {
-      console.error("Error setting user offline:", error);
+      console.error("❌ Error setting user offline:", error);
     }
   });
-});
+})
 
 server.listen(port, () => {
   console.log(`Server listening at ${port}`);

@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Message = require("../model/Message");
 const Conversation = require("../model/Conversation");
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const User = require("../model/User");
 
 // 🔹 GET all conversations for a user
 router.get("/user/:userId", async (req, res) => {
@@ -70,6 +71,28 @@ router.post("/new", async (req, res) => {
     } catch (error) {
         console.error("Error creating conversation:", error);
         res.status(500).json({ error: "Error creating conversation" });
+    }
+});
+
+router.get("/fetch-status/:receiverId", async (req, res) => {
+    try {
+        const { receiverId } = req.params;
+
+        if (!receiverId) {
+            return res.status(400).json({ message: "Receiver ID is required!" });
+        }
+
+        // Find user by ID and select only isOnline and lastSeen fields
+        const user = await User.findById(receiverId).select("isOnline lastSeen");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found!" });
+        }
+
+        res.status(200).json({ isOnline: user.isOnline, lastSeen: user.lastSeen });
+    } catch (error) {
+        console.error("Error fetching user status:", error);
+        res.status(500).json({ error: "Error fetching user status" });
     }
 });
 
