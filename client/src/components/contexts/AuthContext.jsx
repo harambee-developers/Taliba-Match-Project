@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
-import { SocketProvider, useSocket } from "./SocketContext";
+import { useSocket } from "./SocketContext";
 
 /**
  * Context for authentication management.
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
       if (response.status === 200) {
         // Emit the disconnect event before logging out
         await verifyTokenAndFetchData(); // Re-verify token and fetch user data after login
-        
+
         if (socket && user) {
           socket.emit('user_connected', { userId: user.userId });  // This will trigger the backend to handle user disconnection
         }
@@ -125,6 +125,12 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser(null); // Clear user state
+      // clear cache
+      const cache = await caches.open('chat-cache') 
+      const keys = await cache.keys(); // Get all cached requests
+      await Promise.all(keys.map((key) => cache.delete(key))); // Delete each request
+      
+      console.log("✅ All cache cleared!");
       console.log("Logout successful!");
     } catch (error) {
       console.error("Logout failed:", error);

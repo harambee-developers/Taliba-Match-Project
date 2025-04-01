@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Send, User } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
@@ -28,6 +28,23 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const CACHE_EXPIRY = 10 * 60 * 1000; // Cache expires in 10 min
     const CACHE_KEY_MESSAGES = `chat_messages_${currentConversationId}`;
     const CACHE_KEY_DETAILS = `chat_details_${currentConversationId}`;
+    const CACHE_STATUS = `chat_status_${receiverName}`
+
+    async function cacheData(key, data) {
+        const cache = await caches.open("chat-cache");
+        const response = new Response(JSON.stringify({ data, timestamp: Date.now() }), {
+            headers: { "Content-Type": "application/json" },
+        });
+        await cache.put(key, response);
+    }
+
+    async function getCachedData(key) {
+        const cache = await caches.open("chat-cache");
+        const response = await cache.match(key);
+        if (!response) return null;
+        const { data, timestamp } = await response.json();
+        return Date.now() - timestamp < CACHE_EXPIRY ? data : null;
+    }
 
     // Send a message
     const sendMessage = () => {
@@ -45,27 +62,23 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         };
 
         console.log("Sending message: ", messageData);
+
         socket.emit("send_message", messageData);
         socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
         // Notify the parent component about the new message
         if (onLastMessageUpdate) {
             onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
         }
-        localStorage.setItem(CACHE_KEY_MESSAGES, JSON.stringify({ messages: [...messages, messageData], timestamp: Date.now() }));
         setInput(""); // Clear input after sending
     };
 
     // Fetch conversation details and set receiver information
     const fetchConversationDetails = async () => {
-        const cachedData = localStorage.getItem(CACHE_KEY_DETAILS);
-        if (cachedData) {
-            const { data, timestamp } = JSON.parse(cachedData);
-            if (Date.now() - timestamp < CACHE_EXPIRY) {
-                console.log("✅ Loaded conversation details from cache");
-                setReceiverId(data._id);
-                setReceiverName([data.userName, data.firstName, data.lastName]);
-                return;
-            }
+        const cachedDetails = await getCachedData(CACHE_KEY_DETAILS);
+        if (cachedDetails) {
+            setReceiverId(cachedDetails._id);
+            setReceiverName([cachedDetails.userName, cachedDetails.firstName, cachedDetails.lastName]);
+            return;
         }
         try {
             const response = await axios.get(
@@ -82,7 +95,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             if (receiver && receiver._id !== receiverId) {
                 setReceiverId(receiver._id);
                 setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
-                localStorage.setItem(CACHE_KEY_DETAILS, JSON.stringify({ data: receiver, timestamp: Date.now() }));
+                cacheData(CACHE_KEY_DETAILS, receiver);
             }
         } catch (error) {
             console.error("Error fetching conversation details:", error);
@@ -99,44 +112,61 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             : `Last seen ${format(new Date(lastSeen), "MMM d, yyyy")}`
         : null;
 
-    const groupMessagesByDate = (messages) => {
-        return messages.reduce((acc, message) => {
-            const messageDate = new Date(message.createdAt);
-            let formattedDate;
-            if (isToday(messageDate)) {
-                formattedDate = "Today";
-            } else if (isYesterday(messageDate)) {
-                formattedDate = "Yesterday";
-            } else {
-                formattedDate = format(messageDate, "EEEE, MMMM d");
-            }
-            if (!acc[formattedDate]) {
-                acc[formattedDate] = [];
-            }
-            acc[formattedDate].push(message);
-            return acc;
-        }, {});
+    const groupMessagesByDate = (messages = []) => {
+        if (!Array.isArray(messages)) return {}; // Ensure messages is an array
+
+        return messages
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Sort by date
+            .reduce((acc, message) => {
+                if (!message?.createdAt) return acc; // Skip messages with no timestamp
+
+                const messageDate = new Date(message.createdAt);
+                let formattedDate;
+
+                if (isToday(messageDate)) {
+                    formattedDate = "Today";
+                } else if (isYesterday(messageDate)) {
+                    formattedDate = "Yesterday";
+                } else {
+                    formattedDate = format(messageDate, "EEEE, MMMM d");
+                }
+
+                acc[formattedDate] = acc[formattedDate] || [];
+                acc[formattedDate].push(message);
+
+                return acc;
+            }, {});
     };
 
     const fetchReceiverStatus = async () => {
+        const cachedStatus = await getCachedData(CACHE_STATUS);
+        if (cachedStatus) {
+            console.log("✅ Loaded status from cache");
+            setIsOnline(cachedStatus.data.isOnline)
+            setLastSeen(cachedStatus.data.lastSeen)
+            return;
+        }
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
             setIsOnline(response.data.isOnline)
             setLastSeen(response.data.lastSeen)
+            cacheData(CACHE_STATUS, response)
         } catch (error) {
             console.error("Error fetching messages", error.message);
         }
     }
 
     const fetchMessages = async (conversationId) => {
-        const cachedData = localStorage.getItem(CACHE_KEY_MESSAGES);
-        if (cachedData) {
-            const { messages, timestamp } = JSON.parse(cachedData);
-            if (Date.now() - timestamp < CACHE_EXPIRY) {
-                console.log("✅ Loaded messages from cache");
-                setMessages(messages);
+        const cachedMessages = await getCachedData(CACHE_KEY_MESSAGES);
+        if (cachedMessages) {
+            console.log("✅ Loaded messages from cache");
+            if (!Array.isArray(cachedMessages)) {
+                console.warn("Cached messages are not an array, clearing cache for this conversation.");
+                setMessages([]);
                 return;
             }
+            setMessages(cachedMessages);
+            return;
         }
 
         try {
@@ -144,24 +174,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 `${import.meta.env.VITE_BACKEND_URL}/api/message/${conversationId}/messages`
             );
 
-            let messages = response.data.messages;
-
-            // Check if messages is an object (grouped by date) or an array
-            if (Array.isArray(messages)) {
-                // If it's an array, sort by createdAt and group by date
-                const sortedMessages = messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                messages = groupMessagesByDate(sortedMessages);  // Group messages by date
-            } else if (typeof messages === "object") {
-                // If it's already an object (grouped by date), you might not need to do any processing
-                // Optionally, you can flatten it or keep it as is depending on how you want to handle the object structure
-                console.log("Messages already grouped by date:", messages);
-            } else {
-                console.error("Unexpected message format:", messages);
-                return;
-            }
-
+            const messages = response.data.messages;
             setMessages(messages);
-            localStorage.setItem(CACHE_KEY_MESSAGES, JSON.stringify({ messages, timestamp: Date.now() }));
+            cacheData(CACHE_KEY_MESSAGES, messages);
 
         } catch (error) {
             console.error("Error fetching messages", error.message);
@@ -198,20 +213,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
         const handleNewMessage = (newMessage) => {
             setMessages((prevMessages) => {
-                let updatedMessages;
-
-                // Check if prevMessages is an array or an object (grouped by date)
-                if (Array.isArray(prevMessages)) {
-                    updatedMessages = groupMessagesByDate([...prevMessages, newMessage]);
-                } else if (typeof prevMessages === 'object') {
-                    // If it's an object, you need to extract the messages and group by date
-                    const allMessages = Object.values(prevMessages).flat(); // Flatten the object
-                    updatedMessages = groupMessagesByDate([...allMessages, newMessage]);
-                } else {
-                    updatedMessages = groupMessagesByDate([newMessage]); // Fallback if prevMessages is not valid
-                }
-
-                localStorage.setItem(CACHE_KEY_MESSAGES, JSON.stringify({ messages: updatedMessages, timestamp: Date.now() }));
+                const updatedMessages = [...prevMessages, newMessage]
+                cacheData(CACHE_KEY_MESSAGES, updatedMessages);
                 return updatedMessages;
             });
             if (onLastMessageUpdate) {
@@ -236,18 +239,18 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         });
         socket.on("messages_read", ({ conversationId, receiverId }) => {
             setMessages((prevMessages) => {
-                if (!prevMessages || typeof prevMessages !== "object") return prevMessages;
-                const updatedMessages = Object.keys(prevMessages).reduce((acc, key) => {
-                    acc[key] =
-                        prevMessages[key].conversation_id === conversationId &&
-                            prevMessages[key].receiver_id === receiverId
-                            ? { ...prevMessages[key], status: "Read" }
-                            : prevMessages[key];
-                    return acc;
-                }, {});
-                return updatedMessages;
+                if (!Array.isArray(prevMessages)) return prevMessages;
+                return prevMessages.map(message => {
+                    if (
+                        message.conversation_id === conversationId &&
+                        message.receiver_id === receiverId
+                    ) {
+                        return { ...message, status: "Read" };
+                    }
+                    return message;
+                });
             });
-        });
+        })
         socket.on("typing", (data) => {
             if (data.senderId !== currentUserId) {
                 setIsTyping(true);
@@ -270,17 +273,31 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         };
     }, [currentConversationId, currentUserId, socket, receiverId, onLastMessageUpdate]);
 
+    // Memoize grouped messages
+    const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages])
+
     // Show loading state if the current user is not yet available or receiverId is not set
-    if (!currentUserId || !receiverId) {
+    if (!currentUserId || !receiverId || !user) {
         return <div className="flex items-center justify-center">Loading...</div>;
     }
 
+    const borderClass = user?.gender === "Male"
+        ? "border-2 border-[#203449]"
+        : "border-2 border-[#E01D42]";
+
     return (
-        <div className="flex flex-col h-screen w-full md:border-0 border-4 border-[#203449] bg-cover bg-center" style={{ backgroundImage: "url('/chat_background.jpg')" }}>
-            <div className="ml-10 p-2 text-xl font-bold bg-[#FFF1FE] text-black border-4 border-[#E01D42] rounded-xl inline-flex items-center space-x-4 m-6 w-fit">
-                <User className="w-12 h-12 text-black" />
+        <div className={`flex flex-col h-screen w-full md:border-0 ${borderClass} bg-repeat bg-center`}
+            style={{
+                backgroundImage: user?.gender === "Male"
+                    ? "url('/wallpaper_man.svg')"
+                    : "url('/wallpaper_woman.svg')"
+            }}>
+            <div className={`p-2 text-xl font-bold ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} text-black ${borderClass} inline-flex items-center space-x-4`}>
+                <div className={`rounded-full bg-white overflow-hidden w-16 h-16`} >
+                    <img src="/icon_woman.svg" alt="icon_woman" className="w-full h-full object-cover" />
+                </div>
                 <div className="flex flex-col items-start">
-                    <span className="text-lg font-semibold">
+                    <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
                     {!isOnline && lastSeen && (
@@ -297,29 +314,38 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 </div>
             </div>
             <div className="flex-1 p-10 md:ml-10 overflow-y-auto">
-                {messages.length === 0 ? (
+                {groupedMessages.length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
                     </div>
                 ) : (
-                    Object.entries(messages).map(([date, msgs], dateIndex) => (
+                    Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
                         <div key={dateIndex}>
+
                             {/* Date Header */}
-                            <div className="text-center text-gray-500 font-semibold my-4">{date}</div>
+                            <div className="flex justify-center m-8">
+                                <div className={`text-white ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"} bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}>
+                                    {date}
+                                </div>
+                            </div>
 
                             {/* Loop through each message in the array */}
                             {msgs.map((msg, index) => (
-                                <div key={index} className="flex items-start mb-4 w-full">
+                                <div key={index} className={`flex w-full ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"} mb-4`}>
                                     {/* Sender Information */}
-                                    <div className="text-sm font-semibold text-black min-w-max pr-2">
-                                        {msg.sender_id === currentUserId ? "You:" : receiverName[1]}
+                                    <div className={`flex items-end ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"} mb-2`}>
                                     </div>
 
                                     {/* Message Bubble */}
                                     <div
-                                        className={`flex-1 rounded-xl px-3 py-2 ${msg.sender_id === currentUserId
-                                            ? "bg-[#FFF1FE] text-black border-4 border-[#203449]"
-                                            : "bg-[#FFF1FE] text-black border-4 border-red-600"
+                                        className={`max-w-xs md:max-w-md p-4 rounded-full shadow-md break-words text-white
+                                                ${msg.sender_id === currentUserId
+                                                ? user?.gender === "Male"
+                                                    ? "bg-[#203449] rounded-br-none"  // Male user's sent messages (dark blue)
+                                                    : "bg-[#E01D42] rounded-br-none"  // Female user's sent messages (red)
+                                                : user?.gender === "Male"
+                                                    ? "bg-[#E01D42] rounded-bl-none"   // If male, receiver's messages are red
+                                                    : "bg-[#203449] rounded-bl-none"   // If female, receiver's messages are dark blue
                                             }`}
                                     >
                                         <p className="font-semibold">{msg.text}</p>
@@ -348,12 +374,14 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     </div>
                 )}
             </div>
+            {/* Smooth scrolling to the latest message */}
+            {/* <div ref={messagesEndRef}></div> */}
             <div className="md:p-10 flex items-center m-6">
                 <input
                     type="text"
                     name="chatbox"
                     id="chatbox"
-                    className="flex-1 p-2 bg-[#fef2f2] text-black rounded-lg focus:outline-none border-4 hover:bg-white transition-all duration-300"
+                    className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none ${borderClass} hover:bg-white transition-all duration-300`}
                     placeholder="Type a message..."
                     value={input}
                     onChange={(e) => {
@@ -363,8 +391,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     }}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />
-                <button onClick={sendMessage} className="ml-2 mr-2 p-2 text-[#203449] rounded-lg">
-                    <Send className="w-5 h-5" />
+                <button onClick={sendMessage}
+                    className={`ml-2 mr-2 p-2 rounded-lg ${user.gender === "Male" ? "text-[#203449] hover:text-blue-300" : "text-[#E01D42] hover:text-red-300"}`}>
+                    <Send className="w-10 h-10" />
                 </button>
             </div>
         </div>
