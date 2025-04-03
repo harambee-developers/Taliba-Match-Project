@@ -4,6 +4,7 @@ import logo from '../assets/logo.png';
 import heart from '../assets/heart.png';
 import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
+import { useAlert } from '../components/contexts/AlertContext';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -15,7 +16,6 @@ const LandingPage = () => {
   // For the FAQ toggles
   const [openIndex, setOpenIndex] = useState(null);
   const navigate = useNavigate()
-
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };

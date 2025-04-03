@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
 
       console.log(`✅ User ${userId} is now ONLINE`);
 
-      io.emit("user_online", { userId, username: user?.userName });
+      socket.broadcast.emit("user_online", { userId, username: user?.firstName });
     } catch (error) {
       console.error("❌ Error updating online status:", error);
     }
@@ -150,8 +150,12 @@ io.on('connection', (socket) => {
         updatedAt: new Date(), // Update timestamp
       });
 
+      // Retrieve sender's user information to get the firstName
+      const senderUser = await User.findById(sender_id);
+      const username = senderUser?.firstName || "Unknown";
+
       // Broadcast message to the receiver in the same conversation
-      io.to(conversation_id).emit("message", message);
+      io.to(conversation_id).emit("message", { message, username});
 
       // ✅ If the receiver is online and in the chatroom, mark message as read
       const receiverSockets = await io.in(conversation_id).fetchSockets();

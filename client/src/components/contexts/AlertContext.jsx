@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
+import Alert from "../Alert";
 
 /**
  * Context for managing alert notifications.
@@ -46,6 +47,7 @@ export const AlertProvider = ({ children }) => {
   return (
     <AlertContext.Provider value={{ alert, showAlert, hideAlert }}>
       {children}
+      <Alert/>
     </AlertContext.Provider>
   );
 };

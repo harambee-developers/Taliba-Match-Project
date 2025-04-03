@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from "lucide-react";
 import axios from 'axios';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from '../components/contexts/AuthContext';
 import { format, isToday } from 'date-fns';
-import ChatApp from './ChatApp';
+import ChatApp from '../components/ChatApp';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
@@ -20,23 +19,23 @@ const Match = () => {
     }
   }, [user]);
 
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${user.userId}`);
       setMatches(response.data);
     } catch (error) {
       console.error('Error fetching matches: ', error);
     }
-  };
+  });
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`);
       setConversations(response.data);
     } catch (error) {
       console.error('Error fetching conversations: ', error);
     }
-  };
+  });
 
   const handleNewConversation = async () => {
     try {
@@ -96,7 +95,7 @@ const Match = () => {
       <div className={`flex flex-col md:flex-row ${borderClass} items-stretch rounded-lg shadow-md`}>
         <div className={`w-full md:w-1/3 ${borderClass} min-h-screen`}>
           {/* Full-width Title with Border */}
-          <h1 className={`${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} bg-opacity-60 text-3xl font-bold text-left pt-[1.5rem] pb-[1.45rem] px-4 ${borderClass}`}>
+          <h1 className={`${user?.gender === "Male" ? "bg-[#203449] text-white" : "bg-[#FFF1FE] text-black"} bg-opacity-60 text-3xl font-bold text-left pt-[1.5rem] pb-[1.45rem] px-4 ${borderClass}`}>
             Matched
           </h1>
           <div className='p-4'>

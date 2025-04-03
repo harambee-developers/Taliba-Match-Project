@@ -14,7 +14,7 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        console.log("🚀 Connecting to socket...");
+        console.info("🚀 Connecting to socket...");
         const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
             transports: ["websocket", "polling"], // Ensures stable connection
             withCredentials: true, // Allows sending auth cookies (if needed)
@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
 
         setSocket(newSocket);
         newSocket.on("connect", () => {
-            console.log("✅ Socket connected:", newSocket.id);
+            console.info("✅ Socket connected:", newSocket.id);
             // Notify server that user is online
             newSocket.emit("user_connected", { userId: user.userId });
         });
@@ -35,7 +35,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         return () => {
-            console.log("🛑 Cleaning up socket...");
+            console.info("🛑 Cleaning up socket...");
             newSocket.disconnect(); // Prevent multiple sockets
         };
     }, [user]);

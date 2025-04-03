@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAlert } from '../components/contexts/AlertContext';
 import Alert from '../components/Alert';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from '../components/contexts/AuthContext';
 
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);

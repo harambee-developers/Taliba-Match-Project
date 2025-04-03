@@ -8,11 +8,13 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import RegisterSuccess from "./pages/RegisterSuccess";
 import ChatApp from "./components/ChatApp";
-import Match from "./components/Match";
-import PendingMatches from "./components/PendingMatches";
+import Match from "./pages/Match";
+import PendingMatches from "./pages/PendingMatches";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
+import OnlineUserNotification from "./components/OnlineUserNotification";
+import MessageNotification from "./components/MessageNotification";
 
 function AppLayout() {
   const location = useLocation(); // Get current route
@@ -23,6 +25,8 @@ function AppLayout() {
   return (
     <>
       {!hideNavbar && <Navbar />} {/* Conditionally render Navbar */}
+      <OnlineUserNotification/>
+      <MessageNotification/>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />

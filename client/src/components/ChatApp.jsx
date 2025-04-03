@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Send, User } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Send, ChevronLeft } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
 import axios from "axios";
+import TypingIndicator from "./TypingIndicator";
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
     // State variables
@@ -15,6 +16,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const [isTyping, setIsTyping] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
     const [lastSeen, setLastSeen] = useState(null);
+    const navigate = useNavigate()
+    const messagesEndRef = useRef(null);
 
     // Get user from AuthContext and socket from SocketContext
     const { user } = useAuth();
@@ -29,6 +32,12 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const CACHE_KEY_MESSAGES = `chat_messages_${currentConversationId}`;
     const CACHE_KEY_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${receiverName}`
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "instant" });
+        }
+    }, [])
 
     async function cacheData(key, data) {
         const cache = await caches.open("chat-cache");
@@ -61,7 +70,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             createdAt: new Date().toISOString(),
         };
 
-        console.log("Sending message: ", messageData);
+        console.info("Sending message: ", messageData);
 
         socket.emit("send_message", messageData);
         socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
@@ -141,7 +150,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const fetchReceiverStatus = async () => {
         const cachedStatus = await getCachedData(CACHE_STATUS);
         if (cachedStatus) {
-            console.log("✅ Loaded status from cache");
+            console.info("✅ Loaded status from cache");
             setIsOnline(cachedStatus.data.isOnline)
             setLastSeen(cachedStatus.data.lastSeen)
             return;
@@ -159,7 +168,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const fetchMessages = async (conversationId) => {
         const cachedMessages = await getCachedData(CACHE_KEY_MESSAGES);
         if (cachedMessages) {
-            console.log("✅ Loaded messages from cache");
+            console.info("✅ Loaded messages from cache");
             if (!Array.isArray(cachedMessages)) {
                 console.warn("Cached messages are not an array, clearing cache for this conversation.");
                 setMessages([]);
@@ -213,12 +222,12 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
         const handleNewMessage = (newMessage) => {
             setMessages((prevMessages) => {
-                const updatedMessages = [...prevMessages, newMessage]
+                const updatedMessages = [...prevMessages, newMessage.message]
                 cacheData(CACHE_KEY_MESSAGES, updatedMessages);
                 return updatedMessages;
             });
             if (onLastMessageUpdate) {
-                onLastMessageUpdate(currentConversationId, newMessage.text, currentUserId);
+                onLastMessageUpdate(currentConversationId, newMessage.message.text, currentUserId);
             }
         };
 
@@ -292,16 +301,20 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     ? "url('/wallpaper_man.svg')"
                     : "url('/wallpaper_woman.svg')"
             }}>
+
             <div className={`p-[0.65rem] text-xl font-bold ${borderClass} ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} bg-opacity-60 text-black inline-flex items-center space-x-4`}>
+                <div className={`md:hidden cursor-pointer ${user?.gender === "Male" ? "text-white" : "text-black"}`} onClick={() => navigate("/matches")}>
+                    <ChevronLeft className="w-10-h-10" />
+                </div>
                 <div className={`rounded-full bg-white overflow-hidden w-16 h-16`} >
-                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg": "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman": "icon_man"}`} className="w-full h-full object-cover" />
+                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col items-start">
                     <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
                     {!isOnline && lastSeen && (
-                        <span className="text-sm text-white">{formattedLastSeen}</span>
+                        <span className={`text-sm ${user?.gender === "Male" ? "text-white" : "text-black"}`}>{formattedLastSeen}</span>
                     )}
                 </div>
                 {/* Status Dot (Green or Grey) */}
@@ -369,13 +382,11 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     ))
                 )}
                 {isTyping && (
-                    <div className="text-[#203449] text-sm italic">
-                        💬 {receiverName[1]} is typing...
-                    </div>
+                    <TypingIndicator isTyping={true} gender={user?.gender} />
                 )}
             </div>
             {/* Smooth scrolling to the latest message */}
-            {/* <div ref={messagesEndRef}></div> */}
+            <div ref={messagesEndRef}></div>
             <div className="md:p-10 flex items-center m-6">
                 <input
                     type="text"

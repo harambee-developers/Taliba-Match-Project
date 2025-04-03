@@ -187,8 +187,6 @@ const RegisterPage = () => {
   }));
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
-      {/* Render alert component */}
-      {alert && <Alert />}
       <form
         onSubmit={handleSubmit}
         className="w-[90%] md:w-[50%] lg:w-[40%] p-8 rounded-lg space-y-6"
