@@ -4,20 +4,55 @@ import axios from 'axios';
 import { useAuth } from '../components/contexts/AuthContext';
 import { format, isToday } from 'date-fns';
 import ChatApp from '../components/ChatApp';
+import { useSocket } from '../components/contexts/SocketContext';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [typingStatus, setTypingStatus] = useState({});
   const navigate = useNavigate();
   const { user } = useAuth()
+  const { socket } = useSocket()
 
   useEffect(() => {
     if (user) {
       fetchMatches();
       fetchConversations();
     }
-  }, [user]);
+  }, [user])
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("typing", (data) => {
+      console.log("Received 'typing' event:", data); // ✅ Log when event is received
+      if (data.senderId !== user?.userId) {
+        // Update the typing status for the current conversation
+        setTypingStatus((prev) => ({
+          ...prev,
+          [data.conversationId]: true,
+        }));
+      }
+    });
+
+    // Listen for the 'stop_typing' event
+    socket.on("stop_typing", (data) => {
+      console.log("Received 'stop_typing' event:", data); // ✅ Log when event is received
+      if (data.senderId !== user?.userId) {
+        // Update the typing status for the current conversation
+        setTypingStatus((prev) => ({
+          ...prev,
+          [data.conversationId]: false,
+        }));
+      }
+    });
+
+    return () => {
+      socket.off("typing");
+      socket.off("stop_typing");
+    }
+  }, [socket]);
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -85,7 +120,10 @@ const Match = () => {
     : "border-2 border-[#E01D42]";
 
   const chatComponent = useMemo(() => {
-    if (!selectedMatch || !user?.userId) return <p className="text-center text-gray-500">Select a match to view the conversation.</p>;
+    if (!selectedMatch || !user?.userId)
+      return <div className='flex text-center justify-center h-full text-gray-500'>
+        <p>Select a match to view the conversation.</p>;
+      </div>
     const conversation = getConversationWithMatch(selectedMatch);
     return <ChatApp conversation={conversation?._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
@@ -126,7 +164,7 @@ const Match = () => {
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">
                       <img
-                        src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} 
+                        src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`}
                         alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
                         className="w-full h-full object-cover"
                       />
@@ -144,7 +182,9 @@ const Match = () => {
                         )}
                       </div>
                       <p className="text-sm text-gray-500">
-                        {conversation ? (
+                        {conversation && typingStatus[conversation._id] ? (
+                          <span className="text-gray-500 font-semibold">{conversation.last_sender_id === user?.userId ? "You" : opponent.firstName} is typing...</span>
+                        ) : conversation ? (
                           <>
                             <span className="font-semibold">
                               {conversation.last_sender_id === user?.userId ? "You" : opponent.firstName}:

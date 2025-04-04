@@ -16,8 +16,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const [isTyping, setIsTyping] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
     const [lastSeen, setLastSeen] = useState(null);
+
     const navigate = useNavigate()
     const messagesEndRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
 
     // Get user from AuthContext and socket from SocketContext
     const { user } = useAuth();
@@ -32,12 +34,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const CACHE_KEY_MESSAGES = `chat_messages_${currentConversationId}`;
     const CACHE_KEY_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${receiverName}`
-
-    useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "instant" });
-        }
-    }, [])
 
     async function cacheData(key, data) {
         const cache = await caches.open("chat-cache");
@@ -74,11 +70,16 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
         socket.emit("send_message", messageData);
         socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
+
         // Notify the parent component about the new message
         if (onLastMessageUpdate) {
             onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
         }
         setInput(""); // Clear input after sending
+
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100); // Delay slightly to allow rendering
     };
 
     // Fetch conversation details and set receiver information
@@ -89,6 +90,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             setReceiverName([cachedDetails.userName, cachedDetails.firstName, cachedDetails.lastName]);
             return;
         }
+
         try {
             const response = await axios.get(
                 `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`
@@ -195,39 +197,52 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     // Typing indicator events
     const handleTyping = () => {
         socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
+        }, 2000);
     };
 
-    const handleStopTyping = () => {
-        setTimeout(() => {
-            socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
-        }, 1000);
-    };
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages])
+
+    useEffect(() => {
+        if (!receiverId || !socket || isOnline) return;
+
+        fetchReceiverStatus();
+
+        // Check online status only when mounting, not on every message send
+        socket.emit("check_user_online", { userId: receiverId });
+
+    }, [socket, receiverId, isOnline]) // Adds in dependencies to ensure that it doesnt fire often. ReceiverId is usually the culprit due to it undergoing constant updates
+
 
     useEffect(() => {
         if (!socket) {
             console.warn("Socket not connected yet.");
             return;
         }
+
         if (!currentConversationId || !currentUserId) return; // Ensure required data is available
 
         fetchMessages(currentConversationId);
         fetchConversationDetails();
 
-        if (receiverId) {
-            fetchReceiverStatus();
-            socket.emit("check_user_online", { userId: receiverId });
-        }
-
         socket.emit("join_chat", { userId: currentUserId, conversationId: currentConversationId });
 
-        const handleNewMessage = (newMessage) => {
+        const handleNewMessage = ({ message }) => {
             setMessages((prevMessages) => {
-                const updatedMessages = [...prevMessages, newMessage.message]
+                const updatedMessages = [...prevMessages, message]
                 cacheData(CACHE_KEY_MESSAGES, updatedMessages);
                 return updatedMessages;
             });
             if (onLastMessageUpdate) {
-                onLastMessageUpdate(currentConversationId, newMessage.message.text, currentUserId);
+                onLastMessageUpdate(currentConversationId, message.text, currentUserId);
             }
         };
 
@@ -387,6 +402,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             </div>
             {/* Smooth scrolling to the latest message */}
             <div ref={messagesEndRef}></div>
+
             <div className="md:p-10 flex items-center m-6">
                 <input
                     type="text"
@@ -398,7 +414,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     onChange={(e) => {
                         setInput(e.target.value);
                         handleTyping();
-                        handleStopTyping();
                     }}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />

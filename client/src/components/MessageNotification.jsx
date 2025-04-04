@@ -17,7 +17,7 @@ const MessageNotification = () => {
             // Avoid showing notification if the current user is the sender
             if (message.sender_id === user?.userId) return;
 
-            console.info("New message received:", message);
+            console.table("New message received:", message);
             // You can customize the notification message and type
             const notificationText = `${username}: ${message.text}`;
             showAlert(notificationText, "info");

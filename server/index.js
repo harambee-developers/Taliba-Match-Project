@@ -104,14 +104,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.removeAllListeners("typing");
   socket.on("typing", ({ conversationId, senderId }) => {
-    socket.to(conversationId).emit("typing", { senderId });
+    socket.to(conversationId).emit("typing", { senderId, conversationId });
   });
 
-  socket.removeAllListeners("stop_typing");
   socket.on("stop_typing", ({ conversationId, senderId }) => {
-    socket.to(conversationId).emit("stop_typing", { senderId });
+    socket.to(conversationId).emit("stop_typing", { senderId, conversationId });
   });
 
   socket.on("check_user_online", ({ userId }) => {
