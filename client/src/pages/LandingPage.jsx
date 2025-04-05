@@ -26,7 +26,6 @@ const LandingPage = () => {
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row w-full min-h-screen z-20">
-
         {/* Left Section (Pink) */}
         <div className="lg:w-1/2 bg-[#FFF1FE] flex flex-col items-center justify-center p-6">
           <h1 className="text-5xl lg:text-6xl font-semibold font-[Montserrat] text-[#E01D42] text-center mb-4">

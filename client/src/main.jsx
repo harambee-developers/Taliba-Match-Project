@@ -12,7 +12,7 @@ const AppProviders = ({ children }) => {
     <AuthProvider>
       <SocketProvider>
         <AlertProvider>
-          {children}
+            {children}
         </AlertProvider>
       </SocketProvider>
     </AuthProvider>

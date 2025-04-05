@@ -25,8 +25,8 @@ function AppLayout() {
   return (
     <>
       {!hideNavbar && <Navbar />} {/* Conditionally render Navbar */}
-      <OnlineUserNotification/>
-      <MessageNotification/>
+      <OnlineUserNotification />
+      <MessageNotification />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />

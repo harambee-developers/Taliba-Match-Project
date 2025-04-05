@@ -6,16 +6,12 @@ import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
 import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
+import { useChatEvents } from "./contexts/ChatEventsContext";
+import { cacheData, getCachedData } from "../utils/cacheUtil"
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
     // State variables
-    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [receiverName, setReceiverName] = useState([]);
-    const [receiverId, setReceiverId] = useState(null);
-    const [isTyping, setIsTyping] = useState(false);
-    const [isOnline, setIsOnline] = useState(false);
-    const [lastSeen, setLastSeen] = useState(null);
 
     const navigate = useNavigate()
     const messagesEndRef = useRef(null);
@@ -24,32 +20,12 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     // Get user from AuthContext and socket from SocketContext
     const { user } = useAuth();
     const { socket } = useSocket();
+    const { messages, isTyping, receiverStatus, receiverId, receiverName } = useChatEvents()
 
     // Use URL params as a fallback if props are null
     const { conversationId: conversationIdFromParams } = useParams();
     const currentConversationId = conversation || conversationIdFromParams;
     const currentUserId = user_id || user?.userId;
-
-    const CACHE_EXPIRY = 10 * 60 * 1000; // Cache expires in 10 min
-    const CACHE_KEY_MESSAGES = `chat_messages_${currentConversationId}`;
-    const CACHE_KEY_DETAILS = `chat_details_${currentConversationId}`;
-    const CACHE_STATUS = `chat_status_${receiverName}`
-
-    async function cacheData(key, data) {
-        const cache = await caches.open("chat-cache");
-        const response = new Response(JSON.stringify({ data, timestamp: Date.now() }), {
-            headers: { "Content-Type": "application/json" },
-        });
-        await cache.put(key, response);
-    }
-
-    async function getCachedData(key) {
-        const cache = await caches.open("chat-cache");
-        const response = await cache.match(key);
-        if (!response) return null;
-        const { data, timestamp } = await response.json();
-        return Date.now() - timestamp < CACHE_EXPIRY ? data : null;
-    }
 
     // Send a message
     const sendMessage = () => {
@@ -76,51 +52,19 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
         }
         setInput(""); // Clear input after sending
-
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100); // Delay slightly to allow rendering
     };
 
-    // Fetch conversation details and set receiver information
-    const fetchConversationDetails = async () => {
-        const cachedDetails = await getCachedData(CACHE_KEY_DETAILS);
-        if (cachedDetails) {
-            setReceiverId(cachedDetails._id);
-            setReceiverName([cachedDetails.userName, cachedDetails.firstName, cachedDetails.lastName]);
-            return;
-        }
-
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`
-            );
-            if (!response.data || !response.data.participants) {
-                console.error("Invalid conversation data received");
-                return;
-            }
-            // Find the receiver (the participant that is NOT the current user)
-            const receiver = response.data.participants.find(
-                (otherUser) => otherUser._id !== currentUserId
-            );
-            if (receiver && receiver._id !== receiverId) {
-                setReceiverId(receiver._id);
-                setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
-                cacheData(CACHE_KEY_DETAILS, receiver);
-            }
-        } catch (error) {
-            console.error("Error fetching conversation details:", error);
-        }
-    };
-
     // Format the last seen text
-    const formattedLastSeen = lastSeen
-        ? isToday(new Date(lastSeen))
-            ? `Last seen today at ${new Date(lastSeen).toLocaleTimeString("en-GB", {
+    const formattedLastSeen = receiverStatus.lastSeen
+        ? isToday(new Date(receiverStatus.lastSeen))
+            ? `Last seen today at ${new Date(receiverStatus.lastSeen).toLocaleTimeString("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
             })}`
-            : `Last seen ${format(new Date(lastSeen), "MMM d, yyyy")}`
+            : `Last seen ${format(new Date(receiverStatus.lastSeen), "MMM d, yyyy")}`
         : null;
 
     const groupMessagesByDate = (messages = []) => {
@@ -149,51 +93,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             }, {});
     };
 
-    const fetchReceiverStatus = async () => {
-        const cachedStatus = await getCachedData(CACHE_STATUS);
-        if (cachedStatus) {
-            console.info("✅ Loaded status from cache");
-            setIsOnline(cachedStatus.data.isOnline)
-            setLastSeen(cachedStatus.data.lastSeen)
-            return;
-        }
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
-            setIsOnline(response.data.isOnline)
-            setLastSeen(response.data.lastSeen)
-            cacheData(CACHE_STATUS, response)
-        } catch (error) {
-            console.error("Error fetching messages", error.message);
-        }
-    }
-
-    const fetchMessages = async (conversationId) => {
-        const cachedMessages = await getCachedData(CACHE_KEY_MESSAGES);
-        if (cachedMessages) {
-            console.info("✅ Loaded messages from cache");
-            if (!Array.isArray(cachedMessages)) {
-                console.warn("Cached messages are not an array, clearing cache for this conversation.");
-                setMessages([]);
-                return;
-            }
-            setMessages(cachedMessages);
-            return;
-        }
-
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_BACKEND_URL}/api/message/${conversationId}/messages`
-            );
-
-            const messages = response.data.messages;
-            setMessages(messages);
-            cacheData(CACHE_KEY_MESSAGES, messages);
-
-        } catch (error) {
-            console.error("Error fetching messages", error.message);
-        }
-    };
-
     // Typing indicator events
     const handleTyping = () => {
         socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
@@ -212,88 +111,21 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     }, [messages])
 
     useEffect(() => {
-        if (!receiverId || !socket || isOnline) return;
-
-        fetchReceiverStatus();
-
+        if (!receiverId || !socket || receiverStatus) return;
+        // fetchReceiverStatus();
         // Check online status only when mounting, not on every message send
         socket.emit("check_user_online", { userId: receiverId });
-
-    }, [socket, receiverId, isOnline]) // Adds in dependencies to ensure that it doesnt fire often. ReceiverId is usually the culprit due to it undergoing constant updates
-
+    }, [socket, receiverId, receiverStatus.lastSeen]) // Adds in dependencies to ensure that it doesnt fire often. ReceiverId is usually the culprit due to it undergoing constant updates
 
     useEffect(() => {
         if (!socket) {
             console.warn("Socket not connected yet.");
             return;
         }
-
         if (!currentConversationId || !currentUserId) return; // Ensure required data is available
-
-        fetchMessages(currentConversationId);
-        fetchConversationDetails();
-
         socket.emit("join_chat", { userId: currentUserId, conversationId: currentConversationId });
-
-        const handleNewMessage = ({ message }) => {
-            setMessages((prevMessages) => {
-                const updatedMessages = [...prevMessages, message]
-                cacheData(CACHE_KEY_MESSAGES, updatedMessages);
-                return updatedMessages;
-            });
-            if (onLastMessageUpdate) {
-                onLastMessageUpdate(currentConversationId, message.text, currentUserId);
-            }
-        };
-
-        // Set up socket event listeners
-        socket.on("message", handleNewMessage);
-
-        socket.on("user_online", (data) => {
-            if (data.userId === receiverId) {
-                setIsOnline(true);
-                setLastSeen(null);
-            }
-        });
-        socket.on("user_offline", (data) => {
-            if (data.userId === receiverId) {
-                setIsOnline(false);
-                setLastSeen(data.lastSeen);
-            }
-        });
-        socket.on("messages_read", ({ conversationId, receiverId }) => {
-            setMessages((prevMessages) => {
-                if (!Array.isArray(prevMessages)) return prevMessages;
-                return prevMessages.map(message => {
-                    if (
-                        message.conversation_id === conversationId &&
-                        message.receiver_id === receiverId
-                    ) {
-                        return { ...message, status: "Read" };
-                    }
-                    return message;
-                });
-            });
-        })
-        socket.on("typing", (data) => {
-            if (data.senderId !== currentUserId) {
-                setIsTyping(true);
-            }
-        });
-        socket.on("stop_typing", (data) => {
-            if (data.senderId !== currentUserId) {
-                setIsTyping(false);
-            }
-        });
-
         return () => {
-            socket.off("message", handleNewMessage);
-            socket.off("messages_read");
-            socket.off("check_users_online");
-            socket.off("typing");
-            socket.off("stop_typing");
-            socket.off("user_online");
-            socket.off("user_offline");
+            socket.off("join_chat");
         };
     }, [currentConversationId, currentUserId, socket, receiverId, onLastMessageUpdate]);
 
@@ -328,15 +160,15 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
-                    {!isOnline && lastSeen && (
+                    {receiverStatus && !receiverStatus.isOnline && receiverStatus.lastSeen && (
                         <span className={`text-sm ${user?.gender === "Male" ? "text-white" : "text-black"}`}>{formattedLastSeen}</span>
                     )}
                 </div>
                 {/* Status Dot (Green or Grey) */}
                 <div className="ml-2">
-                    {isOnline === true ? ( // If online, show GREEN dot
+                    {receiverStatus.isOnline === true ? ( // If online, show GREEN dot
                         <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
-                    ) : isOnline === false && lastSeen === null ? ( // If offline & lastSeen is NULL, show GREY dot
+                    ) : receiverStatus.isOnline === false && receiverStatus.lastSeen === null ? ( // If offline & lastSeen is NULL, show GREY dot
                         <span className="w-3 h-3 rounded-full bg-gray-400 inline-block"></span>
                     ) : null /* If offline & lastSeen exists, show nothing */}
                 </div>

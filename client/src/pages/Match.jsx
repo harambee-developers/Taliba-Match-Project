@@ -5,6 +5,7 @@ import { useAuth } from '../components/contexts/AuthContext';
 import { format, isToday } from 'date-fns';
 import ChatApp from '../components/ChatApp';
 import { useSocket } from '../components/contexts/SocketContext';
+import { ChatEventsProvider } from '../components/contexts/ChatEventsContext';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
@@ -125,7 +126,10 @@ const Match = () => {
         <p>Select a match to view the conversation.</p>;
       </div>
     const conversation = getConversationWithMatch(selectedMatch);
-    return <ChatApp conversation={conversation?._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
+
+    return <ChatEventsProvider conversationId={conversation?._id}>
+      <ChatApp conversation={conversation?._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
+    </ChatEventsProvider>
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
 
   return (
