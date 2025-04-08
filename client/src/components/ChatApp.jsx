@@ -1,31 +1,107 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Send, ChevronLeft } from "lucide-react";
-import { format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday, previousMonday } from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
+import { useChatEvents } from "./contexts/ChatEventsContext";
+import { getCachedData, cacheData } from "../utils/cacheUtil";
 import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
-import { useChatEvents } from "./contexts/ChatEventsContext";
-import { cacheData, getCachedData } from "../utils/cacheUtil"
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
-    // State variables
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    // Get user from AuthContext and socket from SocketContext
+    // Get user from AuthContext, socket from SocketContext and chat events context
     const { user } = useAuth();
     const { socket } = useSocket();
-    const { messages, isTyping, receiverStatus, receiverId, receiverName } = useChatEvents()
+    const { isTyping } = useChatEvents()
+
+    const [receiverId, setReceiverId] = useState(null)
+    const [receiverName, setReceiverName] = useState(null)
+    const [messages, setMessages] = useState([]);
+    const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
 
     // Use URL params as a fallback if props are null
     const { conversationId: conversationIdFromParams } = useParams();
     const currentConversationId = conversation || conversationIdFromParams;
     const currentUserId = user_id || user?.userId;
+
+    const chatCache = "chat-cache";
+    const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
+    const CACHE_DETAILS = `chat_details_${currentConversationId}`;
+    const CACHE_STATUS = `chat_status_${currentConversationId}`
+
+    // Fetch and set receiver details
+    useEffect(() => {
+        const fetchReceiverDetails = async () => {
+            const cached = await getCachedData(CACHE_DETAILS, chatCache);
+            if (cached) {
+                setReceiverId(cached._id);
+                setReceiverName([cached.userName, cached.firstName, cached.lastName]);
+                return;
+            }
+            try {
+                const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`);
+                const receiver = data?.participants?.find(p => p._id !== currentUserId);
+                if (receiver) {
+                    setReceiverId(receiver._id);
+                    setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
+                    cacheData(CACHE_DETAILS, receiver, chatCache);
+                }
+            } catch (err) {
+                console.error("Error fetching receiver details", err);
+            }
+        };
+        if (currentConversationId && currentUserId) {
+            fetchReceiverDetails();
+        }
+    }, [currentConversationId, currentUserId]);
+
+    useEffect(() => {
+        if (!receiverId) return;
+        const fetchStatus = async () => {
+            const cachedStatus = await getCachedData(CACHE_STATUS, chatCache);
+            if (cachedStatus) {
+                console.info("✅ Loaded status from cache");
+                setLocalReceiverStatus(cachedStatus.data);
+                return;
+            }
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
+                cacheData(CACHE_STATUS, response, chatCache)
+                setLocalReceiverStatus(response.data);
+            } catch (error) {
+                console.error("Error fetching messages", error.message);
+            }
+        }
+        fetchStatus();
+    }, [receiverId])
+
+    // Fetch messages (once) for display if context hasn't populated yet
+    useEffect(() => {
+        if (!currentConversationId) return;
+        const fetchMessages = async () => {
+            const cached = await getCachedData(CACHE_MESSAGES, chatCache);
+            if (cached) {
+                setMessages(cached)
+                return;
+            }
+            try {
+                const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/messages`);
+                setMessages(data.messages)
+                cacheData(CACHE_MESSAGES, data.messages, chatCache);
+            } catch (err) {
+                console.error("Error fetching messages", err);
+            }
+        };
+
+        fetchMessages();
+    }, [currentConversationId]);
 
     // Send a message
     const sendMessage = () => {
@@ -51,20 +127,21 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         if (onLastMessageUpdate) {
             onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
         }
+
         setInput(""); // Clear input after sending
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
         }, 100); // Delay slightly to allow rendering
     };
 
     // Format the last seen text
-    const formattedLastSeen = receiverStatus.lastSeen
-        ? isToday(new Date(receiverStatus.lastSeen))
-            ? `Last seen today at ${new Date(receiverStatus.lastSeen).toLocaleTimeString("en-GB", {
+    const formattedLastSeen = localReceiverStatus?.lastSeen
+        ? isToday(new Date(localReceiverStatus?.lastSeen))
+            ? `Last seen today at ${new Date(localReceiverStatus?.lastSeen).toLocaleTimeString("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
             })}`
-            : `Last seen ${format(new Date(receiverStatus.lastSeen), "MMM d, yyyy")}`
+            : `Last seen ${format(new Date(localReceiverStatus?.lastSeen), "MMM d, yyyy")}`
         : null;
 
     const groupMessagesByDate = (messages = []) => {
@@ -96,9 +173,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     // Typing indicator events
     const handleTyping = () => {
         socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
-
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
         typingTimeoutRef.current = setTimeout(() => {
             socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
         }, 2000);
@@ -106,16 +181,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
     useEffect(() => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+            messagesEndRef.current.scrollIntoView({ behavior: "instant" });
         }
     }, [messages])
-
-    useEffect(() => {
-        if (!receiverId || !socket || receiverStatus) return;
-        // fetchReceiverStatus();
-        // Check online status only when mounting, not on every message send
-        socket.emit("check_user_online", { userId: receiverId });
-    }, [socket, receiverId, receiverStatus.lastSeen]) // Adds in dependencies to ensure that it doesnt fire often. ReceiverId is usually the culprit due to it undergoing constant updates
 
     useEffect(() => {
         if (!socket) {
@@ -124,23 +192,54 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         }
         if (!currentConversationId || !currentUserId) return; // Ensure required data is available
         socket.emit("join_chat", { userId: currentUserId, conversationId: currentConversationId });
-        return () => {
-            socket.off("join_chat");
+        const handleMessagesRead = ({ conversationId: cId, receiverId: rId }) => {
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg.conversation_id === cId && msg.receiver_id === rId
+                        ? { ...msg, status: "Read" }
+                        : msg
+                )
+            );
         };
-    }, [currentConversationId, currentUserId, socket, receiverId, onLastMessageUpdate]);
+        const handleNewMessages = ({message}) => {
+            if (message.conversation_id !== currentConversationId) return;
+            setMessages((prev) => {
+                const updatedMessage = [...prev, message]
+                cacheData(CACHE_MESSAGES, updatedMessage, chatCache)
+                return updatedMessage
+            })
+            if (onLastMessageUpdate) {
+                onLastMessageUpdate(currentConversationId, message.text, currentUserId);
+            }
+        }
+        const handleUserOnline = () => setLocalReceiverStatus({ isOnline: true, lastSeen: null });
+        const handleUserOffline = ({ lastSeen }) => setLocalReceiverStatus({ isOnline: false, lastSeen });
+
+        socket.on('messages_read', handleMessagesRead)
+        socket.on('message', handleNewMessages)
+        socket.on("user_online", handleUserOnline);
+        socket.on("user_offline", handleUserOffline);
+
+        return () => {
+            socket.off('message', handleNewMessages)
+            socket.off('messages_read', handleMessagesRead)
+            socket.off("user_online", handleUserOnline);
+            socket.off("user_offline", handleUserOffline);
+        };
+    }, [currentConversationId, currentUserId, socket, onLastMessageUpdate]);
 
     // Memoize grouped messages
     const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages])
 
     // Show loading state if the current user is not yet available or receiverId is not set
     if (!currentUserId || !receiverId || !user) {
-        return <div className="flex items-center justify-center">Loading...</div>;
+        return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
 
     const borderClass = user?.gender === "Male"
         ? "border-2 border-[#203449]"
         : "border-2 border-[#E01D42]";
-
+    
     return (
         <div className={`flex flex-col h-screen w-full md:border-0 ${borderClass} bg-repeat bg-center`}
             style={{
@@ -154,21 +253,21 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     <ChevronLeft className="w-10-h-10" />
                 </div>
                 <div className={`rounded-full bg-white overflow-hidden w-16 h-16`} >
-                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" />
+                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
                 </div>
                 <div className="flex flex-col items-start">
                     <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
-                    {receiverStatus && !receiverStatus.isOnline && receiverStatus.lastSeen && (
+                    {localReceiverStatus && !localReceiverStatus?.isOnline && localReceiverStatus?.lastSeen && (
                         <span className={`text-sm ${user?.gender === "Male" ? "text-white" : "text-black"}`}>{formattedLastSeen}</span>
                     )}
                 </div>
                 {/* Status Dot (Green or Grey) */}
                 <div className="ml-2">
-                    {receiverStatus.isOnline === true ? ( // If online, show GREEN dot
+                    {localReceiverStatus?.isOnline === true ? ( // If online, show GREEN dot
                         <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
-                    ) : receiverStatus.isOnline === false && receiverStatus.lastSeen === null ? ( // If offline & lastSeen is NULL, show GREY dot
+                    ) : localReceiverStatus?.isOnline === false && localReceiverStatus?.lastSeen === null ? ( // If offline & lastSeen is NULL, show GREY dot
                         <span className="w-3 h-3 rounded-full bg-gray-400 inline-block"></span>
                     ) : null /* If offline & lastSeen exists, show nothing */}
                 </div>
@@ -228,12 +327,13 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                         </div>
                     ))
                 )}
-                {isTyping && (
+                {isTyping.isTyping && (
                     <TypingIndicator isTyping={true} gender={user?.gender} />
                 )}
+                {/* Smooth scrolling to the latest message */}
+                <div ref={messagesEndRef}></div>
             </div>
-            {/* Smooth scrolling to the latest message */}
-            <div ref={messagesEndRef}></div>
+
 
             <div className="md:p-10 flex items-center m-6">
                 <input

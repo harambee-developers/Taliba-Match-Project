@@ -15,6 +15,7 @@ export const SocketProvider = ({ children }) => {
         }
 
         console.info("🚀 Connecting to socket...");
+        
         const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
             transports: ["websocket", "polling"], // Ensures stable connection
             withCredentials: true, // Allows sending auth cookies (if needed)
@@ -24,6 +25,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         setSocket(newSocket);
+
         newSocket.on("connect", () => {
             console.info("✅ Socket connected:", newSocket.id);
             // Notify server that user is online

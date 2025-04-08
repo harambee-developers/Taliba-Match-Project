@@ -4,17 +4,21 @@ import axios from 'axios';
 import { useAuth } from '../components/contexts/AuthContext';
 import { format, isToday } from 'date-fns';
 import ChatApp from '../components/ChatApp';
-import { useSocket } from '../components/contexts/SocketContext';
-import { ChatEventsProvider } from '../components/contexts/ChatEventsContext';
+import { useChatEvents } from '../components/contexts/ChatEventsContext';
+import { getCachedData, cacheData } from '../utils/cacheUtil';
 
 const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [typingStatus, setTypingStatus] = useState({});
-  const navigate = useNavigate();
+  
+  const { isTyping } = useChatEvents()
   const { user } = useAuth()
-  const { socket } = useSocket()
+  const navigate = useNavigate();
+
+  const chatCache = "chat-cache";
+  const CACHE_MATCHES = `chat_matches`;
+  const CACHE_CONVERSATION = 'chat_conversations';
 
   useEffect(() => {
     if (user) {
@@ -23,51 +27,34 @@ const Match = () => {
     }
   }, [user])
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on("typing", (data) => {
-      console.log("Received 'typing' event:", data); // ✅ Log when event is received
-      if (data.senderId !== user?.userId) {
-        // Update the typing status for the current conversation
-        setTypingStatus((prev) => ({
-          ...prev,
-          [data.conversationId]: true,
-        }));
-      }
-    });
-
-    // Listen for the 'stop_typing' event
-    socket.on("stop_typing", (data) => {
-      console.log("Received 'stop_typing' event:", data); // ✅ Log when event is received
-      if (data.senderId !== user?.userId) {
-        // Update the typing status for the current conversation
-        setTypingStatus((prev) => ({
-          ...prev,
-          [data.conversationId]: false,
-        }));
-      }
-    });
-
-    return () => {
-      socket.off("typing");
-      socket.off("stop_typing");
-    }
-  }, [socket]);
-
   const fetchMatches = useCallback(async () => {
+    const cached = await getCachedData(CACHE_MATCHES, chatCache);
+    if (cached) {
+        setMatches(cached)
+        return;
+    }
+
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${user.userId}`);
       setMatches(response.data);
+      // ✅ Cache it
+      await cacheData(CACHE_MATCHES, response.data, chatCache);
     } catch (error) {
       console.error('Error fetching matches: ', error);
     }
   });
 
   const fetchConversations = useCallback(async () => {
+    const cached = await getCachedData(CACHE_CONVERSATION, chatCache);
+    if (cached) {
+        setConversations(cached)
+        return;
+    }
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`);
       setConversations(response.data);
+          // ✅ Cache it
+      await cacheData(CACHE_CONVERSATION, response.data, chatCache);
     } catch (error) {
       console.error('Error fetching conversations: ', error);
     }
@@ -126,10 +113,7 @@ const Match = () => {
         <p>Select a match to view the conversation.</p>;
       </div>
     const conversation = getConversationWithMatch(selectedMatch);
-
-    return <ChatEventsProvider conversationId={conversation?._id}>
-      <ChatApp conversation={conversation?._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
-    </ChatEventsProvider>
+    return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
 
   return (
@@ -171,6 +155,7 @@ const Match = () => {
                         src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`}
                         alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
                         className="w-full h-full object-cover"
+                        loading='lazy'
                       />
                     </div>
 
@@ -186,8 +171,8 @@ const Match = () => {
                         )}
                       </div>
                       <p className="text-sm text-gray-500">
-                        {conversation && typingStatus[conversation._id] ? (
-                          <span className="text-gray-500 font-semibold">{conversation.last_sender_id === user?.userId ? "You" : opponent.firstName} is typing...</span>
+                        {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
+                          <span className="text-gray-500 font-semibold">{opponent.firstName} is typing...</span>
                         ) : conversation ? (
                           <>
                             <span className="font-semibold">

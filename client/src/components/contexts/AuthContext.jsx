@@ -25,32 +25,62 @@ export const AuthProvider = ({ children }) => {
   // Ensure Axios sends cookies with every request
   axios.defaults.withCredentials = true;
 
-  /**
+    /**
+   * Attempts to refresh the user's access token using a stored refresh token.
+   *
+   * @async
+   * @function
+   * @returns {Promise<boolean>} True if refresh succeeded, false otherwise.
+   */
+    const refreshToken = useCallback(async () => {
+      try {
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token`);
+        console.log("🔁 Token refreshed:", res.data.token);
+        return true;
+      } catch (err) {
+        console.error("❌ Refresh token failed:", err);
+        return false;
+      }
+    }, []);
+
+/**
    * Verifies the authentication token and retrieves user details.
    *
    * @async
    * @function
    * @returns {Promise<{ userId: string, username: string, email: string, role: string } | null>}
-   * Returns user object if verification is successful, otherwise returns null.
    */
-  const verifyToken = useCallback(async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-token`);
-      if (response.status === 200 && response.data.valid) {
-        const { userId, username, email, role } = response.data;
-        const verifiedUser = { userId, username, email, role };
-        setUser(verifiedUser); // Update user state
-        console.log("Token verification successful:", verifiedUser);
-        return verifiedUser; // Return verified user object
-      } else {
-        throw new Error("Token verification failed");
-      }
-    } catch (error) {
-      console.error("Token verification error:", error);
-      setUser(null); // Clear user on failure
-      return null;
+const verifyToken = useCallback(async () => {
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-token`);
+    if (res.status === 200 && res.data.valid) {
+      const { userId, username, email, role } = res.data;
+      const verifiedUser = { userId, username, email, role };
+      setUser(verifiedUser);
+      return verifiedUser;
+    } else {
+      throw new Error("Token verification failed");
     }
-  }, []);
+  } catch (err) {
+    console.warn("🔒 Token expired or invalid, attempting refresh...");
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-token`);
+        if (res.status === 200 && res.data.valid) {
+          const { userId, username, email, role } = res.data;
+          const verifiedUser = { userId, username, email, role };
+          setUser(verifiedUser);
+          return verifiedUser;
+        }
+      } catch (err2) {
+        console.error("Token re-verification after refresh failed:", err2);
+      }
+    }
+    setUser(null);
+    return null;
+  }
+}, [refreshToken]);
 
   /**
    * Verifies the token and fetches additional user data if authenticated.

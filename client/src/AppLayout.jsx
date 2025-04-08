@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Subscription from "./pages/Subscription";
 import LandingPage from "./pages/LandingPage";
@@ -15,6 +15,16 @@ import Search from "./pages/Search";
 import Library from "./pages/Library";
 import OnlineUserNotification from "./components/OnlineUserNotification";
 import MessageNotification from "./components/MessageNotification";
+import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
+
+function ChatLayout() {
+  // Wrap only the chat-related routes in ChatEventsProvider
+  return (
+    <ChatEventsProvider>
+      <Outlet />
+    </ChatEventsProvider>
+  );
+}
 
 function AppLayout() {
   const location = useLocation(); // Get current route
@@ -27,6 +37,7 @@ function AppLayout() {
       {!hideNavbar && <Navbar />} {/* Conditionally render Navbar */}
       <OnlineUserNotification />
       <MessageNotification />
+
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
@@ -34,9 +45,11 @@ function AppLayout() {
         <Route path="/register-success" element={<RegisterSuccess />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/chat/:conversationId" element={<ChatApp />} />
-        <Route path="/matches" element={<Match />} />
         <Route path="/pending-matches" element={<PendingMatches />} />
+        <Route element={<ChatLayout/>}>
+          <Route path="/chat/:conversationId" element={<ChatApp />} />
+          <Route path="/matches" element={<Match />} />
+        </Route>
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/library" element={<Library />} />
