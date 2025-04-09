@@ -11,7 +11,8 @@ const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+
   const { isTyping } = useChatEvents()
   const { user } = useAuth()
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ const Match = () => {
   const fetchMatches = useCallback(async () => {
     const cached = await getCachedData(CACHE_MATCHES, chatCache);
     if (cached) {
-        setMatches(cached)
-        return;
+      setMatches(cached)
+      return;
     }
 
     try {
@@ -47,14 +48,14 @@ const Match = () => {
   const fetchConversations = useCallback(async () => {
     const cached = await getCachedData(CACHE_CONVERSATION, chatCache);
     if (cached) {
-        setConversations(cached)
-        return;
+      setConversations(cached)
+      return;
     }
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`);
-      setConversations(response.data);
-          // ✅ Cache it
-      await cacheData(CACHE_CONVERSATION, response.data, chatCache);
+      const conversationData = response.data; // This is your array of conversations.
+      setConversations(conversationData);
+      await cacheData(CACHE_CONVERSATION, conversationData, chatCache);
     } catch (error) {
       console.error('Error fetching conversations: ', error);
     }
@@ -62,13 +63,17 @@ const Match = () => {
 
   const handleNewConversation = async () => {
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new`, { user1: selectedMatch._id, user2: user.userId });
+      setIsCreatingConversation(true);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`, { user1: selectedMatch._id, user2: user.userId });
       const newConversation = response.data; // Get the newly created conversation
       // Update the conversations state to include the new conversation
       setConversations((prevConversations) => [...prevConversations, newConversation]);
       console.log("New conversation created:", newConversation);
     } catch (error) {
       console.error('Error creating new conversation', error);
+    } finally {
+      // Reset the creating flag after creation is attempted
+      setIsCreatingConversation(false);
     }
   };
 
@@ -107,12 +112,34 @@ const Match = () => {
     ? "border-2 border-[#203449]"
     : "border-2 border-[#E01D42]";
 
+  // Effect to automatically start a new conversation when a match is selected and none exists.
+  useEffect(() => {
+    if (selectedMatch) {
+      const existingConversation = getConversationWithMatch(selectedMatch);
+      if (!existingConversation) {
+        // Create a new conversation. Note that handleNewConversation might be modified
+        // to return the new conversation so you can immediately update state.
+        handleNewConversation();
+      }
+    }
+  }, [selectedMatch, isCreatingConversation, getConversationWithMatch]);
+
   const chatComponent = useMemo(() => {
     if (!selectedMatch || !user?.userId)
       return <div className='flex text-center justify-center h-screen text-gray-500'>
         <p>Select a match to view the conversation.</p>;
       </div>
+
     const conversation = getConversationWithMatch(selectedMatch);
+    // If conversation is still null, display a placeholder (or a loading spinner)
+    if (!conversation) {
+      return (
+        <div className='flex text-center justify-center h-screen text-gray-500'>
+          <p>Creating a new conversation...</p>
+        </div>
+      );
+    }
+
     return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
 

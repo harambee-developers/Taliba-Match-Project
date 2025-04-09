@@ -66,7 +66,7 @@ router.get("/:conversationId/messages", async (req, res) => {
     }
 });
 
-router.post("/new", async (req, res) => {
+router.post("/new-conversation", async (req, res) => {
     try {
         const { user1, user2 } = req.body;
 
