@@ -109,7 +109,7 @@ const Match = () => {
 
   const chatComponent = useMemo(() => {
     if (!selectedMatch || !user?.userId)
-      return <div className='flex text-center justify-center h-full text-gray-500'>
+      return <div className='flex text-center justify-center h-screen text-gray-500'>
         <p>Select a match to view the conversation.</p>;
       </div>
     const conversation = getConversationWithMatch(selectedMatch);

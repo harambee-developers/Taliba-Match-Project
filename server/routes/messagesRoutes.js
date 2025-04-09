@@ -4,6 +4,24 @@ const Message = require("../model/Message");
 const Conversation = require("../model/Conversation");
 const mongoose = require('mongoose');
 const User = require("../model/User");
+const multer = require('multer')
+const path = require('path')
+
+// Setup the storage engine for multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Use __dirname to get the path of the current directory (routes/) and then go one level up
+        const uploadPath = path.join(__dirname, '..', 'public', 'uploads');  // Go one level up from 'routes'
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        // Use current timestamp to ensure unique filenames
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+// Set up multer with the storage engine
+const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }) // 10 MB limit);
 
 // 🔹 GET all conversations for a user
 router.get("/user/:userId", async (req, res) => {
@@ -95,5 +113,36 @@ router.get("/fetch-status/:receiverId", async (req, res) => {
         res.status(500).json({ error: "Error fetching user status" });
     }
 });
+
+router.post("/upload", upload.single("file"), async (req, res) => {
+    if (!req.file.filename) {
+        return res.status(400).json({ message: "filename is missing!" });
+    }
+    // Save the file to storage, build the message object, etc.
+    const fileUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+    // Get mimetype, e.g., 'image/png', 'video/mp4'
+    const mimeType = req.file.mimetype;
+    // Determine file type based on mimetype
+    let type = "file";
+    if (mimeType.startsWith("image")) {
+        type = "image";
+    } else if (mimeType.startsWith("video")) {
+        type = "video";
+    }
+    const message = await Message.create({
+        text: "attachment", // or any caption if provided
+        sender_id: req.body.senderId,
+        receiver_id: req.body.receiverId,
+        conversation_id: req.body.conversationId,
+        attachment: fileUrl,
+        type: type,
+        createdAt: new Date().toISOString(),
+    });
+    await message.save()
+    // Save the message to your DB here...
+    res.json({ message });
+});
+
+
 
 module.exports = router;

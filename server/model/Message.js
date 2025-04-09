@@ -6,7 +6,8 @@ const MessageSchema = new Schema({
   sender_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   receiver_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   text: { type: String, required: true },
-  type: { type: String, enum: ["text", "image", "video"], default: "text" }, // Optional: For supporting media
+  attachment: { type: String, default: null },
+  type: { type: String, enum: ["text", "image", "video", 'file'], default: "text" }, // Optional: For supporting media
   status: { type: String, enum: ["Sent", "Read", "Deleted"], default: "Sent" },
 }, {timestamps: true});
 

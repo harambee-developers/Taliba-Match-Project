@@ -25,6 +25,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const [receiverName, setReceiverName] = useState(null)
     const [messages, setMessages] = useState([]);
     const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Use URL params as a fallback if props are null
     const { conversationId: conversationIdFromParams } = useParams();
@@ -35,6 +36,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
     const CACHE_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${currentConversationId}`
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
     // Fetch and set receiver details
     useEffect(() => {
@@ -102,6 +104,60 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
         fetchMessages();
     }, [currentConversationId]);
+
+    const handleFileSelect = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file size
+        if (file.size > MAX_FILE_SIZE) {
+            alert("File size exceeds the limit of 5 MB.");
+            return;
+        }
+
+        setIsUploading(true); // Disable input/button
+        // Optionally, preview the file if desired (for images)
+        if (file.type.startsWith("image/")) {
+            const previewURL = URL.createObjectURL(file);
+            // You can set state to show the preview somewhere in your UI if needed
+            console.info("Image preview URL: ", previewURL);
+        }
+
+        // Prepare the payload using FormData
+        const formData = new FormData();
+
+        // Append other necessary info
+        formData.append("file", file);
+        formData.append("conversationId", currentConversationId);
+        formData.append("senderId", currentUserId);
+        formData.append("receiverId", receiverId);
+
+        // Upload the file using axios
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/message/upload`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            // You might expect the server to respond with the file URL or a message payload.
+            const attachmentMessage = response.data.message;
+            // Emit the message event via socket (if needed) or update the UI directly
+            socket.emit("send_message", attachmentMessage);
+            // Optionally update the cache if you're using it
+            cacheData(CACHE_MESSAGES, [...messages, attachmentMessage], chatCache);
+            // Clear the text input once the file upload is complete
+            setInput("");
+        } catch (err) {
+            console.error("Error uploading file:", err);
+        } finally {
+            setIsUploading(false); // Re-enable input/button
+        }
+    };
 
     // Send a message
     const sendMessage = () => {
@@ -201,7 +257,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 )
             );
         };
-        const handleNewMessages = ({message}) => {
+        const handleNewMessages = ({ message }) => {
             if (message.conversation_id !== currentConversationId) return;
             setMessages((prev) => {
                 const updatedMessage = [...prev, message]
@@ -212,6 +268,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 onLastMessageUpdate(currentConversationId, message.text, currentUserId);
             }
         }
+
         const handleUserOnline = () => setLocalReceiverStatus({ isOnline: true, lastSeen: null });
         const handleUserOffline = ({ lastSeen }) => setLocalReceiverStatus({ isOnline: false, lastSeen });
 
@@ -239,7 +296,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const borderClass = user?.gender === "Male"
         ? "border-2 border-[#203449]"
         : "border-2 border-[#E01D42]";
-    
+
     return (
         <div className={`flex flex-col h-screen w-full md:border-0 ${borderClass} bg-repeat bg-center`}
             style={{
@@ -297,7 +354,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
                                     {/* Message Bubble */}
                                     <div
-                                        className={`max-w-xs md:max-w-md p-4 rounded-full shadow-md break-words text-white
+                                        className={`max-w-xs md:max-w-md p-4 rounded-lg shadow-md break-words text-white
                                                 ${msg.sender_id === currentUserId
                                                 ? user?.gender === "Male"
                                                     ? "bg-[#203449] rounded-br-none"  // Male user's sent messages (dark blue)
@@ -307,7 +364,38 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                                                     : "bg-[#203449] rounded-bl-none"   // If female, receiver's messages are dark blue
                                             }`}
                                     >
-                                        <p className="font-semibold">{msg.text}</p>
+                                        {msg.attachment ? (
+                                            <div className="max-w-full w-full rounded-lg">
+                                                {msg.attachment.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                                                    <a href={msg.attachment} target="_blank" rel="noopener noreferrer">
+                                                        <img
+                                                            src={msg.attachment}
+                                                            alt="attachment"
+                                                            className="w-full max-h-64 rounded-lg object-contain"
+                                                        />
+                                                    </a>
+                                                ) : msg.attachment.match(/\.(mp4|mov|webm|wmv)$/i) ? (
+                                                    <video
+                                                        controls
+                                                        className="w-full max-h-64 rounded-lg object-contain"
+                                                    >
+                                                        <source src={msg.attachment} />
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                ) : (
+                                                    <a
+                                                        href={msg.attachment}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-200 underline hover:text-blue-100"
+                                                    >
+                                                        View attachment
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="font-semibold">{msg.text}</p>
+                                        )}
                                     </div>
 
                                     {/* Timestamp and Message Status */}
@@ -336,12 +424,40 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
 
 
             <div className="md:p-10 flex items-center m-6">
+                {/* File Attachment Input */}
+                <label htmlFor="file-attachment" className="cursor-pointer mr-4 group">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-12 h-12"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="12"
+                            className={`transition-colors duration-200 ${user.gender === "Male" ? "fill-[#203449] group-hover:fill-blue-400" : "fill-[#E01D42] group-hover:fill-red-300"}`}
+                        />
+                        <path
+                            fill="white"
+                            d="M16.5 9.5l-6 6c-.8.8-2 .8-2.8 0-.8-.8-.8-2 0-2.8l6-6c1.2-1.2 3.1-1.2 4.3 0 1.2 1.2 1.2 3.1 0 4.3l-5 5c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l5-5c.6-.6.6-1.6 0-2.3-.6-.6-1.6-.6-2.3 0z"
+                        />
+                    </svg>
+                    <input
+                        type="file"
+                        id="file-attachment"
+                        accept="image/*,video/*"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+                </label>
+
                 <input
                     type="text"
                     name="chatbox"
                     id="chatbox"
+                    disabled={isUploading}
                     className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none ${borderClass} hover:bg-white transition-all duration-300`}
-                    placeholder="Type a message..."
+                    placeholder={isUploading ? "Uploading..." : "Type a message..."}
                     value={input}
                     onChange={(e) => {
                         setInput(e.target.value);
@@ -350,7 +466,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />
                 <button onClick={sendMessage}
-                    className={`ml-2 mr-2 p-2 rounded-lg ${user.gender === "Male" ? "text-[#203449] hover:text-blue-300" : "text-[#E01D42] hover:text-red-300"}`}>
+                    disabled={isUploading}
+                    className={`ml-2 mr-2 p-2 rounded-lg ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
                     <Send className="w-10 h-10" />
                 </button>
             </div>

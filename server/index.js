@@ -31,8 +31,10 @@ const corsOptions = {
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
 }
 
+
 app.use(express.json())
 app.use(cors(corsOptions));
+app.use('/uploads', express.static('public/uploads'));
 
 // Modularized routes
 app.use("/api/payment", paymentRoutes);
@@ -128,7 +130,7 @@ io.on('connection', (socket) => {
     io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
   });
 
-  socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text }) => {
+  socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text, attachment, type }) => {
     try {
 
       // Save message to MongoDB
@@ -136,7 +138,9 @@ io.on('connection', (socket) => {
         conversation_id,
         sender_id,
         receiver_id,
-        text
+        text,
+        attachment, 
+        type
       });
 
       await message.save()
