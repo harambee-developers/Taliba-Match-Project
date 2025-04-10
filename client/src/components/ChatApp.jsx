@@ -264,6 +264,17 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 cacheData(CACHE_MESSAGES, updatedMessage, chatCache)
                 return updatedMessage
             })
+            // Only play the notification sound if the message is not from the current user.
+            if (message.sender_id !== currentUserId) {
+                const pingSound = new Audio("/sounds/ping.mp3");
+                // Play sound; if already playing, restart it.
+                if (pingSound.paused) {
+                    pingSound.play();
+                } else {
+                    pingSound.currentTime = 0;
+                    pingSound.play();
+                }
+            }
             if (onLastMessageUpdate) {
                 onLastMessageUpdate(currentConversationId, message.text, currentUserId);
             }

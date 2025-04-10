@@ -3,18 +3,22 @@ import { createRoot } from 'react-dom/client'
 import { AuthProvider } from './components/contexts/AuthContext.jsx'
 import { AlertProvider } from './components/contexts/AlertContext.jsx'
 import { SocketProvider } from './components/contexts/SocketContext.jsx'
+import { NotificationProvider } from './components/contexts/NotificationContext.jsx'
 import './index.css'
 import App from './App.jsx'
+
 
 // Allows deeply nested context objects
 const AppProviders = ({ children }) => {
   return (
     <AuthProvider>
-      <SocketProvider>
-        <AlertProvider>
+      <NotificationProvider>
+        <SocketProvider>
+          <AlertProvider>
             {children}
-        </AlertProvider>
-      </SocketProvider>
+          </AlertProvider>
+        </SocketProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 };

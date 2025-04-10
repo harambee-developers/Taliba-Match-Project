@@ -97,11 +97,9 @@ const PendingMatches = () => {
                                         <h3 className="font-semibold">{request.sender.firstName} {request.sender.lastName}</h3>
                                         <p className="text-gray-500">{request.sender.userName}</p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <img src='/assets/greenTick.svg' alt='acceptTick' onClick={() => acceptRequest(request._id)} className="w-16 h-16 object-contain bg-white shadow-lg rounded-md cursor-pointer">
-                                        </img>
-                                        <img src='/assets/redTick.svg' alt='rejectTick' onClick={() => rejectRequest(request._id)} className="w-16 h-16 object-contain bg-white shadow-lg rounded-md cursor-pointer">
-                                        </img>
+                                    <div className="flex">
+                                        <img src='/accept.svg' alt='acceptTick' onClick={() => acceptRequest(request._id)} className="w-16 h-16 cursor-pointer"></img>
+                                        <img src='/decline.svg' alt='rejectTick' onClick={() => rejectRequest(request._id)} className="w-16 h-16 cursor-pointer"></img>
                                     </div>
                                 </div>
                             ))}

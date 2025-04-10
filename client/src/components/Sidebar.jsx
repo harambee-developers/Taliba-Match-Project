@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from './contexts/AuthContext';
 import Icon26 from './icons/Icon26';
@@ -10,6 +10,7 @@ import Icon30 from './icons/Icon30';
 const Sidebar = ({ isOpen, toggleMenu }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [matchesOpen, setMatchesOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -25,34 +26,33 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
     <>
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity"
           onClick={toggleMenu}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside 
-        className={`fixed top-0 left-0 h-full w-64 bg-[#E01D42] text-white transform transition-transform duration-300 ease-in-out z-40 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-[#E01D42] text-white transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <nav className="flex flex-col h-full">
           <div className="p-4 flex-grow">
             <ul className="space-y-4">
               <li>
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
                   <span>Home</span>
-                  <Icon26  width={24} height={24} color="#FFF" />
+                  <Icon26 width={24} height={24} color="#FFF" />
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/profile" 
+                <Link
+                  to="/profile"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
@@ -61,18 +61,39 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/matches" 
-                  onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                <button
+                  onClick={() => setMatchesOpen(!matchesOpen)}
+                  className="flex items-center justify-between w-full p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
                   <span>Your Matches</span>
                   <Icon28 width={24} height={24} color="#FFF" />
-                </Link>
+                </button>
+                {matchesOpen && (
+                  <ul className="ml-6 mt-2 space-y-2 text-sm text-white">
+                    <li>
+                      <Link
+                        to="/pending-matches"
+                        onClick={toggleMenu}
+                        className="block p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                      >
+                        Pending
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/matches"
+                        onClick={toggleMenu}
+                        className="block p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                      >
+                        Matches
+                      </Link>
+                    </li>
+                  </ul>
+                )}
               </li>
               <li>
-                <Link 
-                  to="/search" 
+                <Link
+                  to="/search"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
@@ -81,13 +102,13 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/library" 
+                <Link
+                  to="/library"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
                   <span>Library</span>
-                  <Icon30  className="detail-icon" width={24} height={24} color="#FFF" />
+                  <Icon30 className="detail-icon" width={24} height={24} color="#FFF" />
                 </Link>
               </li>
             </ul>

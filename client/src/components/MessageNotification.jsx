@@ -2,11 +2,13 @@ import React, { useEffect } from "react";
 import { useSocket } from "./contexts/SocketContext";
 import { useAlert } from "./contexts/AlertContext";
 import { useAuth } from "./contexts/AuthContext";
+import { useNotification } from "./contexts/NotificationContext";
 
 const MessageNotification = () => {
     const { socket } = useSocket();
     const { showAlert } = useAlert();
     const { user } = useAuth(); // Get current user info
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         if (!socket) return;
@@ -21,6 +23,7 @@ const MessageNotification = () => {
             // You can customize the notification message and type
             const notificationText = `${username}: ${message.text}`;
             showAlert(notificationText, "info");
+            addNotification({ id: Date.now(), name: username, text: notificationText });
         };
 
         // Listen for the "message" event from the server

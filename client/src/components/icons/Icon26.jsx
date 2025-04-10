@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Icon26 = ({ width = 24, height = 24, color = '#1a495d', className = '' }) => {
+const Icon26 = ({ width = 24, height = 24, color = '#1a495d', className = 'object-contain' }) => {
   return (
     <svg 
       width={width}

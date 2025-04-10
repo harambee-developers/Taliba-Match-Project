@@ -9,6 +9,8 @@ import Icon50 from "../components/icons/Icon50";
 import { ethnicityOptions } from "../data/fieldData";
 import MessageModal from "../components/MessageModal";
 import { useAuth } from "../components/contexts/AuthContext";
+import Alert from "../components/Alert";
+import { useAlert } from "../components/contexts/AlertContext";
 
 const Search = () => {
   const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "" });
@@ -18,6 +20,7 @@ const Search = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
   const { user } = useAuth()
+  const { showAlert, alert } = useAlert()
 
   const fetchProfiles = async () => {
     try {
@@ -56,7 +59,7 @@ const Search = () => {
         {
           method: "POST",
           credentials: "include",
-          headers: {'Accept': 'application/json', "Content-Type": "application/json",},
+          headers: { 'Accept': 'application/json', "Content-Type": "application/json", },
           body: JSON.stringify({ sender_id: user.userId, receiver_id: profileId })
         }
       )
@@ -65,8 +68,10 @@ const Search = () => {
       }
 
       const data = await response.json();
+      showAlert("Match request sent", 'success')
       console.log("Match request sent:", data);
     } catch (error) {
+      showAlert("Error sending match request", 'error')
       console.error("Error sending match request:", error);
     }
 
@@ -80,8 +85,17 @@ const Search = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+    // Filter profiles based on logged-in user gender
+  // Assumption: Each profile has a 'gender' property.
+  const visibleProfiles =
+    user && user.gender
+      ? profiles.filter(profile => profile.gender !== user.gender)
+      : profiles;
+
   return (
     <div className="search-container">
+      {/* Render alert component */}
+      {alert && <Alert />}
       <h1 className="search-title"></h1>
 
       {/* Filters */}
@@ -151,9 +165,9 @@ const Search = () => {
       )}
 
       {/* Profiles Grid */}
-      {!loading && !error && profiles.length > 0 && (
+      {!loading && !error && visibleProfiles.length > 0 && (
         <div className="profiles-grid">
-          {profiles.map((profile) => (
+          {visibleProfiles.map((profile) => (
             <div key={profile.id} className="profile-card">
               <div className="age-badge">{profile.age || 'N/A'}</div>
               <div className="profile-left">
@@ -183,7 +197,7 @@ const Search = () => {
               <div className="profile-right">
                 <div className="bio-container">
                   <button className="view-bio">View Bio</button>
-                  <Icon50 width={32} height={32} className="premium-icon" color="#1e5a8d" />
+                  <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
                 </div>
                 <button className="request-match" onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }}>Request Match</button>
                 <MessageModal
@@ -201,7 +215,7 @@ const Search = () => {
         </div>
       )}
 
-      {profiles.length > 0 && (
+      {visibleProfiles.length > 0 && (
         <div className="pagination">
           <button className="next-page">Next Page</button>
         </div>
