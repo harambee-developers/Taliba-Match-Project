@@ -129,7 +129,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     } else if (mimeType.startsWith("video")) {
         type = "video";
     }
-    const message = await Message.create({
+    const message = ({
         text: "attachment", // or any caption if provided
         sender_id: req.body.senderId,
         receiver_id: req.body.receiverId,
@@ -138,7 +138,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         type: type,
         createdAt: new Date().toISOString(),
     });
-    await message.save()
+
     // Save the message to your DB here...
     res.json({ message });
 });

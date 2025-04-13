@@ -12,13 +12,13 @@ import App from './App.jsx'
 const AppProviders = ({ children }) => {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <SocketProvider>
+      <SocketProvider>
+        <NotificationProvider>
           <AlertProvider>
             {children}
           </AlertProvider>
-        </SocketProvider>
-      </NotificationProvider>
+        </NotificationProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 };

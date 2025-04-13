@@ -11,7 +11,7 @@ const Navbar = () => {
   const { user } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { notificationCount, notifications, resetNotifications } = useNotification();
+  const {notificationCount, notifications, markAsRead, markAllAsRead } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
 
   const toggleSidebar = () => {
@@ -42,13 +42,15 @@ const Navbar = () => {
     };
   }, []);
 
+  const unreadNotifications = notifications.filter(n => !n.isRead);
+
   return (
     <>
       <div className="flex items-center justify-between w-full px-8 py-4 z-20 bg-[#FFF1FE] shadow-lg">
         {/* Left side - Logo and Title */}
         <div className="flex items-center">
           {user && (
-            <div className="mr-4 cursor-pointer rounded-full bg-[#E01D42] hover:bg-[#4A0635] py-2 px-2" onClick={toggleSidebar}>
+            <div className="mr-4 cursor-pointer rounded-full bg-[#E01D42] shadow-lg hover:bg-[#4A0635] py-2 px-2" onClick={toggleSidebar}>
               <Icon38 width={24} height={24} className='' />
             </div>
           )}
@@ -73,7 +75,7 @@ const Navbar = () => {
               </span>
             </div>
             {/* Notification Bell Icon */}
-            <div className="relative cursor-pointer" onClick={handleNotificationClick} title="Notifications">
+            <div className="relative cursor-pointer rounded-full" onClick={handleNotificationClick} title="Notifications">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-12 w-12 text-[#E01D42] hover:text-[#4A0635]"
@@ -101,18 +103,18 @@ const Navbar = () => {
                   <h3 className="text-xl font-semibold text-gray-800">Notifications</h3>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {notifications.length === 0 ? (
+                  {unreadNotifications.length === 0 ? (
                     <div className="p-4 text-center">
                       <p className="text-gray-500">No notifications</p>
                     </div>
                   ) : (
                     <ul>
-                      {notifications.map((notif) => (
+                      {unreadNotifications.map((notif) => (
                         <li
-                          key={notif.id}
+                          key={notif._id}
                           className="px-4 py-3 hover:bg-gray-100 transition-colors duration-200"
                         >
-                          <p className="text-gray-700">{notif.text}</p>
+                          <p className="text-gray-700" onClick={() => markAsRead(notif._id)}>{notif.text}</p>
                         </li>
                       ))}
                     </ul>
@@ -120,10 +122,10 @@ const Navbar = () => {
                 </div>
                 <div className="p-3 border-t border-gray-200">
                   <button
-                    onClick={resetNotifications}
+                    onClick={markAllAsRead}
                     className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                   >
-                    Clear All
+                    Mark All as Read
                   </button>
                 </div>
               </div>

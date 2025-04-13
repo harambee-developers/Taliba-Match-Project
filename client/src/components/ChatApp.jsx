@@ -15,6 +15,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const navigate = useNavigate()
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const fileInputRef = useRef();
 
     // Get user from AuthContext, socket from SocketContext and chat events context
     const { user } = useAuth();
@@ -152,6 +153,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             cacheData(CACHE_MESSAGES, [...messages, attachmentMessage], chatCache);
             // Clear the text input once the file upload is complete
             setInput("");
+            // Clear file input so it doesn't trigger again with the same file.
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         } catch (err) {
             console.error("Error uploading file:", err);
         } finally {
@@ -376,13 +381,13 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                                             }`}
                                     >
                                         {msg.attachment ? (
-                                            <div className="max-w-full w-full rounded-lg">
+                                            <div className="max-w-full w-full rounded-lg z-50">
                                                 {msg.attachment.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
                                                     <a href={msg.attachment} target="_blank" rel="noopener noreferrer">
                                                         <img
                                                             src={msg.attachment}
                                                             alt="attachment"
-                                                            className="w-full max-h-64 rounded-lg object-contain"
+                                                            className="w-full max-h-64 rounded-lg object-contain bg-white"
                                                         />
                                                     </a>
                                                 ) : msg.attachment.match(/\.(mp4|mov|webm|wmv)$/i) ? (
@@ -457,6 +462,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                         type="file"
                         id="file-attachment"
                         accept="image/*,video/*"
+                        ref={fileInputRef}
+                        disabled={isUploading}
                         className="hidden"
                         onChange={handleFileSelect}
                     />

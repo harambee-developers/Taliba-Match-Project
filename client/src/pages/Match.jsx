@@ -112,6 +112,11 @@ const Match = () => {
     ? "border-2 border-[#203449]"
     : "border-2 border-[#E01D42]";
 
+  const getUnreadCount = (conversation) => {
+    // If the last message wasn't sent by the current user, mark it as unread
+    return conversation.last_sender_id !== user.userId ? 1 : 0;
+  };
+
   // Effect to automatically start a new conversation when a match is selected and none exists.
   useEffect(() => {
     if (selectedMatch) {
@@ -187,27 +192,42 @@ const Match = () => {
                     </div>
 
                     {/* User Details */}
-                    <div className="flex-1">
-                      <div className='flex justify-between items-center w-full'>
-                        <h3 className="font-semibold">{opponent.firstName} {opponent.lastName}</h3>
-                        {/* Timestamp - Aligned to the right */}
-                        {lastMessageTime && (
-                          <p className="text-sm text-gray-500 ml-auto">
-                            {lastMessageTime}
-                          </p>
-                        )}
+                    <div className="flex-1 flex flex-col justify-center">
+                      {/* Top row: Name and Time */}
+                      <div className="flex justify-between items-center w-full mb-1">
+                        <h3 className="font-semibold text-base truncate">
+                          {opponent.firstName} {opponent.lastName}
+                        </h3>
+
+                        {/* Time + Unread Badge */}
+                        <div className="flex flex-col items-end min-w-[48px] ml-2">
+                          {lastMessageTime && (
+                            <p className="text-xs text-gray-500 whitespace-nowrap">{lastMessageTime}</p>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-500">
-                        {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
-                          <span className="text-gray-500 font-semibold">{opponent.firstName} is typing...</span>
-                        ) : conversation ? (
-                          <>
-                            <span className="font-semibold">
-                              {conversation.last_sender_id === user?.userId ? "You" : opponent.firstName}:
-                            </span> {conversation.last_message}
-                          </>
-                        ) : (
-                          "No messages yet"
+                      <p className="text-sm text-gray-500 truncate flex justify-between items-center w-full">
+                        <span className="truncate">
+                          {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
+                            <span className="text-gray-500 font-semibold">
+                              {opponent.firstName} is typing...
+                            </span>
+                          ) : conversation ? (
+                            <>
+                              <span className="font-semibold">
+                                {conversation.last_sender_id === user?.userId ? "You" : opponent.firstName}:
+                              </span> {conversation.last_message}
+                            </>
+                          ) : (
+                            "No messages yet"
+                          )}
+                        </span>
+
+                        {/* Push badge to the right */}
+                        {conversation && getUnreadCount(conversation) > 0 && (
+                          <span className="ml-2 bg-red-500 text-white text-[10px] font-semibold px-2 py-[1px] rounded-full shrink-0">
+                            {getUnreadCount(conversation)}
+                          </span>
                         )}
                       </p>
                     </div>

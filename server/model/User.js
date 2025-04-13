@@ -61,10 +61,10 @@ const UserSchema = new Schema({
   profile: ProfileSchema,
   preferences: PreferencesSchema,
   photos: [PhotoSchema],
-  // New Fields for Online Status and Socket ID
   isOnline: { type: Boolean, default: false }, // Track if the user is online or offline
   lastSeen: { type: Date, default: null }, // Timestamp for last seen when offline
   socketId: { type: String, default: null }, // Store the socket ID to track the user
+  refreshToken: { type: String, default: null }
 });
 
 // Optionally, you can define a method for updating status based on socket activity

@@ -11,6 +11,7 @@ import MessageModal from "../components/MessageModal";
 import { useAuth } from "../components/contexts/AuthContext";
 import Alert from "../components/Alert";
 import { useAlert } from "../components/contexts/AlertContext";
+import FilterModal from "../components/FilterModal";
 
 const Search = () => {
   const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "" });
@@ -18,9 +19,12 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState(filters);
   const [selectedProfile, setSelectedProfile] = useState(null)
   const { user } = useAuth()
   const { showAlert, alert } = useAlert()
+
 
   const fetchProfiles = async () => {
     try {
@@ -79,19 +83,24 @@ const Search = () => {
 
   useEffect(() => {
     fetchProfiles();
-  }, [filters]);
+  }, []);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-    // Filter profiles based on logged-in user gender
+  const countActiveFilters = () => {
+    return Object.values(filters).filter(value => value !== "").length;
+  };
+
+  // Filter profiles based on logged-in user gender
   // Assumption: Each profile has a 'gender' property.
   const visibleProfiles =
     user && user.gender
       ? profiles.filter(profile => profile.gender !== user.gender)
       : profiles;
 
+  console.log(user)
   return (
     <div className="search-container">
       {/* Render alert component */}
@@ -145,10 +154,27 @@ const Search = () => {
           </div>
 
           <div className="more-filters-container">
-            <button className="more-filters-btn">
+            <button className="more-filters-btn flex items-center gap-2 relative" onClick={() => setIsFilterModalOpen(true)}>
               More Filters
+              {countActiveFilters() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                  {countActiveFilters()}
+                </span>
+              )}
               <Icon49 width={30} height={30} className="filter-icon" />
             </button>
+            <FilterModal
+              isOpen={isFilterModalOpen}
+              onClose={() => setIsFilterModalOpen(false)}
+              filters={pendingFilters}
+              onChange={(e) =>
+                setPendingFilters((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              onApply={() => { setFilters(pendingFilters); fetchProfiles(); }}
+            />
           </div>
         </div>
       </div>

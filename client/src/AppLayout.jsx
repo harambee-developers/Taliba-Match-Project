@@ -16,6 +16,8 @@ import Library from "./pages/Library";
 import OnlineUserNotification from "./components/OnlineUserNotification";
 import MessageNotification from "./components/MessageNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
+import { useAuth } from "./components/contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function ChatLayout() {
   // Wrap only the chat-related routes in ChatEventsProvider
@@ -27,8 +29,8 @@ function ChatLayout() {
 }
 
 function AppLayout() {
+  const { user } = useAuth()
   const location = useLocation(); // Get current route
-
   // Hide navbar if the user is in the chat page
   const hideNavbar = location.pathname.startsWith("/chat");
 
@@ -44,15 +46,18 @@ function AppLayout() {
         <Route path="/subscribe" element={<Subscription />} />
         <Route path="/register-success" element={<RegisterSuccess />} />
         <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/pending-matches" element={<PendingMatches />} />
-        <Route element={<ChatLayout/>}>
-          <Route path="/chat/:conversationId" element={<ChatApp />} />
-          <Route path="/matches" element={<Match />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute user={user} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/pending-matches" element={<PendingMatches />} />
+          <Route element={<ChatLayout />}>
+            <Route path="/chat/:conversationId" element={<ChatApp />} />
+            <Route path="/matches" element={<Match />} />
+          </Route>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/library" element={<Library />} />
         </Route>
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/library" element={<Library />} />
       </Routes>
     </>
   );

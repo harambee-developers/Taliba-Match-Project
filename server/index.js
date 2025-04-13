@@ -5,6 +5,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const Message = require('./model/Message')
 const User = require('./model/User')
+const Notifications = require('./model/Notifications');
 const Conversation = require('./model/Conversation')
 
 // Import and initialize the MongoDB connection
@@ -19,6 +20,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messagesRoutes");
 const matchRoutes = require("./routes/matchRoutes");
+const notificationsRoutes = require('./routes/notificationsRoutes');
 
 const port = 7777;
 const app = express();
@@ -27,7 +29,7 @@ const server = http.createServer(app)
 const corsOptions = {
   origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
 }
 
@@ -42,6 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/match", matchRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // WebSocket server on the same port as Express
 const io = new Server(server, {
@@ -130,6 +133,30 @@ io.on('connection', (socket) => {
     io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
   });
 
+  socket.on("notification", async ({ text, type, sender_id, receiver_id, isRead = false }) => {
+    try {
+      // Optional: Fetch sender info for logging or customizing the text
+      const senderUser = await User.findById(sender_id);
+      const displayName = senderUser?.firstName || "Someone";
+  
+      const notification = await Notifications.create({
+        userId: sender_id,
+        receiverId: receiver_id,
+        text: text || `${displayName} sent you a notification.`,
+        type,
+        isRead
+      });
+  
+      await notification.save();
+  
+      // Emit notification to the receiver if they’re online
+      io.to(receiver_id.toString()).emit("new_notification", notification);
+  
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
+  });
+
   socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text, attachment, type }) => {
     try {
 
@@ -139,11 +166,15 @@ io.on('connection', (socket) => {
         sender_id,
         receiver_id,
         text,
-        attachment, 
+        attachment,
         type
       });
 
       await message.save()
+
+      // Retrieve sender's user information to get the firstName
+      const senderUser = await User.findById(sender_id);
+      const username = senderUser?.firstName || "Unknown";
 
       // Update lastMessage in the Conversation document
       await Conversation.findByIdAndUpdate(conversation_id, {
@@ -152,12 +183,16 @@ io.on('connection', (socket) => {
         updatedAt: new Date(), // Update timestamp
       });
 
-      // Retrieve sender's user information to get the firstName
-      const senderUser = await User.findById(sender_id);
-      const username = senderUser?.firstName || "Unknown";
-
+      // 🔥 Emit universal notification
+      socket.emit("notification", {
+        text: `${username} sent you a message!`,
+        type: "message",
+        sender_id,
+        receiver_id,
+        isRead: false
+      });
       // Broadcast message to the receiver in the same conversation
-      io.to(conversation_id).emit("message", { message, username});
+      io.to(conversation_id).emit("message", { message, username });
 
       // ✅ If the receiver is online and in the chatroom, mark message as read
       const receiverSockets = await io.in(conversation_id).fetchSockets();

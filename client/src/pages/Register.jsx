@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import occupationData from '../data/Occupations.json';
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions } from '../data/fieldData'
-import Alert from '../components/Alert';
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -185,6 +184,7 @@ const RegisterPage = () => {
     value: country,
     label: country,
   }));
+
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
       <form

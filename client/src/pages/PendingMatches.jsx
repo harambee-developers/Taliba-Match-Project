@@ -3,11 +3,13 @@ import axios from 'axios';
 import { useAlert } from '../components/contexts/AlertContext';
 import Alert from '../components/Alert';
 import { useAuth } from '../components/contexts/AuthContext';
+import { useSocket } from '../components/contexts/SocketContext';
 
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);
     const [pendingReceivedRequests, setPendingReceivedRequests] = useState([])
     const { user } = useAuth()
+    const { socket } = useSocket()
     const { alert, showAlert } = useAlert()
 
     // Fetch data when the component mounts
@@ -24,7 +26,7 @@ const PendingMatches = () => {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/sent/${user.userId}`);
             setPendingSentRequests(response.data);
         } catch (error) {
-            console.error('Error fetching pending requests: ', error);
+            console.error('Error fetching sent pending requests: ', error);
         }
     };
 
@@ -34,12 +36,12 @@ const PendingMatches = () => {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/match/pending/received/${user.userId}`);
             setPendingReceivedRequests(response.data);
         } catch (error) {
-            console.error('Error fetching pending requests: ', error);
+            console.error('Error fetching received pending requests: ', error);
         }
     };
 
     // Accept match request
-    const acceptRequest = async (matchId) => {
+    const acceptRequest = async (matchId, senderId) => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/match/accept/${matchId}`);
             // Remove the accepted match from pending requests
@@ -54,6 +56,20 @@ const PendingMatches = () => {
             } else {
                 pingSound.currentTime = 0; // Restart the sound if already playing
             }
+
+            const requestObject = {
+                text: `${user.firstName} accepted your match request!`,
+                type: "match",
+                receiver_id: user.userId,
+                sender_id: senderId,
+            }
+
+            if (socket) {
+                socket.emit("notification", requestObject);
+              } else {
+                console.warn("Socket is not connected, cannot send notification event.");
+              }
+
             showAlert('Match accepted!', 'success')
             console.log('Match accepted:', response.data);
         } catch (error) {
@@ -98,7 +114,7 @@ const PendingMatches = () => {
                                         <p className="text-gray-500">{request.sender.userName}</p>
                                     </div>
                                     <div className="flex">
-                                        <img src='/accept.svg' alt='acceptTick' onClick={() => acceptRequest(request._id)} className="w-16 h-16 cursor-pointer"></img>
+                                        <img src='/accept.svg' alt='acceptTick' onClick={() => acceptRequest(request._id, request.sender_id)} className="w-16 h-16 cursor-pointer"></img>
                                         <img src='/decline.svg' alt='rejectTick' onClick={() => rejectRequest(request._id)} className="w-16 h-16 cursor-pointer"></img>
                                     </div>
                                 </div>
