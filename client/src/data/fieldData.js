@@ -25,10 +25,27 @@ export const salahPatternOptions = [
 
 export const sectOptions = [
   { value: 'sunni', label: 'Sunni' },
-  { value: 'shia', label: 'Shia' },
   { value: 'salafi', label: 'Salafi' },
-  { value: 'sufi', label: 'Sufi' },
+  { value: 'shia', label: 'Shia' },
+  { value: 'idontknow', label: 'I don\'t know' },
   { value: 'other', label: 'Other' },
+];
+
+export const madhabOptions = [
+  { value: 'hanafi', label: 'Hanafi' },
+  { value: 'maliki', label: 'Maliki' },
+  { value: 'shafi', label: 'Shafi\'i' },
+  { value: 'hanbali', label: 'Hanbali' },
+  { value: 'thahiri', label: 'Thahiri' },
+  { value: 'other', label: 'Other' },
+];
+
+export const dressStyleOptions = [
+  { value: 'niqab', label: 'Niqab' },
+  { value: 'jilbab', label: 'Jilbab' },
+  { value: 'headscarf', label: 'Headscarf Abaya' },
+  { value: 'somtimeshijab', label: 'Wear Hijab Sometimes' },
+  { value: 'no', label: "Doesn't Wear Hijab" },
 ];
 
 export const quranMemorizationOptions = [

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../components/contexts/AuthContext";
 import axios from "axios";
+import { salahPatternOptions, madhabOptions } from "../data/fieldData";
 
 const Profile = () => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
+    userName: "",
     bio: "",
     location: "",
-    nationality: "",
     salahPattern: "",
     madhab: "",
+    sect: "",
     occupation: "",
     islamicStudies: "",
   });
@@ -20,11 +22,12 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setProfileData({
+        userName: user.userName || "",
         bio: user.profile?.bio || "",
         location: user.location || "",
-        nationality: user.nationality || "",
         salahPattern: user.profile?.salahPattern || "",
-        madhab: user.sect || "",
+        madhab: user.profile?.madhab || "",
+        sect: user.sect || "",
         occupation: user.occupation || "",
         islamicStudies: user.profile?.islamicStudies || "",
       });
@@ -55,6 +58,11 @@ const Profile = () => {
       setError("Failed to update profile. Please try again.");
       console.error("Error updating profile:", err);
     }
+  };
+
+  const getLabelFromValue = (options, value) => {
+    const option = options.find(opt => opt.value === value);
+    return option ? option.label : "Not specified";
   };
 
   if (loading) {
@@ -95,7 +103,7 @@ const Profile = () => {
           <div className="p-8">
             <div className="flex justify-between items-start mb-8">
               <h2 className="text-2xl font-semibold">
-                {user?.userName || "User"} {user?.gender === 'male' ? '♂' : '♀'}
+                {user?.firstName || "First"} {user?.lastName || "Last"} {user?.gender === 'male' ? '♂' : '♀'}
               </h2>
               <div className="text-3xl font-arabic text-[#4A0635]">
                 السَّلامُ عَلَيْكُم
@@ -104,6 +112,26 @@ const Profile = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6">
               <div>
+                <div className="mb-6">
+                  <label className="block text-lg font-medium text-gray-700 mb-2">
+                    Kunya
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="userName"
+                      value={profileData.userName}
+                      onChange={handleInputChange}
+                      className="w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors"
+                      placeholder="Your kunya..."
+                    />
+                  ) : (
+                    <div className="p-4 bg-[#FFF1FE] rounded-xl">
+                      {profileData.userName || "Not specified"}
+                    </div>
+                  )}
+                </div>
+
                 <div className="mb-6">
                   <label className="block text-lg font-medium text-gray-700 mb-2">
                     Bio
@@ -146,40 +174,25 @@ const Profile = () => {
 
                 <div className="mb-6">
                   <label className="block text-lg font-medium text-gray-700 mb-2">
-                    Nationality
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="nationality"
-                      value={profileData.nationality}
-                      onChange={handleInputChange}
-                      className="w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors"
-                      placeholder="Your nationality..."
-                    />
-                  ) : (
-                    <div className="p-4 bg-[#FFF1FE] rounded-xl">
-                      {profileData.nationality || "Not specified"}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-lg font-medium text-gray-700 mb-2">
                     Salah Pattern
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
+                    <select
                       name="salahPattern"
                       value={profileData.salahPattern}
                       onChange={handleInputChange}
                       className="w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors"
-                      placeholder="Your salah pattern..."
-                    />
+                    >
+                      <option value="">Select Salah Pattern</option>
+                      {salahPatternOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <div className="p-4 bg-[#FFF1FE] rounded-xl">
-                      {profileData.salahPattern || "Not specified"}
+                      {getLabelFromValue(salahPatternOptions, profileData.salahPattern)}
                     </div>
                   )}
                 </div>
@@ -191,17 +204,22 @@ const Profile = () => {
                     Madhab
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
+                    <select
                       name="madhab"
                       value={profileData.madhab}
                       onChange={handleInputChange}
                       className="w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors"
-                      placeholder="Your madhab..."
-                    />
+                    >
+                      <option value="">Select Madhab</option>
+                      {madhabOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <div className="p-4 bg-[#FFF1FE] rounded-xl">
-                      {profileData.madhab || "Not specified"}
+                      {getLabelFromValue(madhabOptions, profileData.madhab)}
                     </div>
                   )}
                 </div>
