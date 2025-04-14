@@ -171,6 +171,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             console.error("Receiver ID is missing!");
             return;
         }
+
         const messageData = {
             text: input,
             sender_id: currentUserId,
@@ -179,10 +180,17 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             createdAt: new Date().toISOString(),
         };
 
-        console.info("Sending message: ", messageData);
+        
+        const notificationObject = {
+            text: `${user.firstName} sent you a message!`,
+            receiver_id: receiverId,
+            sender_id: currentUserId,
+        }
 
+        console.info("Sending message: ", messageData);
         socket.emit("send_message", messageData);
         socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
+        socket.emit("notification", notificationObject)
 
         // Notify the parent component about the new message
         if (onLastMessageUpdate) {

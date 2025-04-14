@@ -140,8 +140,8 @@ io.on('connection', (socket) => {
       const displayName = senderUser?.firstName || "Someone";
   
       const notification = await Notifications.create({
-        userId: sender_id,
-        receiverId: receiver_id,
+        userId: receiver_id,
+        senderId: sender_id,
         text: text || `${displayName} sent you a notification.`,
         type,
         isRead

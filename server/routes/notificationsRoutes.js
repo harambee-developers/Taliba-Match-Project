@@ -37,7 +37,7 @@ router.patch("/read/:id", async (req, res) => {
 // PATCH /api/notifications/mark-all-read/:userId
 router.patch("/mark-all-read/:userId", async (req, res) => {
   try {
-    await Notifications.updateMany(
+    await Notification.updateMany(
       { userId: req.params.userId, isRead: false },
       { $set: { isRead: true } }
     );

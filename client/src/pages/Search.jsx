@@ -12,6 +12,7 @@ import { useAuth } from "../components/contexts/AuthContext";
 import Alert from "../components/Alert";
 import { useAlert } from "../components/contexts/AlertContext";
 import FilterModal from "../components/FilterModal";
+import { useSocket } from "../components/contexts/SocketContext";
 
 const Search = () => {
   const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "" });
@@ -23,6 +24,7 @@ const Search = () => {
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [selectedProfile, setSelectedProfile] = useState(null)
   const { user } = useAuth()
+  const { socket } = useSocket()
   const { showAlert, alert } = useAlert()
 
 
@@ -72,6 +74,20 @@ const Search = () => {
       }
 
       const data = await response.json();
+
+      const requestObject = {
+        text: `${user.firstName} sent you a match request!`,
+        type: "match",
+        receiver_id: profileId,
+        sender_id: user.userId
+      }
+
+      if (socket) {
+        socket.emit("notification", requestObject);
+      } else {
+        console.warn("Socket is not connected, cannot send notification event.");
+      }
+
       showAlert("Match request sent", 'success')
       console.log("Match request sent:", data);
     } catch (error) {
@@ -100,7 +116,6 @@ const Search = () => {
       ? profiles.filter(profile => profile.gender !== user.gender)
       : profiles;
 
-  console.log(user)
   return (
     <div className="search-container">
       {/* Render alert component */}
