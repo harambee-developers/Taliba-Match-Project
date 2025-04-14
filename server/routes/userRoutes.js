@@ -143,17 +143,82 @@ router.delete("/user/delete/:id", async (req, res) => {
 // Protected Route
 router.put("/profile", authMiddleware, async (req, res) => {
   try {
-    const { bio, location, nationality, salahPattern, madhab, occupation, islamicStudies } = req.body;
+    const {
+      // Personal Details
+      firstName,
+      lastName,
+      dob,
+      email,
+      phone,
+      ethnicity,
+      nationality,
+      language,
+
+      // About Yourself
+      bio,
+      personality,
+      dealBreakers,
+
+      // Your Faith
+      sect,
+      madhab,
+      salahPattern,
+      quranMemorization,
+      dressingStyle,
+      openToPolygamy,
+      islamicAmbitions,
+      islamicBooks,
+
+      // Life Situation
+      children,
+      occupation,
+      location,
+      openToHijrah,
+      hijrahDestination,
+      maritalStatus,
+      revert,
+
+      // Appearance
+      weight,
+      height,
+      appearancePreference
+    } = req.body;
+
     const userId = req.user.userId;
 
     const updateData = {
-      location,
+      // Root level fields
+      firstName,
+      lastName,
+      dob,
+      email,
+      phone,
+      ethnicity,
       nationality,
       occupation,
-      sect: madhab, // Map madhab to sect field
+      location,
+      maritalStatus,
+      sect,
+
+      // Profile object fields
+      'profile.language': language,
       'profile.bio': bio,
+      'profile.personality': personality,
+      'profile.dealBreakers': dealBreakers,
+      'profile.madhab': madhab,
       'profile.salahPattern': salahPattern,
-      'profile.islamicStudies': islamicStudies,
+      'profile.quranMemorization': quranMemorization,
+      'profile.dressingStyle': dressingStyle,
+      'profile.openToPolygamy': openToPolygamy,
+      'profile.islamicAmbitions': islamicAmbitions,
+      'profile.islamicBooks': islamicBooks,
+      'profile.children': children,
+      'profile.openToHijrah': openToHijrah,
+      'profile.hijrahDestination': hijrahDestination,
+      'profile.revert': revert,
+      'profile.weight': weight,
+      'profile.height': height,
+      'profile.appearancePreference': appearancePreference
     };
 
     // Remove undefined fields

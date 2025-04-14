@@ -3,25 +3,42 @@ const { Schema } = mongoose;
 
 // Define the embedded schema for profile details
 const ProfileSchema = new Schema({
-  height: { type: Number },
+  // Personal Details
+  language: { type: [String] }, // Array of strings for multiple languages
+
+  // About Yourself
   age: { type: Number },
-  hobbies: { type: [String] },
-  languages: { type: [String] },
-  family_background: { type: String },
-  revert: { type: String, enum: ['yes', 'no', ''] },
-  yearsRevert: { type: Number },
-  additional_info: { type: String },
-  salahPattern: { type: String, enum: ['prays_mosque', 'prays_5_times', 'prays_most', 'prays_occasional'] },
-  madhab: { type: String, enum: ['hanafi', 'maliki', 'shafi', 'hanbali', 'thahiri', 'other'] },
+  bio: { type: String },
+  personality: { type: String },
+  dealBreakers: { type: String },
+
+  // Your Faith
+  madhab: { type: String, enum: ['hanafi', 'maliki', 'shafi', 'hanbali', 'thahiri', 'other', ''] },
+  salahPattern: { type: String, enum: ['prays_mosque', 'prays_5_times', 'prays_most', 'prays_occasional', ''] },
+  quranMemorization: { type: String, enum: ['hafidh', '10_plus', '5_to_10', '2_to_5', '1_or_less', ''] },
+  dressingStyle: { type: String, enum: ['niqab', 'jilbab', 'headscarf', 'somtimeshijab', 'no', ''] },
+  openToPolygamy: { type: String, enum: ['yes', 'no', 'maybe', ''] },
   islamicAmbitions: { type: String },
   islamicBooks: { type: String },
+
+  // Life Situation
+  children: { type: String, enum: ['yes', 'no', ''] },
   openToHijrah: { type: String, enum: ['yes', 'no', ''] },
   hijrahDestination: { type: String },
-  dealBreakers: { type: String },
-  children: { type: String, enum: ['yes', 'no', ''] },
-  dressingStyle: { type: String },
-  quranMemorization: { type: String },
-  public_profile: { type: Boolean, default: true }, // Default to public
+  revert: { type: String, enum: ['yes', 'no', ''] },
+  yearsRevert: { type: Number },
+
+  // Appearance
+  height: { type: Number, min: 100, max: 250 }, // in cm
+  weight: { type: Number, min: 30, max: 200 }, // in kg
+  appearancePreference: { type: String },
+
+  // Miscellaneous (Legacy/Unused Fields)
+  hobbies: { type: [String] },
+  family_background: { type: String },
+  additional_info: { type: String },
+
+  public_profile: { type: Boolean, default: true },// Default to public
 });
 
 // Define the embedded schema for user preferences
@@ -42,20 +59,21 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  userName: { type: String, required: true, index: true},
+  userName: { type: String, required: true, index: true }, // Kunya
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   role: { type: String, required: true, enum: ['admin', 'user'] },
   dob: { type: Date },
-  gender: { type: String },
-  sect: { type: String },
   education: { type: String },
+  gender: { type: String, enum: ['male', 'female'] },
+  sect: { type: String, enum: ['sunni', 'salafi', 'shia', 'idontknow', 'other', ''] },
   occupation: { type: String },
   maritalStatus: { type: String, enum: ['yes', 'no', ''] },
   location: { type: String },
   nationality: { type: String },
+  ethnicity: { type: String },
   phone: { type: String },
   created_at: { type: Date, default: Date.now },
   profile: ProfileSchema,
