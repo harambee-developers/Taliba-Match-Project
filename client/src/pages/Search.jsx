@@ -8,11 +8,11 @@ import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
 import Icon50 from "../components/icons/Icon50";
 import { ethnicityOptions } from "../data/fieldData";
-
-// Direct API connection (current implementation)
-const API_BASE_URL = 'http://localhost:7777';
-
-
+import MessageModal from "../components/MessageModal";
+import { useAuth } from "../components/contexts/AuthContext";
+import Alert from "../components/Alert";
+import { useAlert } from "../components/contexts/AlertContext";
+import FilterModal from "../components/FilterModal";
 
 const Search = () => {
   const navigate = useNavigate();
@@ -20,6 +20,13 @@ const Search = () => {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState(filters);
+  const [selectedProfile, setSelectedProfile] = useState(null)
+  const { user } = useAuth()
+  const { showAlert, alert } = useAlert()
+
 
   const fetchProfiles = async () => {
     try {
@@ -27,22 +34,22 @@ const Search = () => {
       setError(null);
       const queryParams = new URLSearchParams(filters).toString();
       console.log('Fetching profiles with params:', queryParams);
-      
-      const response = await fetch(`${API_BASE_URL}/api/user/search?${queryParams}`, {
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/search?${queryParams}`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Response error:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log('Received profiles:', data);
+      console.table('Received profiles:', data);
       setProfiles(data);
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -52,9 +59,33 @@ const Search = () => {
     }
   };
 
+  const handleMatchRequest = async (profileId) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/match/send-request`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { 'Accept': 'application/json', "Content-Type": "application/json", },
+          body: JSON.stringify({ sender_id: user.userId, receiver_id: profileId })
+        }
+      )
+      if (!response.ok) {
+        throw new Error("Failed to send match request");
+      }
+
+      const data = await response.json();
+      showAlert("Match request sent", 'success')
+      console.log("Match request sent:", data);
+    } catch (error) {
+      showAlert("Error sending match request", 'error')
+      console.error("Error sending match request:", error);
+    }
+
+  }
+
   useEffect(() => {
     fetchProfiles();
-  }, [filters]);
+  }, []);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -65,10 +96,24 @@ const Search = () => {
     navigate(`/profile/${userId}`);
   };
 
+  const countActiveFilters = () => {
+    return Object.values(filters).filter(value => value !== "").length;
+  };
+
+  // Filter profiles based on logged-in user gender
+  // Assumption: Each profile has a 'gender' property.
+  const visibleProfiles =
+    user && user.gender
+      ? profiles.filter(profile => profile.gender !== user.gender)
+      : profiles;
+
+  console.log(user)
   return (
     <div className="search-container">
+      {/* Render alert component */}
+      {alert && <Alert />}
       <h1 className="search-title"></h1>
-      
+
       {/* Filters */}
       <div className="filters-container">
         <div className="filter-row">
@@ -85,7 +130,7 @@ const Search = () => {
               <span className="select-arrow">▼</span>
             </div>
           </div>
-          
+
           <div className="filter-group">
             <label>Location</label>
             <div className="custom-select">
@@ -99,7 +144,7 @@ const Search = () => {
               <span className="select-arrow">▼</span>
             </div>
           </div>
-          
+
           <div className="filter-group">
             <label>Ethnicity</label>
             <div className="custom-select">
@@ -114,12 +159,29 @@ const Search = () => {
               <span className="select-arrow">▼</span>
             </div>
           </div>
-          
+
           <div className="more-filters-container">
-            <button className="more-filters-btn">
+            <button className="more-filters-btn flex items-center gap-2 relative" onClick={() => setIsFilterModalOpen(true)}>
               More Filters
+              {countActiveFilters() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                  {countActiveFilters()}
+                </span>
+              )}
               <Icon49 width={30} height={30} className="filter-icon" />
             </button>
+            <FilterModal
+              isOpen={isFilterModalOpen}
+              onClose={() => setIsFilterModalOpen(false)}
+              filters={pendingFilters}
+              onChange={(e) =>
+                setPendingFilters((prev) => ({
+                  ...prev,
+                  [e.target.name]: e.target.value,
+                }))
+              }
+              onApply={() => { setFilters(pendingFilters); fetchProfiles(); }}
+            />
           </div>
         </div>
       </div>
@@ -136,15 +198,15 @@ const Search = () => {
       )}
 
       {/* Profiles Grid */}
-      {!loading && !error && profiles.length > 0 && (
+      {!loading && !error && visibleProfiles.length > 0 && (
         <div className="profiles-grid">
-          {profiles.map((profile) => (
+          {visibleProfiles.map((profile) => (
             <div key={profile.id} className="profile-card">
               <div className="age-badge">{profile.age || 'N/A'}</div>
               <div className="profile-left">
-                <img 
-                  src={profile.image || icon_placeholder} 
-                  alt="Profile" 
+                <img
+                  src={profile.image || icon_placeholder}
+                  alt="Profile"
                   className="profile-icon"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -173,16 +235,25 @@ const Search = () => {
                   >
                     View Bio
                   </button>
-                  <Icon50 width={32} height={32} className="premium-icon" color="#1e5a8d" />
+                  <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
                 </div>
-                <button className="request-match">Request Match</button>
+                <button className="request-match" onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }}>Request Match</button>
+                <MessageModal
+                  isOpen={isOpen}
+                  onClose={() => setIsOpen(false)}
+                  title="Match Request Confirmation"
+                  onConfirm={() => {
+                    handleMatchRequest(selectedProfile)
+                    setIsOpen(false);
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
       )}
-      
-      {profiles.length > 0 && (
+
+      {visibleProfiles.length > 0 && (
         <div className="pagination">
           <button className="next-page">Next Page</button>
         </div>

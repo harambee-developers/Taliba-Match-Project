@@ -5,10 +5,17 @@ const cookieParser = require('cookie-parser')
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const router = express();
+const rateLimit = require("express-rate-limit");
 
 router.use(cookieParser())
 
-if (!process.env.JWT_SECRET_TOKEN) {
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 login attempts per windowMs
+    message: "Too many login attempts from this IP, please try again after 15 minutes."
+});
+
+if (!process.env.JWT_SECRET_TOKEN || !process.env.JWT_REFRESH_SECRET) {
     console.error("Missing JWT_SECRET in environment variables.");
     process.exit(1);
 }
@@ -90,7 +97,6 @@ router.post("/register", async (req, res) => {
             profile: generateProfile()
         });
         await user.save();
-        console.log(user)
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         console.error(error);
@@ -100,7 +106,7 @@ router.post("/register", async (req, res) => {
 
 router.post(
     "/login",
-    [body("email").notEmpty(), body("password").notEmpty()],
+    [body("email").notEmpty(), body("password").notEmpty()], loginLimiter,
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -121,9 +127,20 @@ router.post(
             const token = generateToken({
                 userId: user._id,
                 username: user.userName,
+                gender: user.gender,
                 email: user.email,
                 role: user.role
             });
+
+            const refreshToken = jwt.sign(
+                { userId: user._id },
+                process.env.JWT_REFRESH_SECRET,
+                { expiresIn: "7d" }
+            );
+
+            // Save the refresh token in DB
+            user.refreshToken = refreshToken;
+            await user.save();
 
             // Set the token in a secure, httpOnly cookie
             res.cookie("token", token, {
@@ -133,7 +150,15 @@ router.post(
                 maxAge: 60 * 60 * 1000 // 7 days when rememberMe is implemented, but 1 hour when not
             });
 
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "Strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+
             res.json({ token, redirect: user.role === "admin" ? "/admin/dashboard" : "/" });
+
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Internal server error" });
@@ -141,8 +166,82 @@ router.post(
     }
 );
 
-router.post("/logout", (req, res) => {
+// set refresh token
+router.post("/refresh-token", async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+        const user = await User.findById(decoded.userId);
+        if (!user || user.refreshToken !== refreshToken) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        // Generate new tokens
+        const newAccessToken = jwt.sign(
+            {
+                userId: user._id,
+                username: user.userName,
+                gender: user.gender,
+                email: user.email,
+                role: user.role
+            },
+            process.env.JWT_SECRET_TOKEN,
+            { expiresIn: "1h" }
+        );
+
+        const newRefreshToken = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Update DB
+        user.refreshToken = newRefreshToken;
+        await user.save();
+
+        // Set new cookies
+        res.cookie("token", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 60 * 60 * 1000
+        });
+
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({ token: newAccessToken });
+
+    } catch (error) {
+        console.error("Refresh token error:", error);
+        res.status(403).json({ message: "Invalid or expired refresh token" });
+    }
+});
+
+router.post("/logout", async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (refreshToken) {
+        try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        await User.findByIdAndUpdate(decoded.userId, { refreshToken: null });
+        } catch (err) {
+        console.warn("Error clearing refresh token:", err);
+        }
+  }
+
     res.clearCookie("token");
+    res.clearCookie("refreshToken");
     res.status(200).json({ message: "Logged out successfully" });
 });
 
@@ -159,6 +258,7 @@ router.get("/verify-token", async (req, res) => {
             valid: true,
             userId: decoded.userId,
             username: decoded.username,
+            gender: decoded.gender,
             email: decoded.email,
             role: decoded.role
         });

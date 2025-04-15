@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 1024.5 576" 
+    preserveAspectRatio="xMidYMid meet" 
+    class="w-full h-full" 
+    version="1.0">
+  <defs>
+    <clipPath id="clip-bg">
+      <path d="M 0 0.140625 L 1024 0.140625 L 1024 575.859375 L 0 575.859375 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <g clip-path="url(#clip-bg)">
+    <rect x="0" y="0.14" width="1024" height="575.72" fill="#ffffff" />
+  </g>
+
+  <!-- Red circle -->
+  <g>
+    <circle cx="511.875" cy="287.875" r="300" fill="#dd2f2f" />
+  </g>
+
+  <!-- White X (scaled up) -->
+  <g transform="translate(511.875 287.875) scale(5.5) translate(-511.875 -287.875)">
+    <path 
+      fill="#ffffff" 
+      d="M 542.058594 272.972656 L 529.089844 258.945312 L 511.875 274.863281 L 494.65625 258.945312 L 481.6875 272.972656 L 497.800781 287.871094 L 481.6875 302.769531 L 494.65625 316.796875 L 511.875 300.878906 L 529.089844 316.796875 L 542.058594 302.769531 L 525.945312 287.871094 Z"
+    />
+  </g>
+</svg>

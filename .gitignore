@@ -410,3 +410,12 @@ mongo_data
 # ignore seed file
 seed*
 
+# Ignore virtual environment folders
+venv/
+.env/
+.venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

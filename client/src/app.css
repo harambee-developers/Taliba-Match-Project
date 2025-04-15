@@ -13,7 +13,7 @@ body {
 /* Search container */
 .search-container {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -57,7 +57,7 @@ body {
   padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background-color: white;
+  background-color: #fef4f3;
   font-size: 16px;
   cursor: pointer;
 }
@@ -101,18 +101,6 @@ body {
   gap: 20px;
 }
 
-/* Profile card */
-.profile-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: #fef4f3;
-  border: 2px solid #d61c72;
-  border-radius: 10px;
-  padding: 15px;
-  height: 130px;
-}
-
 .age-badge {
   position: absolute;
   left: 32px;
@@ -139,6 +127,18 @@ body {
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* Profile card */
+.profile-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fef4f3;
+  border: 2px solid #d61c72;
+  border-radius: 10px;
+  padding: 30x;
+  height: 140px;
 }
 
 .profile-center {
@@ -171,6 +171,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 16px; /* <-- this adds space from the right edge */
 }
 
 .bio-container {
@@ -202,7 +203,12 @@ body {
   background-color: #1e5a8d;
   color: white;
   padding: 8px 12px;
-  width: 140px;
+  width: 130px;
+}
+
+.request-match:hover {
+  background-color: #174b75; /* darker shade */
+  transition: background-color 0.3s ease;
 }
 
 /* Pagination */

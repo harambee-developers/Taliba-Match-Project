@@ -59,7 +59,7 @@ const PhotoSchema = new Schema({
 
 // Main user schema
 const UserSchema = new Schema({
-  userName: { type: String, required: true, index: true }, // Kunya
+  userName: { type: String, required: true, index: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
@@ -70,6 +70,7 @@ const UserSchema = new Schema({
   gender: { type: String, enum: ['male', 'female'] },
   sect: { type: String, enum: ['sunni', 'salafi', 'shia', 'idontknow', 'other', ''] },
   occupation: { type: String },
+  ethnicity: { type: String },
   maritalStatus: { type: String, enum: ['yes', 'no', ''] },
   location: { type: String },
   nationality: { type: String },
@@ -79,7 +80,19 @@ const UserSchema = new Schema({
   profile: ProfileSchema,
   preferences: PreferencesSchema,
   photos: [PhotoSchema],
+  isOnline: { type: Boolean, default: false }, // Track if the user is online or offline
+  lastSeen: { type: Date, default: null }, // Timestamp for last seen when offline
+  socketId: { type: String, default: null }, // Store the socket ID to track the user
+  refreshToken: { type: String, default: null }
 });
+
+// Optionally, you can define a method for updating status based on socket activity
+UserSchema.methods.setOnlineStatus = function (status, socketId) {
+  this.isOnline = status;
+  this.socketId = socketId || null; // if status is offline, socketId can be null
+  this.lastSeen = status ? null : new Date(); // Set lastSeen only when offline
+  return this.save();
+};
 
 const User = mongoose.model('User', UserSchema);
 

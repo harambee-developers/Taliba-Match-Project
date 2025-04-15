@@ -42,10 +42,8 @@ router.get("/search", async (req, res) => {
 
     console.log('MongoDB query:', query);
     
-
-
     const users = await User.find(query)
-      .select('userName dob location nationality photos profile')
+      .select('userName dob location nationality photos profile gender')
       .lean() // Convert to plain JavaScript objects
       .exec();
 
@@ -65,7 +63,8 @@ router.get("/search", async (req, res) => {
           age,
           location: user.location || 'Not specified',
           nationality: user.nationality || 'Not specified',
-          image: user.photos && user.photos.length > 0 ? user.photos[0].url : null
+          image: user.photos && user.photos.length > 0 ? user.photos[0].url : null,
+          gender: user.gender
         };
       } catch (err) {
         console.error('Error processing user:', user._id, err);

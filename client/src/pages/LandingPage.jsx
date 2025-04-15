@@ -4,6 +4,7 @@ import logo from '../assets/logo.png';
 import heart from '../assets/heart.png';
 import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
+import { useAlert } from '../components/contexts/AlertContext';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -15,7 +16,6 @@ const LandingPage = () => {
   // For the FAQ toggles
   const [openIndex, setOpenIndex] = useState(null);
   const navigate = useNavigate()
-
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
@@ -26,7 +26,6 @@ const LandingPage = () => {
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row w-full min-h-screen z-20">
-
         {/* Left Section (Pink) */}
         <div className="lg:w-1/2 bg-[#FFF1FE] flex flex-col items-center justify-center p-6">
           <h1 className="text-5xl lg:text-6xl font-semibold font-[Montserrat] text-[#E01D42] text-center mb-4">
@@ -55,6 +54,7 @@ const LandingPage = () => {
                     src={step.icon}
                     alt={step.title}
                     className="w-12 h-12 object-contain"
+                    loading='lazy'
                   />
                 </div>
                 <h3 className="text-xl lg:text-2xl font-semibold font-[Montserrat]">
