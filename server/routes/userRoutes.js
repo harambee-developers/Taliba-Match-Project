@@ -100,6 +100,37 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// Protected route for viewing profiles
+router.get("/profile/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate ID parameter
+    if (!id || id === 'undefined') {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id)
+      .select('-password -__v -email -phone -dob') // Exclude sensitive information
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    res.status(500).json({ 
+      message: "Internal server error",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // Admin routes
 router.use(adminAuthMiddleware);
 

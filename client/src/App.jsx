@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import RegisterSuccess from "./pages/RegisterSuccess";
 import Profile from "./pages/Profile";
+import ViewProfile from "./pages/ViewProfile";
 import Matches from "./pages/Matches";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
@@ -27,6 +28,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<ViewProfile />} />
         <Route path="/matches" element={<Matches />} />
         <Route path="/search" element={<Search />} />
         <Route path="/library" element={<Library />} />
