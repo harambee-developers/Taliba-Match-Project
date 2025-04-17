@@ -8,6 +8,7 @@ import { useChatEvents } from "./contexts/ChatEventsContext";
 import { getCachedData, cacheData } from "../utils/cacheUtil";
 import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
+import MessageModal from "./modals/MessageModal";
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
     const [input, setInput] = useState("");
@@ -27,6 +28,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
     const [messages, setMessages] = useState([]);
     const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     // Use URL params as a fallback if props are null
     const { conversationId: conversationIdFromParams } = useParams();
@@ -180,7 +182,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             createdAt: new Date().toISOString(),
         };
 
-        
+
         const notificationObject = {
             text: `${user.firstName} sent you a message!`,
             receiver_id: receiverId,
@@ -474,6 +476,12 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                         disabled={isUploading}
                         className="hidden"
                         onChange={handleFileSelect}
+                    />
+                    <MessageModal
+                        isOpen={isOpen}
+                        onClose={() => setIsOpen(false)}
+                        title="Guidelines"
+                        text="Only send a shariah compliant picture ensuring your 'awrah is covered and you observe modesty"
                     />
                 </label>
 

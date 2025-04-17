@@ -73,6 +73,7 @@ const Match = () => {
         return updatedConversations;
       });
       console.log("New conversation created:", newConversation);
+      return newConversation;
     } catch (error) {
       console.error('Error creating new conversation', error);
     }
@@ -128,7 +129,7 @@ const Match = () => {
     // If conversation is still null, display a placeholder (or a loading spinner)
     if (!conversation) {
       return (
-        <div className='flex text-center justify-center h-screen text-gray-500'>
+        <div className='flex text-center justify-center min-h-screen text-gray-500'>
           <p>Creating a new conversation...</p>
         </div>
       );
@@ -156,12 +157,19 @@ const Match = () => {
                   <div
                     key={index}
                     className={`flex items-center p-4 mb-2 cursor-pointer rounded-lg ${borderClass} bg-white hover:bg-[#FFF1FE] transition-all duration-300`}
-                    onClick={() => {
+                    onClick={async () => {
                       if (!conversation) {
-                        // If no conversation exists, just create a new one immediately.
-                        return handleNewConversation(opponent._id);
-                      }
+                        setIsCreatingConversation(true);
+                        const newConv = await handleNewConversation(opponent._id);
 
+                        if (newConv) {
+                          await fetchConversations(); // Make sure state updates with the new conversation
+                          setSelectedMatch(opponent);
+                        }
+
+                        setIsCreatingConversation(false);
+                        return;
+                      }
                       if (window.innerWidth < 768) {
                         // On mobile, navigate directly to chat using the existing conversation.
                         navigate(`/chat/${conversation._id}`);
@@ -169,7 +177,8 @@ const Match = () => {
                         // On desktop, select the match.
                         setSelectedMatch(opponent);
                       }
-                    }}
+                    }
+                    }
                   >
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">

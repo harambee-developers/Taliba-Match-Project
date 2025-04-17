@@ -7,31 +7,34 @@ import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
 import Icon50 from "../components/icons/Icon50";
 import { ethnicityOptions } from "../data/fieldData";
-import MessageModal from "../components/MessageModal";
+import MessageModal from "../components/modals/MessageModal";
 import { useAuth } from "../components/contexts/AuthContext";
 import Alert from "../components/Alert";
 import { useAlert } from "../components/contexts/AlertContext";
-import FilterModal from "../components/FilterModal";
+import FilterModal from "../components/modals/FilterModal";
 import { useSocket } from "../components/contexts/SocketContext";
 
 const Search = () => {
-  const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "" });
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [pendingFilters, setPendingFilters] = useState(filters);
   const [selectedProfile, setSelectedProfile] = useState(null)
+
   const { user } = useAuth()
   const { socket } = useSocket()
   const { showAlert, alert } = useAlert()
 
+  const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "", senderId: user?._id, alreadyMatched: false });
+  const [pendingFilters, setPendingFilters] = useState(filters);
 
   const fetchProfiles = async () => {
     try {
       setLoading(true);
       setError(null);
+      
       const queryParams = new URLSearchParams(filters).toString();
       console.log('Fetching profiles with params:', queryParams);
 
@@ -50,6 +53,7 @@ const Search = () => {
 
       const data = await response.json();
       console.table('Received profiles:', data);
+
       setProfiles(data);
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -240,7 +244,11 @@ const Search = () => {
                   <button className="view-bio">View Bio</button>
                   <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
                 </div>
-                <button className="request-match" onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }}>Request Match</button>
+                <button className="request-match" 
+                onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }} 
+                disabled={profile.hasPendingRequest}>
+                {profile.hasPendingRequest ? "Pending...." : "Request Match"}
+                </button>
                 <MessageModal
                   isOpen={isOpen}
                   onClose={() => setIsOpen(false)}
@@ -249,6 +257,7 @@ const Search = () => {
                     handleMatchRequest(selectedProfile)
                     setIsOpen(false);
                   }}
+                  text="You are about to submit a match request. Would you like to continue?"
                 />
               </div>
             </div>

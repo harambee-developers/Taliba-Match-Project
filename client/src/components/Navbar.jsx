@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from './contexts/AuthContext';
 import Icon38 from './icons/Icon38';
 import Sidebar from './Sidebar';
-import LoginModal from './LoginModal';
+import LoginModal from './modals/LoginModal';
 import { useNotification } from './contexts/NotificationContext';
 
 const Navbar = () => {
@@ -97,7 +97,7 @@ const Navbar = () => {
             {showNotifications && (
               <div
                 ref={dropdownRef}
-                className="absolute right-4 mt-32 w-80 bg-gradient-to-br from-white to-gray-50 shadow-xl rounded-xl overflow-hidden z-50 transform transition-all duration-300"
+                className="absolute right-4 mt-32 w-80 bg-[#FFF1FE] border-2 border-[#203449] shadow-xl rounded-xl overflow-hidden z-50 transform transition-all duration-300"
               >
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-800">Notifications</h3>
@@ -112,7 +112,7 @@ const Navbar = () => {
                       {unreadNotifications.map((notif) => (
                         <li
                           key={notif._id}
-                          className="px-4 py-3 hover:bg-gray-100 transition-colors duration-200"
+                          className="px-4 py-3 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
                         >
                           <p className="text-gray-700" onClick={() => markAsRead(notif._id)}>{notif.text}</p>
                         </li>
@@ -123,7 +123,7 @@ const Navbar = () => {
                 <div className="p-3 border-t border-gray-200">
                   <button
                     onClick={markAllAsRead}
-                    className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    className="w-full py-2 bg-[#203449] text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                   >
                     Mark All as Read
                   </button>

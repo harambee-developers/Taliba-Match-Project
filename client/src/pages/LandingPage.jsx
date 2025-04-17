@@ -4,7 +4,6 @@ import logo from '../assets/logo.png';
 import heart from '../assets/heart.png';
 import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
-import { useAlert } from '../components/contexts/AlertContext';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -20,7 +19,7 @@ const LandingPage = () => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  usePageTitle("Welcome to Taliba Match!")
+  usePageTitle("Welcome to Talibah Match!")
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
