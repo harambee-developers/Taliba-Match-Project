@@ -20,6 +20,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate()
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
@@ -126,6 +127,8 @@ const Search = () => {
       ? profiles.filter(profile => profile.gender !== user.gender)
       : profiles;
 
+  console.log(profiles)
+  
   return (
     <div className="search-container">
       {/* Render alert component */}

@@ -3,25 +3,10 @@ const User = require("../model/User");
 const Match = require("../model/Match");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
+const adminAuthMiddleware = require('../middleware/adminAuthMiddleware')
+const authMiddleware = require('../middleware/authMiddleware')
 
 router.use(cookieParser())
-
-// Middleware to verify user token
-const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 // Public routes
 router.get("/search", async (req, res) => {
@@ -45,7 +30,7 @@ router.get("/search", async (req, res) => {
     const senderId = req.user?.id || req.query.senderId;
     
     const users = await User.find(query)
-      .select('userName dob location nationality photos profile gender')
+      .select('userName dob location nationality photos profile gender firstName lastName')
       .lean() // Convert to plain JavaScript objects
       .exec();
 
@@ -71,6 +56,8 @@ router.get("/search", async (req, res) => {
         return {
           id: user._id,
           name: user.userName,
+          firstName: user.firstName,
+          lastName: user.lastName,
           age,
           location: user.location || 'Not specified',
           nationality: user.nationality || 'Not specified',
@@ -141,9 +128,6 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     });
   }
 });
-
-// Admin routes
-router.use(adminAuthMiddleware);
 
 router.get("/users", async (req, res) => {
   try {
