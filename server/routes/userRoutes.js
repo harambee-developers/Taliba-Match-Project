@@ -111,6 +111,40 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// Protected route for viewing profiles
+router.get("/profile/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate ID parameter
+    if (!id || id === 'undefined') {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id)
+      .select('-password -__v -email -phone -dob') // Exclude sensitive information
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    res.status(500).json({ 
+      message: "Internal server error",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Admin routes
+router.use(adminAuthMiddleware);
+
 router.get("/users", async (req, res) => {
   try {
     const user = await User.find({});
@@ -151,17 +185,82 @@ router.delete("/user/delete/:id", async (req, res) => {
 // Protected Route
 router.put("/profile", authMiddleware, async (req, res) => {
   try {
-    const { bio, location, nationality, salahPattern, madhab, occupation, islamicStudies } = req.body;
+    const {
+      // Personal Details
+      firstName,
+      lastName,
+      dob,
+      email,
+      phone,
+      ethnicity,
+      nationality,
+      language,
+
+      // About Yourself
+      bio,
+      personality,
+      dealBreakers,
+
+      // Your Faith
+      sect,
+      madhab,
+      salahPattern,
+      quranMemorization,
+      dressingStyle,
+      openToPolygamy,
+      islamicAmbitions,
+      islamicBooks,
+
+      // Life Situation
+      children,
+      occupation,
+      location,
+      openToHijrah,
+      hijrahDestination,
+      maritalStatus,
+      revert,
+
+      // Appearance
+      weight,
+      height,
+      appearancePreference
+    } = req.body;
+
     const userId = req.user.userId;
 
     const updateData = {
-      location,
+      // Root level fields
+      firstName,
+      lastName,
+      dob,
+      email,
+      phone,
+      ethnicity,
       nationality,
       occupation,
-      sect: madhab, // Map madhab to sect field
+      location,
+      maritalStatus,
+      sect,
+
+      // Profile object fields
+      'profile.language': language,
       'profile.bio': bio,
+      'profile.personality': personality,
+      'profile.dealBreakers': dealBreakers,
+      'profile.madhab': madhab,
       'profile.salahPattern': salahPattern,
-      'profile.islamicStudies': islamicStudies,
+      'profile.quranMemorization': quranMemorization,
+      'profile.dressingStyle': dressingStyle,
+      'profile.openToPolygamy': openToPolygamy,
+      'profile.islamicAmbitions': islamicAmbitions,
+      'profile.islamicBooks': islamicBooks,
+      'profile.children': children,
+      'profile.openToHijrah': openToHijrah,
+      'profile.hijrahDestination': hijrahDestination,
+      'profile.revert': revert,
+      'profile.weight': weight,
+      'profile.height': height,
+      'profile.appearancePreference': appearancePreference
     };
 
     // Remove undefined fields

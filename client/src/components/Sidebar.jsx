@@ -7,6 +7,9 @@ import Icon28 from './icons/Icon28';
 import Icon29 from './icons/Icon29';
 import Icon30 from './icons/Icon30';
 
+// For debugging purposes
+console.log('Icon30 loaded:', Icon30);
+
 const Sidebar = ({ isOpen, toggleMenu }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -108,7 +111,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
                 >
                   <span>Library</span>
-                  <Icon30 className="detail-icon" width={24} height={24} color="#FFF" />
+                  <Icon30 width={24} height={24} color="#FFF" />
                 </Link>
               </li>
             </ul>

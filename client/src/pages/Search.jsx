@@ -1,5 +1,6 @@
 // pages/Search.js
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../app.css";
 import icon_placeholder from "../assets/placeholderIcon.png";
 import Icon47 from "../components/icons/Icon47";
@@ -107,6 +108,11 @@ const Search = () => {
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const handleViewBio = (userId) => {
+    console.log('Viewing profile with ID:', userId); // Debug log
+    navigate(`/profile/${userId}`);
   };
 
   const countActiveFilters = () => {
@@ -228,7 +234,7 @@ const Search = () => {
               </div>
 
               <div className="profile-center">
-                <h3 className="profile-name">{profile.name}</h3>
+                <h3 className="profile-name">{profile.firstName} {profile.lastName}</h3>
                 <div className="profile-detail">
                   <Icon47 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
                   <span>{profile.location || 'Location not specified'}</span>
@@ -241,7 +247,12 @@ const Search = () => {
 
               <div className="profile-right">
                 <div className="bio-container">
-                  <button className="view-bio">View Bio</button>
+                  <button 
+                    className="view-bio"
+                    onClick={() => handleViewBio(profile.id)}
+                  >
+                    View Bio
+                  </button>
                   <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
                 </div>
                 <button className="request-match" 

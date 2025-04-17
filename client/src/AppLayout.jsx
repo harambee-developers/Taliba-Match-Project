@@ -11,6 +11,7 @@ import ChatApp from "./components/ChatApp";
 import Match from "./pages/Match";
 import PendingMatches from "./pages/PendingMatches";
 import Profile from "./pages/Profile";
+import ViewProfile from "./pages/ViewProfile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import OnlineUserNotification from "./components/OnlineUserNotification";
@@ -55,6 +56,7 @@ function AppLayout() {
             <Route path="/matches" element={<Match />} />
           </Route>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />
         </Route>
