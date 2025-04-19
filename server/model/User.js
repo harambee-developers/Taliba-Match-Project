@@ -11,6 +11,7 @@ const ProfileSchema = new Schema({
   bio: { type: String },
   personality: { type: String },
   dealBreakers: { type: String },
+  hobbies: { type: [String] },
 
   // Your Faith
   madhab: { type: String, enum: ['hanafi', 'maliki', 'shafi', 'hanbali', 'thahiri', 'other', ''] },
@@ -34,7 +35,6 @@ const ProfileSchema = new Schema({
   appearancePreference: { type: String },
 
   // Miscellaneous (Legacy/Unused Fields)
-  hobbies: { type: [String] },
   family_background: { type: String },
   additional_info: { type: String },
 
