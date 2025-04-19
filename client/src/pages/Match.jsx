@@ -61,19 +61,21 @@ const Match = () => {
     }
   });
 
-  const handleNewConversation = async () => {
+  const handleNewConversation = async (selectedMatchId) => {
     try {
-      setIsCreatingConversation(true);
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`, { user1: selectedMatch._id, user2: user.userId });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`, { user1: selectedMatchId, user2: user.userId });
       const newConversation = response.data; // Get the newly created conversation
-      // Update the conversations state to include the new conversation
-      setConversations((prevConversations) => [...prevConversations, newConversation]);
+      // Update the conversations state to include the new conversation,
+      // and update the cache accordingly.
+      setConversations((prevConversations) => {
+        const updatedConversations = [...prevConversations, newConversation];
+        cacheData(CACHE_CONVERSATION, updatedConversations, chatCache);
+        return updatedConversations;
+      });
       console.log("New conversation created:", newConversation);
+      return newConversation;
     } catch (error) {
       console.error('Error creating new conversation', error);
-    } finally {
-      // Reset the creating flag after creation is attempted
-      setIsCreatingConversation(false);
     }
   };
 
@@ -117,18 +119,6 @@ const Match = () => {
     return conversation.last_sender_id !== user.userId ? 1 : 0;
   };
 
-  // Effect to automatically start a new conversation when a match is selected and none exists.
-  useEffect(() => {
-    if (selectedMatch) {
-      const existingConversation = getConversationWithMatch(selectedMatch);
-      if (!existingConversation) {
-        // Create a new conversation. Note that handleNewConversation might be modified
-        // to return the new conversation so you can immediately update state.
-        handleNewConversation();
-      }
-    }
-  }, [selectedMatch, isCreatingConversation, getConversationWithMatch]);
-
   const chatComponent = useMemo(() => {
     if (!selectedMatch || !user?.userId)
       return <div className='flex text-center justify-center h-screen text-gray-500'>
@@ -139,7 +129,7 @@ const Match = () => {
     // If conversation is still null, display a placeholder (or a loading spinner)
     if (!conversation) {
       return (
-        <div className='flex text-center justify-center h-screen text-gray-500'>
+        <div className='flex text-center justify-center min-h-screen text-gray-500'>
           <p>Creating a new conversation...</p>
         </div>
       );
@@ -167,19 +157,28 @@ const Match = () => {
                   <div
                     key={index}
                     className={`flex items-center p-4 mb-2 cursor-pointer rounded-lg ${borderClass} bg-white hover:bg-[#FFF1FE] transition-all duration-300`}
-                    onClick={() => {
-                      if (window.innerWidth < 768) {
-                        // On mobile, navigate directly to chat
-                        if (conversation) {
-                          navigate(`/chat/${conversation._id}`);
-                        } else {
-                          handleNewConversation(opponent);
+                    onClick={async () => {
+                      if (!conversation) {
+                        setIsCreatingConversation(true);
+                        const newConv = await handleNewConversation(opponent._id);
+
+                        if (newConv) {
+                          await fetchConversations(); // Make sure state updates with the new conversation
+                          setSelectedMatch(opponent);
                         }
+
+                        setIsCreatingConversation(false);
+                        return;
+                      }
+                      if (window.innerWidth < 768) {
+                        // On mobile, navigate directly to chat using the existing conversation.
+                        navigate(`/chat/${conversation._id}`);
                       } else {
-                        // On desktop, use the selected match approach
+                        // On desktop, select the match.
                         setSelectedMatch(opponent);
                       }
-                    }}
+                    }
+                    }
                   >
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">

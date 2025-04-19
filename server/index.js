@@ -7,6 +7,8 @@ const Message = require('./model/Message')
 const User = require('./model/User')
 const Notifications = require('./model/Notifications');
 const Conversation = require('./model/Conversation')
+const path = require('path')
+const fs = require('fs')
 
 // Import and initialize the MongoDB connection
 require("./db")
@@ -14,6 +16,13 @@ require("./db")
 // Load the appropriate .env file
 const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
 dotenv.config({ path: envFile });
+
+// Ensure public/uploads folder exists
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Created public/uploads directory');
+}
 
 const paymentRoutes = require("./routes/paymentRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -140,8 +149,8 @@ io.on('connection', (socket) => {
       const displayName = senderUser?.firstName || "Someone";
   
       const notification = await Notifications.create({
-        userId: sender_id,
-        receiverId: receiver_id,
+        userId: receiver_id,
+        senderId: sender_id,
         text: text || `${displayName} sent you a notification.`,
         type,
         isRead

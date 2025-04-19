@@ -1,27 +1,12 @@
 const express = require("express");
 const User = require("../model/User");
-const adminAuthMiddleware = require("../middleware/adminAuthMiddleware");
+const Match = require("../model/Match");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
+const adminAuthMiddleware = require('../middleware/adminAuthMiddleware')
+const authMiddleware = require('../middleware/authMiddleware')
 
 router.use(cookieParser())
-
-// Middleware to verify user token
-const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 // Public routes
 router.get("/search", async (req, res) => {
@@ -41,30 +26,44 @@ router.get("/search", async (req, res) => {
     }
 
     console.log('MongoDB query:', query);
+
+    const senderId = req.user?.id || req.query.senderId;
     
     const users = await User.find(query)
-      .select('userName dob location nationality photos profile gender')
+      .select('userName dob location nationality photos profile gender firstName lastName')
       .lean() // Convert to plain JavaScript objects
       .exec();
 
     console.log('Found users:', users.length);
+    console.log(req.query)
     
     if (!users) {
       console.log('No users found');
       return res.json([]);
     }
+
+    const pendingRequests = await Match.find({ 
+      sender_id: senderId, 
+      match_status: "pending" 
+    }).select("receiver_id");
+    
+    const pendingReceiverIds = new Set(pendingRequests.map(m => m.receiver_id.toString()));
     
     const profiles = users.map(user => {
       try {
         const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+        const hasPendingRequest = pendingReceiverIds.has(user._id.toString());
         return {
           id: user._id,
           name: user.userName,
+          firstName: user.firstName,
+          lastName: user.lastName,
           age,
           location: user.location || 'Not specified',
           nationality: user.nationality || 'Not specified',
           image: user.photos && user.photos.length > 0 ? user.photos[0].url : null,
-          gender: user.gender
+          gender: user.gender,
+          hasPendingRequest
         };
       } catch (err) {
         console.error('Error processing user:', user._id, err);
@@ -129,9 +128,6 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     });
   }
 });
-
-// Admin routes
-router.use(adminAuthMiddleware);
 
 router.get("/users", async (req, res) => {
   try {

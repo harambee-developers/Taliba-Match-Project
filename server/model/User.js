@@ -67,7 +67,7 @@ const UserSchema = new Schema({
   role: { type: String, required: true, enum: ['admin', 'user'] },
   dob: { type: Date },
   education: { type: String },
-  gender: { type: String, enum: ['male', 'female'] },
+  gender: { type: String, enum: ['Male', 'Female'] },
   sect: { type: String, enum: ['sunni', 'salafi', 'shia', 'idontknow', 'other', ''] },
   occupation: { type: String },
   ethnicity: { type: String },

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { useAuth } from './contexts/AuthContext';
-import { useAlert } from './contexts/AlertContext';
-import Alert from './Alert';
+import { useAuth } from '../contexts/AuthContext';
+import { useAlert } from '../contexts/AlertContext';
 
 const LoginModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState("");

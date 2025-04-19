@@ -60,8 +60,8 @@ const PendingMatches = () => {
             const requestObject = {
                 text: `${user.firstName} accepted your match request!`,
                 type: "match",
-                receiver_id: user.userId,
-                sender_id: senderId,
+                receiver_id: senderId,
+                sender_id: user.userId 
             }
 
             if (socket) {
