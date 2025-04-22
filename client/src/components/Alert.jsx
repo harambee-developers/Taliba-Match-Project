@@ -34,6 +34,11 @@ const Alert = () => {
     }
   }, [alert, hideAlert]);
 
+  // Extra safety check - render nothing if alert is undefined or null
+  if (!alert) {
+    return null;
+  }
+
   return (
     <AnimatePresence>
       {alert && (
@@ -43,13 +48,13 @@ const Alert = () => {
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ duration: 0.3 }}
           className={`fixed top-6 right-6 z-50 w-full max-w-sm rounded-xl shadow-lg border p-4 flex items-start space-x-3
-            ${bgColors[alert.type]} ${borderColors[alert.type]}`}
+            ${bgColors[alert.type] || bgColors.info} ${borderColors[alert.type] || borderColors.info}`}
         >
           <div className="flex-shrink-0 pt-0.5">
-            {icons[alert.type]}
+            {icons[alert.type] || icons.info}
           </div>
           <div className="flex-1 text-sm text-gray-800">
-            {alert.message}
+            {alert.message || "An alert occurred"}
           </div>
           <button
             onClick={hideAlert}
