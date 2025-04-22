@@ -410,3 +410,5 @@ mongo_data
 # ignore seed file
 seed*
 
+# ignore public uploaded files
+**/*public*
