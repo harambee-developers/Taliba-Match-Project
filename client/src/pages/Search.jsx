@@ -14,12 +14,15 @@ import Alert from "../components/Alert";
 import { useAlert } from "../components/contexts/AlertContext";
 import FilterModal from "../components/modals/FilterModal";
 import { useSocket } from "../components/contexts/SocketContext";
+import ProfileModal from "../components/modals/ProfileModal";
 
 const Search = () => {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
   const navigate = useNavigate()
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -112,8 +115,8 @@ const Search = () => {
   };
 
   const handleViewBio = (userId) => {
-    console.log('Viewing profile with ID:', userId); // Debug log
-    navigate(`/profile/${userId}`);
+    setSelectedProfileId(userId);
+    setIsProfileModalOpen(true);
   };
 
   const countActiveFilters = () => {
@@ -126,6 +129,31 @@ const Search = () => {
     user && user.gender
       ? profiles.filter(profile => profile.gender !== user.gender)
       : profiles;
+
+  // Helper function to get proper image URL
+  const getProfileImageUrl = (profile) => {
+    if (!profile.image) {
+      return icon_placeholder;
+    }
+    
+    // Handle avatar icons (SVG files)
+    if (profile.image.includes('icon_') && profile.image.endsWith('.svg')) {
+      return `/${profile.image}`;
+    }
+    
+    // Handle URLs that already have http/https
+    if (profile.image.startsWith('http')) {
+      return profile.image;
+    }
+    
+    // Handle relative paths from uploads directory
+    if (profile.image.startsWith('/uploads/')) {
+      return `${import.meta.env.VITE_BACKEND_URL}${profile.image}`;
+    }
+    
+    // Default case: prepend with backend URL if it's a relative path
+    return `${import.meta.env.VITE_BACKEND_URL}/${profile.image}`;
+  };
 
   console.log(profiles)
   
@@ -226,7 +254,7 @@ const Search = () => {
               <div className="age-badge">{profile.age || 'N/A'}</div>
               <div className="profile-left">
                 <img
-                  src={profile.image || icon_placeholder}
+                  src={getProfileImageUrl(profile)}
                   alt="Profile"
                   className="profile-icon"
                   onError={(e) => {
@@ -237,7 +265,7 @@ const Search = () => {
               </div>
 
               <div className="profile-center">
-                <h3 className="profile-name">{profile.firstName} {profile.lastName}</h3>
+                <h3 className="profile-name">{profile.name}</h3>
                 <div className="profile-detail">
                   <Icon47 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
                   <span>{profile.location || 'Location not specified'}</span>
@@ -278,6 +306,13 @@ const Search = () => {
           ))}
         </div>
       )}
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        userId={selectedProfileId}
+      />
 
       {visibleProfiles.length > 0 && (
         <div className="pagination">

@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Select from 'react-select';
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import occupationData from '../data/Occupations.json';
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions } from '../data/fieldData'
 import axios from 'axios'
@@ -102,6 +104,8 @@ const RegisterPage = () => {
     appearancePreference: '',
     height: '',
     weight: '',
+    avatar: '',
+    customImage: null,
   };
   const [formData, setFormData] = useState(() => {
     // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
@@ -114,6 +118,91 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate()
   usePageTitle("Register with us now!")
+
+  // Add state for image cropping
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [crop, setCrop] = useState({
+    unit: "%",
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50,
+  });
+  const imgRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  
+  // Function to handle image file selection
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result);
+        setShowCropper(true);
+        // Clear any previously selected avatar when custom image is chosen
+        handleInputChange('avatar', '');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Function for crop completion
+  const handleCropComplete = (crop) => {
+    console.log("Crop completed:", crop);
+  };
+
+  // Function to center the crop aspect
+  const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => {
+    const width = 50;
+    const height = width / aspect;
+    
+    return {
+      unit: "%",
+      width,
+      height,
+      x: (100 - width) / 2,
+      y: (100 - height) / 2,
+    };
+  };
+
+  // Function to apply the crop
+  const handleCropSave = async () => {
+    if (selectedImage && imgRef.current && crop.width && crop.height) {
+      setIsUploading(true);
+      
+      const canvas = document.createElement("canvas");
+      const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+      const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+      canvas.width = crop.width;
+      canvas.height = crop.height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(
+        imgRef.current,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width,
+        crop.height
+      );
+
+      // Convert canvas to blob and save
+      canvas.toBlob((blob) => {
+        // Store the blob in formData to be submitted later
+        handleInputChange('customImage', blob);
+        handleInputChange('avatar', 'custom'); // Set avatar to custom to indicate custom image
+        setShowCropper(false);
+        setIsUploading(false);
+        showAlert("Custom image prepared for upload. Submit your form to complete registration.", "success");
+      }, "image/jpeg");
+    } else {
+      showAlert("Please select and crop an image properly", "warning");
+    }
+  };
 
   // Calculate progress based on filled fields
   const calculateProgress = useMemo(() => {
@@ -193,7 +282,8 @@ const RegisterPage = () => {
   const sectionTitles = {
     1: "Let's start by telling us a bit about yourself!",
     2: "Your Journey With Islam",
-    3: "Let's Get To Know You"
+    3: "Let's Get To Know You",
+    4: "Choose your avatar"
   };
 
   const occupationOptions = occupationData.map((job) => ({
@@ -210,7 +300,12 @@ const RegisterPage = () => {
   };
 
   const nextSection = () => {
-    setCurrentSection((prev) => prev + 1);
+    if (currentSection === 3 && !formData.gender) {
+      showAlert("Please select your gender in section 1 before choosing an avatar", "warning");
+      setCurrentSection(1);
+    } else {
+      setCurrentSection((prev) => prev + 1);
+    }
   };
 
   const prevSection = () => {
@@ -227,31 +322,78 @@ const RegisterPage = () => {
       return;
     }
 
-    console.log("Form Data Submitted:", formData);
+    // Check if avatar is selected (either preset or custom)
+    if (!formData.avatar) {
+      showAlert("Please select an avatar or upload your own image", 'warning');
+      return;
+    }
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/register`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      let submitData = {...formData};
+      let response;
+      
+      // If custom image, handle it differently with FormData
+      if (formData.avatar === 'custom' && formData.customImage) {
+        const formDataObj = new FormData();
+        
+        // Add all other form fields to FormData except customImage
+        Object.keys(formData).forEach(key => {
+          if (key !== 'customImage' && key !== 'avatar') {
+            formDataObj.append(key, formData[key]);
+          }
+        });
+        
+        // Indicate that this is a custom profile image
+        formDataObj.append('isCustomAvatar', 'true');
+        
+        // Add the custom image blob
+        formDataObj.append('profileImage', formData.customImage, 'profile-pic.jpg');
+        
+        response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/auth/register`,
+          formDataObj,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      } else {
+        // For preset avatars, set the photo information correctly for the PhotoSchema
+        // We don't need to send the actual image file since it's a reference to a static file
+        const photoInfo = {
+          url: formData.avatar // This is the path to the SVG file
+        };
+        
+        // Remove the avatar field and add the photoInfo in the format expected by the API
+        delete submitData.avatar;
+        delete submitData.customImage;
+        
+        // Add the photo information
+        submitData.photos = [photoInfo];
+        
+        response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/auth/register`,
+          submitData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
 
       if (response.status === 201) {
         showAlert("Registration successful!", "success");
+        localStorage.removeItem('formData'); // Clear the form data from local storage
         setFormData(defaultFormData);
-        navigate(
-          "/register-success"
-        )
+        navigate("/register-success");
       } else {
         showAlert(`Registration failed: ${response.data.message}`, "error");
       }
     } catch (error) {
       console.error("Error:", error);
-      showAlert(`${error.response.data.message}`, "error");
+      showAlert(`${error.response?.data?.message || "Registration failed"}`, "error");
     }
   };
 
@@ -276,12 +418,57 @@ const RegisterPage = () => {
 
   // For the gender field
   const genderOptions = [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
   ];
 
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
+      {/* Modal for image cropping */}
+      {showCropper && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Crop Your Image</h3>
+            <div className="mb-4">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+                aspect={1}
+                minHeight={100}
+              >
+                <img
+                  ref={imgRef}
+                  src={selectedImage}
+                  alt="Crop me"
+                  className="max-h-[400px]"
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCropper(false);
+                  setSelectedImage(null);
+                }}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropSave}
+                className="px-4 py-2 bg-[#1A495D] text-white rounded"
+                disabled={isUploading}
+              >
+                {isUploading ? "Processing..." : "Save Crop"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="w-[90%] md:w-[70%] lg:w-[60%] p-8 rounded-lg space-y-6"
@@ -739,8 +926,144 @@ const RegisterPage = () => {
                 Back
               </button>
               <button
+                type="button"
+                onClick={nextSection}
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
+
+        {currentSection === 4 && (
+          <>
+            <div className="flex flex-col items-center">
+              <label className="text-gray-600 mb-6 text-xl">Choose your avatar<span className="text-red-600 ml-1">*</span></label>
+              
+              {formData.gender === 'Male' ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                  {[1, 2, 3, 4].map((num) => (
+                    <div 
+                      key={`man${num}`}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleInputChange('avatar', `icon_man${num === 1 ? '' : num}.svg`)}
+                    >
+                      <img 
+                        src={`/icon_man${num === 1 ? '' : num}.svg`} 
+                        alt={`Male Avatar ${num}`}
+                        className="w-full h-auto"
+                      />
+                      <div className="mt-2 text-center">
+                        <button
+                          type="button"
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                        >
+                          Option {num}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                  {/* First 4 female icons in a 2x2 or 4x1 grid */}
+                  {[1, 2, 3, 4].map((num) => (
+                    <div 
+                      key={`woman${num}`}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleInputChange('avatar', `icon_woman${num === 1 ? '' : num}.svg`)}
+                    >
+                      <img 
+                        src={`/icon_woman${num === 1 ? '' : num}.svg`} 
+                        alt={`Female Avatar ${num}`}
+                        className="w-full h-auto"
+                      />
+                      <div className="mt-2 text-center">
+                        <button
+                          type="button"
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                        >
+                          Option {num}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* 5th female icon centered */}
+                  <div className="col-span-2 md:col-span-4 flex justify-center mt-4">
+                    <div 
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === 'icon_woman5.svg' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/2 md:w-1/4`}
+                      onClick={() => handleInputChange('avatar', 'icon_woman5.svg')}
+                    >
+                      <img 
+                        src="/icon_woman5.svg" 
+                        alt="Female Avatar 5"
+                        className="w-full h-auto"
+                      />
+                      <div className="mt-2 text-center">
+                        <button
+                          type="button"
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === 'icon_woman5.svg' ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                        >
+                          Option 5
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {!formData.gender && (
+                <div className="text-center text-red-500 mt-4 mb-8">
+                  Please select your gender in the first section before choosing an avatar.
+                </div>
+              )}
+              
+              <div className="w-full text-center mb-4">
+                <div className="relative">
+                  <hr className="border-t border-gray-300" />
+                  <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FFF1FE] px-4 text-gray-500">
+                    or upload your own
+                  </span>
+                </div>
+              </div>
+              
+              {/* Custom image upload option - now after the avatars */}
+              <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
+                <h3 className="text-[#1A495D] font-semibold mb-3">Upload your own image</h3>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                  className="mb-2"
+                />
+                <p className="text-xs text-gray-500">For best results, use a square image</p>
+                
+                {/* Show preview of cropped image if available */}
+                {formData.avatar === 'custom' && (
+                  <div className="mt-3 inline-block">
+                    <div className="relative w-24 h-24 bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D] rounded-lg p-2">
+                      <div className="text-center text-sm text-[#1A495D] font-medium">Custom</div>
+                      <div className="text-xs text-green-600 mt-2">✓ Ready to upload</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex justify-between space-x-4 mt-8">
+              <button
+                type="button"
+                onClick={prevSection}
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
+              >
+                Back
+              </button>
+              <button
                 type="submit"
                 className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
+                disabled={!formData.avatar}
               >
                 Submit
               </button>

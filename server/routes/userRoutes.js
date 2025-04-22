@@ -5,6 +5,39 @@ const cookieParser = require("cookie-parser");
 const router = express.Router();
 const adminAuthMiddleware = require('../middleware/adminAuthMiddleware')
 const authMiddleware = require('../middleware/authMiddleware')
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Setup the storage engine for multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        // Use current timestamp to ensure unique filenames
+        cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
+    }
+});
+
+// Set up multer with the storage engine
+const upload = multer({ 
+    storage: storage, 
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        // Accept only images
+        if (file.mimetype.startsWith('image')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
+});
 
 router.use(cookieParser())
 
@@ -265,6 +298,85 @@ router.put("/profile", authMiddleware, async (req, res) => {
     res.json({ message: "Profile updated successfully", user });
   } catch (error) {
     console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Add avatar from predefined options
+router.post("/profile/avatar", authMiddleware, async (req, res) => {
+  try {
+    const { avatar } = req.body;
+    const userId = req.user.userId;
+
+    if (!avatar) {
+      return res.status(400).json({ message: "Avatar selection is required" });
+    }
+
+    // Check if avatar is a valid option based on naming convention
+    if (!avatar.match(/^icon_(man|woman)[1-5]?\.svg$/)) {
+      return res.status(400).json({ message: "Invalid avatar selection" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Create a photo object for the avatar
+    const photoInfo = {
+      url: avatar,
+      created_at: new Date()
+    };
+
+    // If user already has photos, update the first one or add a new one
+    if (user.photos && user.photos.length > 0) {
+      user.photos[0] = photoInfo;
+    } else {
+      user.photos = [photoInfo];
+    }
+
+    await user.save();
+    res.json({ message: "Avatar updated successfully", url: avatar });
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Upload custom profile image
+router.post("/profile/upload", authMiddleware, upload.single('profileImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Create the URL for the uploaded file
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    // Create a photo object for the custom image
+    const photoInfo = {
+      url: fileUrl,
+      created_at: new Date()
+    };
+
+    // If user already has photos, update the first one or add a new one
+    if (user.photos && user.photos.length > 0) {
+      user.photos[0] = photoInfo;
+    } else {
+      user.photos = [photoInfo];
+    }
+
+    await user.save();
+    res.json({ message: "Profile image uploaded successfully", url: fileUrl });
+  } catch (error) {
+    console.error("Error uploading profile image:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
