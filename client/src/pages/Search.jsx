@@ -128,7 +128,7 @@ const Search = () => {
       : profiles;
 
   console.log(profiles)
-  
+
   return (
     <div className="search-container">
       {/* Render alert component */}

@@ -4,6 +4,7 @@ import logo from '../assets/logo.png';
 import heart from '../assets/heart.png';
 import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/contexts/AuthContext';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -18,6 +19,13 @@ const LandingPage = () => {
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/profile');
+    }
+  }, [navigate, user]);
 
   usePageTitle("Welcome to Talibah Match!")
 

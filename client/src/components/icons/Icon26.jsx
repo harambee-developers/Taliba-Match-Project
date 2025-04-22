@@ -18,7 +18,7 @@ const Icon26 = ({ width = 24, height = 24, color = '#1a495d', className = 'objec
       />
       {/* Home icon */}
       <path 
-        fill={color === "#FFF" ? "#E01D42" : "#FFF"}
+        fill="theme-btn"
         d="M 511.9375 245 L 471.527344 280 L 479.117188 280 L 479.117188 330 L 498.347656 330 L 498.347656 300 L 525.527344 300 L 525.527344 330 L 544.757812 330 L 544.757812 280 L 552.347656 280 L 511.9375 245 Z"
         fillOpacity="1"
         fillRule="nonzero"

@@ -95,20 +95,20 @@ const PendingMatches = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white p-8 border-t-4 border-[#203449]">
+        <div className="min-h-screen p-8">
             {/* Render alert component */}
             {alert && <Alert />}
             {/* Parent Container for Flexbox */}
             <div className="flex flex-col md:flex-row space-y-8 md:space-y-0 md:space-x-8">
                 {/* Matches & Pending Requests in One Section */}
-                <div className="flex-1 bg-[#FFF1FE] p-6 rounded-lg shadow-md border-[#203449] border-4 min-h-[50vh]">
+                <div className="flex-1 theme-bg p-6 rounded-lg shadow-md theme-border min-h-[50vh]">
                     <h2 className="text-2xl font-semibold mb-4">Your Matches</h2>
                     {/* Loop through Received Pending Requests */}
                     {pendingReceivedRequests.length > 0 && (
                         <div>
                             <h3 className="text-lg font-medium mt-6 mb-2">Pending Requests (Received)</h3>
                             {pendingReceivedRequests.map((request, index) => (
-                                <div key={index} className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm border-4 border-[#E01D42]">
+                                <div key={index} className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm theme-border">
                                     <div>
                                         <h3 className="font-semibold">{request.sender.firstName} {request.sender.lastName}</h3>
                                         <p className="text-gray-500">{request.sender.userName}</p>
@@ -131,13 +131,13 @@ const PendingMatches = () => {
                 </div>
 
                 {/* Pending Sent Requests Section*/}
-                <div className="flex-1 bg-[#FFF1FE] p-6 rounded-lg shadow-md border-[#203449] border-4 min-h-[50vh]">
+                <div className="flex-1 theme-bg p-6 rounded-lg shadow-md theme-border min-h-[50vh]">
                     <h2 className="text-2xl font-semibold mb-4">Pending Requests</h2>
                     {pendingSentRequests.length > 0 ? (
                         <div>
                             {pendingSentRequests.map((request, index) => {
                                 return (
-                                    <div key={index} className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm border-4 border-[#E01D42] w-full">
+                                    <div key={index} className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm theme-border w-full">
                                         <div>
                                             <h3 className="font-semibold">{request.receiver.firstName} {request.receiver.lastName}</h3>
                                             <p className="text-gray-500">{request.receiver.userName}</p>

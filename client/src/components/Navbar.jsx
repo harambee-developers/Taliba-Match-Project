@@ -46,11 +46,11 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between w-full px-8 py-4 z-20 bg-[#FFF1FE] shadow-lg">
+      <div className="flex items-center justify-between w-full px-8 py-4 z-20 theme-bg shadow-lg">
         {/* Left side - Logo and Title */}
         <div className="flex items-center">
           {user && (
-            <div className="mr-4 cursor-pointer rounded-full bg-[#E01D42] shadow-lg hover:bg-[#4A0635] py-2 px-2" onClick={toggleSidebar}>
+            <div className="theme-btn mr-4 cursor-pointer rounded-full shadow-lg py-2 px-2" onClick={toggleSidebar}>
               <Icon38 width={24} height={24} className='' />
             </div>
           )}
@@ -78,7 +78,7 @@ const Navbar = () => {
             <div className="relative cursor-pointer rounded-full" onClick={handleNotificationClick} title="Notifications">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-[#E01D42] hover:text-[#4A0635]"
+                className="h-12 w-12 theme-btn-text"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -97,7 +97,7 @@ const Navbar = () => {
             {showNotifications && (
               <div
                 ref={dropdownRef}
-                className="absolute right-4 mt-32 w-80 bg-[#FFF1FE] border-2 border-[#203449] shadow-xl rounded-xl overflow-hidden z-50 transform transition-all duration-300"
+                className="fixed top-6 right-6 w-80 theme-bg theme-border shadow-xl rounded-xl overflow-hidden z-50 transform transition-all duration-300"
               >
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-800">Notifications</h3>
@@ -123,7 +123,7 @@ const Navbar = () => {
                 <div className="p-3 border-t border-gray-200">
                   <button
                     onClick={markAllAsRead}
-                    className="w-full py-2 bg-[#203449] text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    className="w-full py-2 theme-btn text-white rounded-lg transition-colors duration-200"
                   >
                     Mark All as Read
                   </button>
@@ -132,7 +132,7 @@ const Navbar = () => {
             )}
 
             {/* Profile Icon Placeholder */}
-            <div className="cursor-pointer rounded-full bg-[#FFF1FE] object-contain" title="Profile">
+            <div className="cursor-pointer rounded-full object-contain" title="Profile">
               {user?.gender === "Male" ? (
                 <img src="/man_thobe_bg.png" alt="man" className='h-16 w-16 object-cover' />
               ) : (
