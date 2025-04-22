@@ -34,6 +34,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd /docker_projects/talibamatch.com/
+            echo "Logged into VPS!"
+            cd /docker_projects/talibah.co.uk/
             docker compose down
             docker compose up -d
