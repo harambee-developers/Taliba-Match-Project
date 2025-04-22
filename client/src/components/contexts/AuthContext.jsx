@@ -135,7 +135,17 @@ const verifyToken = useCallback(async () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      throw new Error("Login process failed!");
+      
+      // Preserve the original error details from the backend
+      if (error.response && error.response.data) {
+        // If there's a specific message from the server, use it
+        const errorMessage = error.response.data.message || "Invalid credentials";
+        throw new Error(errorMessage);
+      } else {
+        // Otherwise, use a more specific error than just "Login process failed"
+        const errorMessage = error.message || "Unable to connect to the server. Please try again.";
+        throw error; // Preserve the original error object
+      }
     }
   };
 

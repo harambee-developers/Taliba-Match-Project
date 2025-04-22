@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../components/contexts/AuthContext";
 import axios from "axios";
 import Select from 'react-select';
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import { customSelectStyles } from "../styles/selectStyles";
 import { 
   salahPatternOptions, 
@@ -20,6 +22,20 @@ const Profile = () => {
   const { user } = useAuth();
   const [currentCard, setCurrentCard] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [crop, setCrop] = useState({
+    unit: "%",
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 50,
+  });
+  const imgRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [profileData, setProfileData] = useState({
     // Card 1 - Personal Details
     userName: "",
@@ -107,6 +123,11 @@ const Profile = () => {
         height: user.profile?.height || "",
         appearancePreference: user.profile?.appearancePreference || "",
       });
+
+      if (user.photos && user.photos.length > 0) {
+        setProfilePhoto(user.photos[0].url);
+      }
+      
       setLoading(false);
     }
   }, [user]);
@@ -124,6 +145,103 @@ const Profile = () => {
       ...prev,
       language: selectedOptions ? selectedOptions.map(option => option.value) : []
     }));
+  };
+
+  const handleAvatarSelect = (avatarPath) => {
+    setSelectedAvatar(avatarPath);
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result);
+        setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCropComplete = (crop) => {
+    console.log("Crop completed:", crop);
+  };
+
+  const handleCropSave = async () => {
+    if (selectedImage && imgRef.current && crop.width && crop.height) {
+      setIsUploading(true);
+      
+      const canvas = document.createElement("canvas");
+      const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+      const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+      canvas.width = crop.width;
+      canvas.height = crop.height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(
+        imgRef.current,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width,
+        crop.height
+      );
+
+      canvas.toBlob(async (blob) => {
+        try {
+          const formData = new FormData();
+          formData.append('profileImage', blob, 'profile-pic.jpg');
+          
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/upload`,
+            formData,
+            { 
+              withCredentials: true,
+              headers: { "Content-Type": "multipart/form-data" }
+            }
+          );
+          
+          if (response.status === 200) {
+            setProfilePhoto(response.data.url);
+            setShowCropper(false);
+            setSelectedImage(null);
+            setShowAvatarModal(false);
+          }
+        } catch (err) {
+          console.error("Error uploading image:", err);
+          setError("Failed to upload profile image. Please try again.");
+        } finally {
+          setIsUploading(false);
+        }
+      }, "image/jpeg");
+    } else {
+      setError("Please select and crop an image properly");
+    }
+  };
+
+  const handleAvatarSubmit = async () => {
+    if (selectedAvatar) {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/avatar`,
+          { avatar: selectedAvatar },
+          { withCredentials: true }
+        );
+        
+        if (response.status === 200) {
+          setProfilePhoto(selectedAvatar);
+          setShowAvatarModal(false);
+        }
+      } catch (err) {
+        console.error("Error setting avatar:", err);
+        setError("Failed to set avatar. Please try again.");
+      }
+    } else {
+      setError("Please select an avatar first");
+    }
   };
 
   const handleSubmit = async () => {
@@ -884,9 +1002,33 @@ const Profile = () => {
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
           <div className="p-8">
             <div className="flex justify-between items-start mb-8">
-              <h2 className="text-2xl font-semibold">
-                {profileData.userName} {user?.gender === 'Male' ? '♂' : '♀'}
-              </h2>
+              <div className="flex items-center">
+                <div className="relative mr-4">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#E01D42] bg-gray-100 flex items-center justify-center">
+                    {profilePhoto ? (
+                      <img 
+                        src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-gray-400 text-4xl">
+                        {user?.gender === 'Male' ? '♂' : '♀'}
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setShowAvatarModal(true)}
+                    className="absolute bottom-0 right-0 bg-[#E01D42] text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    title="Change profile picture"
+                  >
+                    <span>✏️</span>
+                  </button>
+                </div>
+                <h2 className="text-2xl font-semibold">
+                  {profileData.userName} {user?.gender === 'Male' ? '♂' : '♀'}
+                </h2>
+              </div>
               <div className="text-3xl font-arabic text-[#4A0635]">
                 السَّلامُ عَلَيْكُم
               </div>
@@ -937,6 +1079,160 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {showAvatarModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Change Profile Picture</h3>
+              <button 
+                onClick={() => {
+                  setShowAvatarModal(false);
+                  setSelectedAvatar('');
+                  setSelectedImage(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-lg font-medium mb-3">Choose from avatars</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {user?.gender === 'Male' ? (
+                  [1, 2, 3, 4].map((num) => (
+                    <div 
+                      key={`man${num}`}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleAvatarSelect(`icon_man${num === 1 ? '' : num}.svg`)}
+                    >
+                      <img 
+                        src={`/icon_man${num === 1 ? '' : num}.svg`} 
+                        alt={`Male Avatar ${num}`}
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 col-span-full">
+                      {[1, 2, 3, 4].map((num) => (
+                        <div 
+                          key={`woman${num}`}
+                          className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                          onClick={() => handleAvatarSelect(`icon_woman${num === 1 ? '' : num}.svg`)}
+                        >
+                          <img 
+                            src={`/icon_woman${num === 1 ? '' : num}.svg`} 
+                            alt={`Female Avatar ${num}`}
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="col-span-full flex justify-center">
+                      <div 
+                        className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === 'icon_woman5.svg' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/3`}
+                        onClick={() => handleAvatarSelect('icon_woman5.svg')}
+                      >
+                        <img 
+                          src="/icon_woman5.svg" 
+                          alt="Female Avatar 5"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="w-full text-center mb-6">
+              <div className="relative">
+                <hr className="border-t border-gray-300" />
+                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-gray-500">
+                  or upload your own
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-6 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
+              <h4 className="text-lg font-medium mb-3">Upload your own image</h4>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+                className="mb-2"
+              />
+              <p className="text-xs text-gray-500">For best results, use a square image</p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowAvatarModal(false);
+                  setSelectedAvatar('');
+                }}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAvatarSubmit}
+                className="px-4 py-2 bg-[#1A495D] text-white rounded"
+                disabled={!selectedAvatar}
+              >
+                Save Avatar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCropper && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Crop Your Image</h3>
+            <div className="mb-4">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+                aspect={1}
+                minHeight={100}
+              >
+                <img
+                  ref={imgRef}
+                  src={selectedImage}
+                  alt="Crop me"
+                  className="max-h-[400px]"
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCropper(false);
+                  setSelectedImage(null);
+                }}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropSave}
+                className="px-4 py-2 bg-[#1A495D] text-white rounded"
+                disabled={isUploading}
+              >
+                {isUploading ? "Processing..." : "Save Crop"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
