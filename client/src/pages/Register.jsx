@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Select from 'react-select';
 import occupationData from '../data/Occupations.json';
-import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions } from '../data/fieldData'
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions } from '../data/fieldData'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -15,41 +15,41 @@ const usePageTitle = (title) => {
 const customSelectStyles = {
   control: (provided) => ({
     ...provided,
-    backgroundColor: '#E01D42',
-    borderColor: '#E01D42',
-    color: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#1A495D',
+    color: '#1A495D',
     input: {
-      color: '#FFFFFF',
+      color: '#1A495D',
     },
   }),
   input: (provided) => ({
     ...provided,
-    color: '#FFFFFF',
+    color: '#1A495D',
   }),
   placeholder: (provided) => ({
     ...provided,
-    color: '#FFFFFF',
+    color: '#1A495D',
   }),
   menu: (provided) => ({
     ...provided,
-    backgroundColor: '#E01D42',
+    backgroundColor: '#FFFFFF',
   }),
   option: (provided, state) => ({
     ...provided,
-    backgroundColor: state.isSelected ? '#9A1C30' : '#E01D42',
-    color: '#FFFFFF',
+    backgroundColor: state.isSelected ? '#1A495D' : '#FFFFFF',
+    color: state.isSelected ? '#FFFFFF' : '#1A495D',
     '&:hover': {
-      backgroundColor: '#9A1C30',
+      backgroundColor: '#1A495D',
       color: '#FFFFFF',
     },
   }),
   noOptionsMessage: (provided) => ({
     ...provided,
-    color: '#FFFFFF',
+    color: '#1A495D',
   }),
   multiValue: (provided) => ({
     ...provided,
-    backgroundColor: '#9A1C30',
+    backgroundColor: '#1A495D',
   }),
   multiValueLabel: (provided) => ({
     ...provided,
@@ -59,13 +59,13 @@ const customSelectStyles = {
     ...provided,
     color: '#FFFFFF',
     ':hover': {
-      backgroundColor: '#9A1C30',
+      backgroundColor: '#1A495D',
       color: '#FFFFFF',
     },
   }),
   singleValue: (provided) => ({
     ...provided,
-    color: '#FFFFFF',
+    color: '#1A495D',
   }),
 };
 
@@ -75,6 +75,7 @@ const RegisterPage = () => {
     lastName: '',
     kunya: '',
     dob: '',
+    gender: '',
     email: '',
     phone: '',
     location: '',
@@ -90,11 +91,17 @@ const RegisterPage = () => {
     islamicBooks: '',
     quranMemorization: '',
     dressingStyle: '',
+    openToPolygamy: '',
     islamicAmbitions: '',
     children: '',
     occupation: '',
     personality: '',
+    hobbies: '',
     dealBreakers: '',
+    bio: '',
+    appearancePreference: '',
+    height: '',
+    weight: '',
   };
   const [formData, setFormData] = useState(() => {
     // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
@@ -107,6 +114,87 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate()
   usePageTitle("Register with us now!")
+
+  // Calculate progress based on filled fields
+  const calculateProgress = useMemo(() => {
+    // Count total required fields
+    const requiredFields = [
+      'firstName', 
+      'lastName', 
+      'kunya', 
+      'email', 
+      'phone', 
+      'location', 
+      'ethnicity', 
+      'nationality'
+    ];
+    
+    // Fields that become required based on other selections
+    if (formData.openToHijrah === 'yes') {
+      requiredFields.push('hijrahDestination');
+    }
+    
+    if (formData.revert === 'yes') {
+      requiredFields.push('yearsRevert');
+    }
+    
+    if (formData.sect === 'other') {
+      requiredFields.push('sectOther');
+    }
+    
+    if (formData.occupation === 'other') {
+      requiredFields.push('occupationOther');
+    }
+    
+    // Count filled required fields
+    const filledRequiredFields = requiredFields.filter(field => {
+      if (typeof formData[field] === 'string') {
+        return formData[field].trim() !== '';
+      }
+      return formData[field] !== undefined && formData[field] !== null;
+    });
+
+    // Additional optional fields that count towards progress
+    const optionalFields = [
+      'dob', 
+      'openToHijrah', 
+      'maritalStatus', 
+      'revert', 
+      'salahPattern', 
+      'sect', 
+      'islamicBooks',
+      'quranMemorization',
+      'dressingStyle',
+      'openToPolygamy',
+      'islamicAmbitions',
+      'children',
+      'occupation',
+      'personality',
+      'hobbies',
+      'dealBreakers'
+    ];
+    
+    const filledOptionalFields = optionalFields.filter(field => {
+      if (typeof formData[field] === 'string') {
+        return formData[field].trim() !== '';
+      }
+      return formData[field] !== undefined && formData[field] !== null;
+    });
+    
+    // Calculate progress percentage
+    // Required fields count more (70% of progress) than optional ones (30% of progress)
+    const requiredFieldsPercent = filledRequiredFields.length / requiredFields.length * 0.7;
+    const optionalFieldsPercent = filledOptionalFields.length / optionalFields.length * 0.3;
+    
+    return Math.min(100, Math.round((requiredFieldsPercent + optionalFieldsPercent) * 100));
+  }, [formData]);
+
+  // Section titles
+  const sectionTitles = {
+    1: "Let's start by telling us a bit about yourself!",
+    2: "Your Journey With Islam",
+    3: "Let's Get To Know You"
+  };
 
   const occupationOptions = occupationData.map((job) => ({
     value: job.title,
@@ -172,6 +260,7 @@ const RegisterPage = () => {
     if (!formData.kunya) errors.kunya = "Kunya is required";
     if (!formData.firstName) errors.firstName = "First Name is required";
     if (!formData.lastName) errors.lastName = "Last Name is required";
+    if (!formData.gender) errors.gender = "Gender is required";
     if (!formData.email) {
       errors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -185,15 +274,39 @@ const RegisterPage = () => {
     label: country,
   }));
 
+  // For the gender field
+  const genderOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
       <form
         onSubmit={handleSubmit}
-        className="w-[90%] md:w-[50%] lg:w-[40%] p-8 rounded-lg space-y-6"
+        className="w-[90%] md:w-[70%] lg:w-[60%] p-8 rounded-lg space-y-6"
       >
+        {/* Header with Salaam */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold text-[#1A495D]">
+            {sectionTitles[currentSection]}
+          </h2>
+          <div className="text-right">
+            <div className="text-2xl font-arabic text-[#1A495D]">السَّلاَمُ عَلَيْكُمْ</div>
+          </div>
+        </div>
+        
+        {/* Progress Bar - now based on filled fields */}
+        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+          <div 
+            className="bg-[#1A495D] h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+            style={{ width: `${calculateProgress}%` }}
+          ></div>
+          <div className="text-right text-xs text-[#1A495D] mt-1">{calculateProgress}% completed</div>
+        </div>
+
         {currentSection === 1 && (
           <>
-            <h1 className="text-2xl font-semibold text-center text-gray-800">Start by telling us a bit about yourself</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">First Name</label>
@@ -202,11 +315,11 @@ const RegisterPage = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter your first name..."
                 />
                 {errors.firstName && (
-                  <p className="mt-2 text-sm text-yellow-500">{errors.firstName}</p>
+                  <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>
                 )}
               </div>
               <div className="flex flex-col">
@@ -216,27 +329,31 @@ const RegisterPage = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter your last name..."
                 />
                 {errors.lastName && (
-                  <p className="mt-2 text-sm text-yellow-500">{errors.lastName}</p>
+                  <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>
                 )}
               </div>
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Do you have a preferred Kunya?</label>
+              <label className="text-gray-600 mb-2">Do you have a preferred Kunya?<span className="text-red-600 ml-1">*</span></label>
               <input
                 type="text"
                 name="kunya"
                 value={formData.kunya}
                 onChange={(e) => handleInputChange('kunya', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                 placeholder="Enter your Kunya..."
               />
               {errors.kunya && (
-                <p className="mt-2 text-sm text-yellow-500">{errors.kunya}</p>
+                <p className="mt-2 text-sm text-red-600">{errors.kunya}</p>
               )}
+              <div className="mt-2 text-sm text-gray-500">
+                <p>A kunya is a nickname like <span className="font-semibold">Umm (mother of)</span> or <span className="font-semibold">Abu (father of)</span> followed by a name. You can choose <span className="font-semibold">any name</span> — it doesn't have to be your child's.</p>
+                <p className="mt-1">Example: <span className="italic">Umm Maryam, Abu Yusuf, Umm Rayyan</span></p>
+              </div>
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Date of Birth (DOB)</label>
@@ -245,7 +362,17 @@ const RegisterPage = () => {
                 name="dob"
                 value={formData.dob}
                 onChange={(e) => handleInputChange('dob', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Gender<span className="text-red-600 ml-1">*</span></label>
+              <Select
+                options={genderOptions}
+                value={genderOptions.find(option => option.value === formData.gender) || null}
+                placeholder="Select gender..."
+                onChange={(option) => handleInputChange('gender', option ? option.value : '')}
+                styles={customSelectStyles}
               />
             </div>
             <div className="flex flex-col">
@@ -255,11 +382,11 @@ const RegisterPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                 placeholder="Enter your email..."
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-yellow-500">{errors.email}</p>
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
             <div className="flex flex-col">
@@ -269,7 +396,7 @@ const RegisterPage = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                 placeholder="Enter your phone number..."
               />
             </div>
@@ -301,7 +428,7 @@ const RegisterPage = () => {
                   name="hijrahDestination"
                   value={formData.hijrahDestination}
                   onChange={(e) => handleInputChange('hijrahDestination', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter potential hijrah destination..."
                 />
               </div>
@@ -323,7 +450,7 @@ const RegisterPage = () => {
                   type="text"
                   name="ethnicity"
                   onChange={(e) => handleInputChange('ethnicity', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Specify ethnicity...."
                 />
               </div>
@@ -351,7 +478,7 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={nextSection}
-              className="w-full py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+              className="w-full py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
             >
               Next
             </button>
@@ -360,7 +487,6 @@ const RegisterPage = () => {
 
         {currentSection === 2 && (
           <>
-            <h1 className="text-2xl font-semibold text-center text-gray-800">Your Journey With Islam</h1>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you a Revert?</label>
               <Select
@@ -379,7 +505,7 @@ const RegisterPage = () => {
                   name="yearsRevert"
                   value={formData.yearsRevert}
                   onChange={(e) => handleInputChange('yearsRevert', e.target.value)}
-                  className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter number of years..."
                 />
               </div>
@@ -410,7 +536,7 @@ const RegisterPage = () => {
                     name="sectOther"
                     value={formData.sectOther || ''}
                     onChange={(e) => handleInputChange('sectOther', e.target.value)}
-                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white w-full"
+                    className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70 w-full"
                     placeholder="Specify other sect..."
                   />
                 )}
@@ -423,7 +549,7 @@ const RegisterPage = () => {
                 name="islamicBooks"
                 value={formData.islamicBooks}
                 onChange={(e) => handleInputChange('islamicBooks', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                 placeholder="Enter books or mutuun studied..."
               />
             </div>
@@ -437,17 +563,30 @@ const RegisterPage = () => {
                 styles={customSelectStyles}
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Dressing Style (Hijab, Niqab, Modesty Level)</label>
-              <input
-                type="text"
-                name="dressingStyle"
-                value={formData.dressingStyle}
-                onChange={(e) => handleInputChange('dressingStyle', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
-                placeholder="Enter dressing style..."
-              />
-            </div>
+            {formData.gender === 'female' && (
+              <>
+                <div className="flex flex-col">
+                  <label className="text-gray-600 mb-2">Dressing Style (Hijab, Niqab, Modesty Level)</label>
+                  <Select
+                    options={dressStyleOptions}
+                    value={dressStyleOptions.find(option => option.value === formData.dressingStyle) || null}
+                    placeholder="Select dressing style..."
+                    onChange={(option) => handleInputChange('dressingStyle', option ? option.value : '')}
+                    styles={customSelectStyles}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-gray-600 mb-2">Are you open to polygamy?</label>
+                  <Select
+                    options={polygamyOptions}
+                    value={polygamyOptions.find(option => option.value === formData.openToPolygamy) || null}
+                    placeholder="Select an option..."
+                    onChange={(option) => handleInputChange('openToPolygamy', option ? option.value : '')}
+                    styles={customSelectStyles}
+                  />
+                </div>
+              </>
+            )}
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Islamic Ambitions</label>
               <input
@@ -455,7 +594,7 @@ const RegisterPage = () => {
                 name="islamicAmbitions"
                 value={formData.islamicAmbitions}
                 onChange={(e) => handleInputChange('islamicAmbitions', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                 placeholder="Enter your ambitions (e.g., Quran memorization, Arabic learning)..."
               />
             </div>
@@ -463,14 +602,14 @@ const RegisterPage = () => {
               <button
                 type="button"
                 onClick={prevSection}
-                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={nextSection}
-                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
               >
                 Next
               </button>
@@ -480,15 +619,48 @@ const RegisterPage = () => {
 
         {currentSection === 3 && (
           <>
-            <h1 className="text-2xl font-semibold text-center text-gray-800">Let’s Get To Know You</h1>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Do you have children?</label>
-              <Select
-                options={childrenOptions}
-                value={childrenOptions.find(option => option.value === formData.children) || null}
-                placeholder="Select an option"
-                onChange={(option) => handleInputChange('children', option ? option.value : '')}
-                styles={customSelectStyles}
+              <label className="text-gray-600 mb-2">Tell us about yourself</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={(e) => handleInputChange('bio', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Write a brief introduction about yourself..."
+                rows={4}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Describe Your Personality</label>
+              <input
+                type="text"
+                name="personality"
+                value={formData.personality}
+                onChange={(e) => handleInputChange('personality', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Enter your personality (e.g., Funny, Patient)"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Hobbies & Interests</label>
+              <input
+                type="text"
+                name="hobbies"
+                value={formData.hobbies}
+                onChange={(e) => handleInputChange('hobbies', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Enter your hobbies (e.g., Reading, Cooking, Hiking)"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Deal Breakers and Non-Negotiables</label>
+              <input
+                type="text"
+                name="dealBreakers"
+                value={formData.dealBreakers}
+                onChange={(e) => handleInputChange('dealBreakers', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Enter deal breakers and non-negotiables"
               />
             </div>
             <div className="flex flex-col">
@@ -507,45 +679,68 @@ const RegisterPage = () => {
                     name="occupationOther"
                     value={formData.occupationOther || ''}
                     onChange={(e) => handleInputChange('occupationOther', e.target.value)}
-                    className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white w-full"
+                    className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70 w-full"
                     placeholder="Specify other occupation"
                   />
                 )}
               </div>
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Describe Your Personality</label>
-              <input
-                type="text"
-                name="personality"
-                value={formData.personality}
-                onChange={(e) => handleInputChange('personality', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
-                placeholder="Enter your personality (e.g., Funny, Patient)"
+              <label className="text-gray-600 mb-2">Appearance Preferences</label>
+              <textarea
+                name="appearancePreference"
+                value={formData.appearancePreference}
+                onChange={(e) => handleInputChange('appearancePreference', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Describe your appearance preferences for a potential spouse..."
+                rows={3}
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="text-gray-600 mb-2">Height</label>
+                <input
+                  type="text"
+                  name="height"
+                  value={formData.height}
+                  onChange={(e) => handleInputChange('height', e.target.value)}
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                  placeholder="Enter your height in cm (e.g., 178cm)"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-gray-600 mb-2">Weight</label>
+                <input
+                  type="text"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={(e) => handleInputChange('weight', e.target.value)}
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                  placeholder="Enter your weight in kg (e.g., 73kg)"
+                />
+              </div>
+            </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Deal Breakers and Non-Negotiables</label>
-              <input
-                type="text"
-                name="dealBreakers"
-                value={formData.dealBreakers}
-                onChange={(e) => handleInputChange('dealBreakers', e.target.value)}
-                className="p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#E01D42] bg-[#E01D42] text-white placeholder-white"
-                placeholder="Enter deal breakers and non-negotiables"
+              <label className="text-gray-600 mb-2">Do you have children?</label>
+              <Select
+                options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.children) || null}
+                placeholder="Select an option"
+                onChange={(option) => handleInputChange('children', option ? option.value : '')}
+                styles={customSelectStyles}
               />
             </div>
             <div className="flex justify-between space-x-4 mt-4">
               <button
                 type="button"
                 onClick={prevSection}
-                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#E01D42] text-white font-semibold rounded-md hover:bg-[#9A1C30] transition"
+                className="w-1/2 py-3 bg-[#1A495D] text-white font-semibold rounded-md hover:bg-opacity-80 transition"
               >
                 Submit
               </button>
