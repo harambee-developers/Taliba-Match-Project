@@ -1,8 +1,6 @@
 // pages/Search.js
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "../app.css";
-import icon_placeholder from "../assets/placeholderIcon.png";
 import Icon47 from "../components/icons/Icon47";
 import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
@@ -23,8 +21,7 @@ const Search = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-  const navigate = useNavigate()
-
+  const [selectedProfileUrl, setSelectedProfileUrl] = useState(null)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
 
@@ -39,7 +36,7 @@ const Search = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const queryParams = new URLSearchParams(filters).toString();
       console.log('Fetching profiles with params:', queryParams);
 
@@ -114,8 +111,9 @@ const Search = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const handleViewBio = (userId) => {
-    setSelectedProfileId(userId);
+  const handleViewBio = (profile) => {
+    setSelectedProfileId(profile.id);
+    setSelectedProfile(profile); // this will be used to get the image
     setIsProfileModalOpen(true);
   };
 
@@ -130,32 +128,35 @@ const Search = () => {
       ? profiles.filter(profile => profile.gender !== user.gender)
       : profiles;
 
+  const fallbackUrl =
+    user?.gender === "Male"
+      ? "/icon_woman6.png"
+      : "/icon_man5.png";
+
   // Helper function to get proper image URL
   const getProfileImageUrl = (profile) => {
     if (!profile.image) {
-      return icon_placeholder;
+      return fallbackUrl;
     }
-    
+
     // Handle avatar icons (SVG files)
     if (profile.image.includes('icon_') && profile.image.endsWith('.svg')) {
       return `/${profile.image}`;
     }
-    
+
     // Handle URLs that already have http/https
     if (profile.image.startsWith('http')) {
       return profile.image;
     }
-    
+
     // Handle relative paths from uploads directory
     if (profile.image.startsWith('/uploads/')) {
       return `${import.meta.env.VITE_BACKEND_URL}${profile.image}`;
     }
-    
+
     // Default case: prepend with backend URL if it's a relative path
     return `${import.meta.env.VITE_BACKEND_URL}/${profile.image}`;
   };
-
-  console.log(profiles)
 
   return (
     <div className="search-container">
@@ -252,7 +253,7 @@ const Search = () => {
           {visibleProfiles.map((profile) => (
             <div key={profile.id} className="profile-card">
               <div className="age-badge">{profile.age || 'N/A'}</div>
-              <div className="profile-left">
+              <div className="profile-left theme-border rounded-full object-contain">
                 <img
                   src={getProfileImageUrl(profile)}
                   alt="Profile"
@@ -278,18 +279,18 @@ const Search = () => {
 
               <div className="profile-right">
                 <div className="bio-container">
-                  <button 
+                  <button
                     className="view-bio"
-                    onClick={() => handleViewBio(profile.id)}
+                    onClick={() => handleViewBio(profile)}
                   >
                     View Bio
                   </button>
                   <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
                 </div>
-                <button className="request-match" 
-                onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }} 
-                disabled={profile.hasPendingRequest}>
-                {profile.hasPendingRequest ? "Pending...." : "Request Match"}
+                <button className="request-match"
+                  onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }}
+                  disabled={profile.hasPendingRequest}>
+                  {profile.hasPendingRequest ? "Pending...." : "Request Match"}
                 </button>
                 <MessageModal
                   isOpen={isOpen}
@@ -308,10 +309,11 @@ const Search = () => {
       )}
 
       {/* Profile Modal */}
-      <ProfileModal 
+      <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         userId={selectedProfileId}
+        photoUrl={selectedProfile ? getProfileImageUrl(selectedProfile) : fallbackUrl}
       />
 
       {visibleProfiles.length > 0 && (

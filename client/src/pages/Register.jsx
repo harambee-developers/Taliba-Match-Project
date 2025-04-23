@@ -887,7 +887,7 @@ const RegisterPage = () => {
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Height</label>
                 <input
-                  type="text"
+                  type="number"
                   name="height"
                   value={formData.height}
                   onChange={(e) => handleInputChange('height', e.target.value)}
@@ -898,7 +898,7 @@ const RegisterPage = () => {
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Weight</label>
                 <input
-                  type="text"
+                  type="number"
                   name="weight"
                   value={formData.weight}
                   onChange={(e) => handleInputChange('weight', e.target.value)}

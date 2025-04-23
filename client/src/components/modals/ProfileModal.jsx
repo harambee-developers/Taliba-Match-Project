@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { 
-  salahPatternOptions, 
-  madhabOptions, 
-  sectOptions, 
-  ethnicityOptions, 
+import {
+  salahPatternOptions,
+  madhabOptions,
+  sectOptions,
+  ethnicityOptions,
   quranMemorizationOptions,
   dressStyleOptions,
   polygamyOptions
 } from "../../data/fieldData";
 
-const ProfileModal = ({ isOpen, onClose, userId }) => {
+const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
   const [currentCard, setCurrentCard] = useState(0);
   const [profileData, setProfileData] = useState({
     // Card 1 - Personal Details
@@ -99,31 +99,28 @@ const ProfileModal = ({ isOpen, onClose, userId }) => {
     "Appearance"
   ];
 
-  const renderCardContent = () => {
-    const viewClasses = "p-4 bg-[#FFF1FE] rounded-xl";
+  console.log(profileData)
 
-    switch(currentCard) {
+  const renderCardContent = () => {
+    const viewClasses = "p-4 theme-bg rounded-xl";
+
+    switch (currentCard) {
       case 0:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
-                First Name
-              </label>
-              <div className={viewClasses}>
-                {profileData.firstName || "Not specified"}
+            {/* Profile Image and Name */}
+            <div className="flex items-center space-x-4">
+              <div className="w-32 h-32 rounded-full overflow-hidden theme-border">
+                <img
+                  src={photoUrl}
+                  alt={`${profileData.firstName} ${profileData.lastName}`}
+                  className="w-full h-full object-cover"
+                />
               </div>
+              <p className="text-2xl font-semibold text-gray-800">
+                {profileData.firstName} {profileData.lastName}
+              </p>
             </div>
-
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
-                Surname
-              </label>
-              <div className={viewClasses}>
-                {profileData.lastName || "Not specified"}
-              </div>
-            </div>
-
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
                 Ethnicity
@@ -147,8 +144,8 @@ const ProfileModal = ({ isOpen, onClose, userId }) => {
                 Languages
               </label>
               <div className={viewClasses}>
-                {profileData.language && profileData.language.length > 0 
-                  ? profileData.language.join(', ') 
+                {profileData.language && profileData.language.length > 0
+                  ? profileData.language.join(', ')
                   : "Not specified"}
               </div>
             </div>
@@ -381,7 +378,7 @@ const ProfileModal = ({ isOpen, onClose, userId }) => {
         </div>
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen"></span>&#8203;
-        
+
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
           <div className="absolute top-0 right-0 pt-4 pr-4">
             <button
@@ -414,11 +411,10 @@ const ProfileModal = ({ isOpen, onClose, userId }) => {
                   <button
                     onClick={prevCard}
                     disabled={currentCard === 0}
-                    className={`px-4 py-2 rounded-full ${
-                      currentCard === 0
+                    className={`px-4 py-2 rounded-full ${currentCard === 0
                         ? "bg-gray-200 cursor-not-allowed"
-                        : "bg-[#E01D42] text-white hover:bg-[#FF1F5A]"
-                    } transition-colors`}
+                        : "theme-btn"
+                      } transition-colors`}
                   >
                     Previous
                   </button>
@@ -427,20 +423,18 @@ const ProfileModal = ({ isOpen, onClose, userId }) => {
                       <button
                         key={index}
                         onClick={() => setCurrentCard(index)}
-                        className={`w-3 h-3 rounded-full ${
-                          currentCard === index ? "bg-[#E01D42]" : "bg-gray-300"
-                        }`}
+                        className={`w-3 h-3 rounded-full ${currentCard === index ? "theme-btn" : "bg-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
                   <button
                     onClick={nextCard}
                     disabled={currentCard === 4}
-                    className={`px-4 py-2 rounded-full ${
-                      currentCard === 4
+                    className={`px-4 py-2 rounded-full ${currentCard === 4
                         ? "bg-gray-200 cursor-not-allowed"
-                        : "bg-[#E01D42] text-white hover:bg-[#FF1F5A]"
-                    } transition-colors`}
+                        : "theme-btn"
+                      } transition-colors`}
                   >
                     Next
                   </button>

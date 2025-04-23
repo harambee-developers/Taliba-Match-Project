@@ -35,14 +35,17 @@ const port = 7777;
 const app = express();
 const server = http.createServer(app)
 
+// Trust the first proxy (e.g., ngrok)
+app.set('trust proxy', 1);
+
 const corsOptions = {
-  origin: ["https://talibamatch.com", "http://localhost", "http://localhost:5173"],
+  origin: [process.env.BACKEND_URL, process.env.FRONTEND_URL],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
 }
 
-
+console.log(process.env.BACKEND_URL, process.env.FRONTEND_URL)
 app.use(express.json())
 app.use(cors(corsOptions));
 app.use('/uploads', express.static('public/uploads'));

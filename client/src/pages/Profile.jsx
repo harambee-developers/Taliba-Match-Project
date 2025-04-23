@@ -1004,7 +1004,7 @@ const Profile = () => {
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center">
                 <div className="relative mr-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#E01D42] bg-gray-100 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden theme-border bg-gray-100 flex items-center justify-center">
                     {profilePhoto ? (
                       <img 
                         src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`} 
@@ -1019,7 +1019,7 @@ const Profile = () => {
                   </div>
                   <button 
                     onClick={() => setShowAvatarModal(true)}
-                    className="absolute bottom-0 right-0 bg-[#E01D42] text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    className="absolute bottom-0 right-0 theme-btn text-white rounded-full w-8 h-8 flex items-center justify-center"
                     title="Change profile picture"
                   >
                     <span>✏️</span>
@@ -1117,7 +1117,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-4 col-span-full">
-                      {[1, 2, 3, 4].map((num) => (
+                      {[1, 2, 3, 4, 5].map((num) => (
                         <div 
                           key={`woman${num}`}
                           className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}

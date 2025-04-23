@@ -3,7 +3,6 @@ const User = require("../model/User");
 const Match = require("../model/Match");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
-const adminAuthMiddleware = require('../middleware/adminAuthMiddleware')
 const authMiddleware = require('../middleware/authMiddleware')
 const multer = require('multer');
 const path = require('path');
@@ -313,7 +312,7 @@ router.post("/profile/avatar", authMiddleware, async (req, res) => {
     }
 
     // Check if avatar is a valid option based on naming convention
-    if (!avatar.match(/^icon_(man|woman)[1-5]?\.svg$/)) {
+    if (!avatar.match(/^icon_(man|woman)[1-6]?\.svg$/)) {
       return res.status(400).json({ message: "Invalid avatar selection" });
     }
 
@@ -358,7 +357,7 @@ router.post("/profile/upload", authMiddleware, upload.single('profileImage'), as
     }
 
     // Create the URL for the uploaded file
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;;
 
     // Create a photo object for the custom image
     const photoInfo = {

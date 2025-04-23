@@ -11,7 +11,7 @@ const Navbar = () => {
   const { user } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const {notificationCount, notifications, markAsRead, markAllAsRead } = useNotification();
+  const { notificationCount, notifications, markAsRead, markAllAsRead } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
 
   const toggleSidebar = () => {
@@ -43,6 +43,14 @@ const Navbar = () => {
   }, []);
 
   const unreadNotifications = notifications.filter(n => !n.isRead);
+
+  const photoUrl = user?.photos?.[0]?.url;
+
+  const fallbackUrl =
+    user?.gender === "Male"
+      ? "/icon_man5.png"
+      : "/icon_woman6.png";
+
 
   return (
     <>
@@ -132,12 +140,12 @@ const Navbar = () => {
             )}
 
             {/* Profile Icon Placeholder */}
-            <div className="cursor-pointer rounded-full object-contain" title="Profile">
-              {user?.gender === "Male" ? (
-                <img src="/man_thobe_bg.png" alt="man" className='h-16 w-16 object-cover' />
-              ) : (
-                <img src="/hijabi_woman_bg.png" alt="woman" className='h-16 w-16 object-contain' />
-              )}
+            <div className="cursor-pointer rounded-full object-contain theme-border" title="Profile">
+              <img
+                src={photoUrl || fallbackUrl}
+                alt={user?.gender === "Male" ? "man" : "woman"}
+                className="h-16 w-16 object-contain rounded-full"
+              />
             </div>
           </div>
         ) : (

@@ -32,7 +32,6 @@ const Match = () => {
     const cached = await getCachedData(CACHE_MATCHES, chatCache);
     if (cached) {
       setMatches(cached)
-      return;
     }
 
     try {
@@ -121,6 +120,8 @@ const Match = () => {
       </div>
 
     const conversation = getConversationWithMatch(selectedMatch);
+    const photoUrl = selectedMatch?.photos?.[0]?.url || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
+
     // If conversation is still null, display a placeholder (or a loading spinner)
     if (!conversation) {
       return (
@@ -130,7 +131,7 @@ const Match = () => {
       );
     }
 
-    return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
+    return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} photoUrl={photoUrl} />;
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
 
   return (
@@ -147,6 +148,9 @@ const Match = () => {
                 const opponent = match.sender._id !== user?.userId ? match.sender : match.receiver;
                 const conversation = getConversationWithMatch(opponent);
                 const lastMessageTime = conversation ? formatTimestamp(conversation.updatedAt) : null;
+                
+                const photoUrl = opponent.photos[0]?.url
+                const fallbackUrl = user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png";
 
                 return (
                   <div
@@ -178,8 +182,8 @@ const Match = () => {
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">
                       <img
-                        src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`}
-                        alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
+                        src={photoUrl || fallbackUrl}
+                        alt={`${match.receiver?.firstName}-photo`}
                         className="w-full h-full object-cover"
                         loading='lazy'
                       />

@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl }) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -48,7 +48,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             if (cached) {
                 setReceiverId(cached._id);
                 setReceiverName([cached.userName, cached.firstName, cached.lastName]);
-                return;
             }
             try {
                 const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`);
@@ -74,7 +73,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             if (cachedStatus) {
                 console.info("✅ Loaded status from cache");
                 setLocalReceiverStatus(cachedStatus.data);
-                return;
             }
             try {
                 const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
@@ -332,7 +330,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     <ChevronLeft className="w-10-h-10" />
                 </div>
                 <div className={`rounded-full bg-white theme-border overflow-hidden w-16 h-16`} >
-                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
+                    <img src={photoUrl} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
                 </div>
                 <div className="flex flex-col items-start">
                     <span className={`text-lg font-semibold theme-bg`}>
