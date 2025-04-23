@@ -1,0 +1,31 @@
+services:
+  backend:
+    container_name: backend
+    build:
+      context: "./server"
+      dockerfile: Dockerfile.prod
+    ports: 
+      - "4002:7777"
+    image: hmohammed2/talibah-uat-backend:latest
+    env_file:
+      - ./server/.env.production
+    environment:
+      - NODE_ENV=production
+      - CHOKIDAR_USEPOLLING=true
+  frontend:
+    container_name: frontend
+    build:
+      context: "./client"
+      dockerfile: Dockerfile.prod
+    image: hmohammed2/talibah-uat-frontend:latest
+    env_file:
+      - ./client/.env.production
+    ports: 
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+  mongo:
+    image: mongo:latest
+    container_name: mongo-server
+    ports: 
+      - "27017:27017" 
