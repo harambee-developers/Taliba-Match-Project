@@ -29,6 +29,7 @@ const Alert = () => {
 
   useEffect(() => {
     if (alert) {
+      console.log("Alert component: Displaying alert:", alert);
       const timer = setTimeout(() => hideAlert(), 5000); // auto-hide after 5s
       return () => clearTimeout(timer);
     }

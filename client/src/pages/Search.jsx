@@ -57,7 +57,7 @@ const Search = () => {
       }
 
       const data = await response.json();
-      console.table('Received profiles:', data);
+      console.log('Received profiles:', data);
 
       setProfiles(data);
     } catch (error) {
@@ -154,8 +154,6 @@ const Search = () => {
     // Default case: prepend with backend URL if it's a relative path
     return `${import.meta.env.VITE_BACKEND_URL}/${profile.image}`;
   };
-
-  console.log(profiles)
   
   return (
     <div className="search-container">
@@ -251,11 +249,14 @@ const Search = () => {
         <div className="profiles-grid">
           {visibleProfiles.map((profile) => (
             <div key={profile.id} className="profile-card">
-              <div className="age-badge">{profile.age || 'N/A'}</div>
+              {/* Age Badge - consistent positioning */}
+              <div className="age-badge">{profile.age || '?'}</div>
+              
+              {/* Profile Image - consistent size and positioning */}
               <div className="profile-left">
                 <img
                   src={getProfileImageUrl(profile)}
-                  alt="Profile"
+                  alt={profile.name || "User"}
                   className="profile-icon"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -264,18 +265,20 @@ const Search = () => {
                 />
               </div>
 
+              {/* Profile Information - consistent structure */}
               <div className="profile-center">
-                <h3 className="profile-name">{profile.name}</h3>
+                <h3 className="profile-name">{profile.name || "Anonymous User"}</h3>
                 <div className="profile-detail">
-                  <Icon47 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
+                  <Icon47 width={22} height={22} className="detail-icon" />
                   <span>{profile.location || 'Location not specified'}</span>
                 </div>
                 <div className="profile-detail">
-                  <Icon48 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
-                  <span>{profile.nationality || 'Nationality not specified'}</span>
+                  <Icon48 width={22} height={22} className="detail-icon" />
+                  <span>{profile.nationality || 'Not specified'}</span>
                 </div>
               </div>
 
+              {/* Profile Actions - consistent button sizes and positioning */}
               <div className="profile-right">
                 <div className="bio-container">
                   <button 
@@ -284,23 +287,15 @@ const Search = () => {
                   >
                     View Bio
                   </button>
-                  <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
+                  <Icon50 width={22} height={22} className="premium-icon" color="#1e5a8d" />
                 </div>
-                <button className="request-match" 
-                onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }} 
-                disabled={profile.hasPendingRequest}>
-                {profile.hasPendingRequest ? "Pending...." : "Request Match"}
+                <button 
+                  className="request-match" 
+                  onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }} 
+                  disabled={profile.hasPendingRequest}
+                >
+                  {profile.hasPendingRequest ? "Pending" : "Request Match"}
                 </button>
-                <MessageModal
-                  isOpen={isOpen}
-                  onClose={() => setIsOpen(false)}
-                  title="Match Request Confirmation"
-                  onConfirm={() => {
-                    handleMatchRequest(selectedProfile)
-                    setIsOpen(false);
-                  }}
-                  text="You are about to submit a match request. Would you like to continue?"
-                />
               </div>
             </div>
           ))}
@@ -312,6 +307,18 @@ const Search = () => {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         userId={selectedProfileId}
+      />
+
+      {/* Match Request Confirmation Modal */}
+      <MessageModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Match Request Confirmation"
+        onConfirm={() => {
+          handleMatchRequest(selectedProfile);
+          setIsOpen(false);
+        }}
+        text="You are about to submit a match request. Would you like to continue?"
       />
 
       {visibleProfiles.length > 0 && (
