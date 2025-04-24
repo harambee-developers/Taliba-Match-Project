@@ -1,22 +1,38 @@
 // logger.js
-const { createLogger, format, transports } = require('winston');
-const { combine, timestamp, printf, colorize } = format;
+const winston = require('winston');
 
-const customFormat = printf(({ level, message, timestamp }) => {
-  return `${timestamp} [${level}]: ${message}`;
-});
-
-const logger = createLogger({
-  level: 'info', // default level
-  format: combine(
-    colorize(),
-    timestamp(),
-    customFormat
-  ),
-  transports: [
-    new transports.Console(),
-    new transports.File({ filename: 'app.log' })
-  ]
-});
+const customLevels = {
+    levels: {
+      fatal: 0,
+      error: 1,
+      warn: 2,
+      info: 3,
+      debug: 4,
+    },
+    colors: {
+      fatal: 'magenta',
+      error: 'red',
+      warn: 'yellow',
+      info: 'green',
+      debug: 'blue',
+    }
+  };
+  
+  winston.addColors(customLevels.colors);
+  
+  const logger = winston.createLogger({
+    levels: customLevels.levels,
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.printf(({ timestamp, level, message }) => {
+        return `${timestamp} [${level}]: ${message}`;
+      })
+    ),
+    transports: [
+      new winston.transports.Console(),
+      new winston.transports.File({ filename: 'app.log' })
+    ]
+  });
 
 module.exports = logger;

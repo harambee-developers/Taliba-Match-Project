@@ -15,8 +15,9 @@ const logger = require('./logger')
 require("./db")
 
 // Load the appropriate .env file
-const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
+const envFile = process.env.NODE_ENV === "UAT" ? ".env.UAT" : ".env.development";
 dotenv.config({ path: envFile });
+logger.info(`Environment: ${envFile}`)
 
 // Ensure public/uploads folder exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
