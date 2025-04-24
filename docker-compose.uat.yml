@@ -7,8 +7,6 @@ services:
     ports: 
       - "7777:7777"
     image: hmohammed2/talibah-uat-backend:latest
-    env_file:
-      - ./server/.env.UAT
     environment:
       - NODE_ENV=UAT
   frontend:
@@ -16,8 +14,6 @@ services:
     build:
       context: "./client"
       dockerfile: Dockerfile.UAT
-    env_file:
-      - ./client/.env.UAT
     image: hmohammed2/talibah-uat-frontend:latest
     ports: 
       - "80:80"
