@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
-const MONGO_URI = `mongodb://mongo-server:27017/TalibaDatabase`;
+if (process.env.NODE_ENV === "UAT") {
+  MONGO_URI = "mongodb://uat-mongo-server:27017/TalibaDatabase";
+} else {
+  MONGO_URI = `mongodb://mongo-server:27017/TalibaDatabase`;
+}
 const logger = require('./logger')
 
 const connectToDatabase = async () => {
