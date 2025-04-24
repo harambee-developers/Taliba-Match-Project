@@ -17,9 +17,8 @@ const customLevels = {
       debug: 'blue',
     }
   };
-  
   winston.addColors(customLevels.colors);
-  
+
   const logger = winston.createLogger({
     levels: customLevels.levels,
     format: winston.format.combine(
@@ -31,7 +30,7 @@ const customLevels = {
     ),
     transports: [
       new winston.transports.Console(),
-      new winston.transports.File({ filename: 'app.log' })
+      new winston.transports.File({ filename: 'logs/app.log' })
     ]
   });
 
