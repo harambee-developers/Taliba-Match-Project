@@ -2,7 +2,7 @@ name: Deploy Production
 
 on:
   push:
-    branches: [ main ]
+    branches: [ UAT ]
 
 jobs:
   deploy:
@@ -18,10 +18,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Create frontend env file
-        run: echo "${{ secrets.FRONTEND_ENV_FILE }}" > ./client/.env.production
+        run: echo "${{ secrets.FRONTEND_ENV_FILE_UAT }}" > ./client/.env.UAT
       
       - name: Create backend env file
-        run: echo "${{ secrets.BACKEND_ENV_FILE }}" > ./server/.env.production
+        run: echo "${{ secrets.BACKEND_ENV_FILE_UAT }}" > ./server/.env.UAT
 
       # Build and deploy your containers
       - name: Build and push images
@@ -36,5 +36,4 @@ jobs:
           script: |
             echo "Logged into VPS!"
             cd /docker_projects/talibah-test.ddns.net/
-            docker compose down
             docker compose up -d --build
