@@ -25,6 +25,6 @@ services:
       - NODE_ENV=UAT
   mongo:
     image: mongo:latest
-    container_name: mongo-server
+    container_name: uat-mongo-server
     ports: 
       - "27017:27017"
