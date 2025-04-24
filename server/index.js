@@ -9,6 +9,7 @@ const Notifications = require('./model/Notifications');
 const Conversation = require('./model/Conversation')
 const path = require('path')
 const fs = require('fs')
+const logger = require('./logger')
 
 // Import and initialize the MongoDB connection
 require("./db")
@@ -21,7 +22,7 @@ dotenv.config({ path: envFile });
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('📁 Created public/uploads directory');
+  logger.info('📁 Created public/uploads directory');
 }
 
 const paymentRoutes = require("./routes/paymentRoutes");
@@ -35,9 +36,6 @@ const port = 7777;
 const app = express();
 const server = http.createServer(app)
 
-// Trust the first proxy (e.g., ngrok)
-app.set('trust proxy', 1);
-
 const corsOptions = {
   origin: [process.env.BACKEND_URL, process.env.FRONTEND_URL],
   credentials: true,
@@ -45,7 +43,6 @@ const corsOptions = {
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
 }
 
-console.log(process.env.BACKEND_URL, process.env.FRONTEND_URL)
 app.use(express.json())
 app.use(cors(corsOptions));
 app.use('/uploads', express.static('public/uploads'));
@@ -66,12 +63,11 @@ const io = new Server(server, {
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log(`Client has connected`, socket.id)
+  logger.info(`Client has connected`, socket.id)
 
   // Extract userId from the client (e.g., from auth token)
   socket.on("user_connected", async ({ userId }) => {
     if (!userId) return;
-
     try {
       // Add socket ID to the user’s active socket list
       if (!onlineUsers.has(userId)) {
@@ -85,18 +81,18 @@ io.on('connection', (socket) => {
         socketId: socket.id
       });
 
-      console.log(`✅ User ${userId} is now ONLINE`);
+      logger.info(`✅ User ${userId} is now ONLINE`);
 
       socket.broadcast.emit("user_online", { userId, username: user?.firstName });
     } catch (error) {
-      console.error("❌ Error updating online status:", error);
+      logger.error("❌ Error updating online status:", error);
     }
   });
 
   socket.on("join_chat", async ({ conversationId, userId }) => {
     socket.join(conversationId);
 
-    console.log(`User ${userId} joined chat ${conversationId}.`);
+    logger.info(`User ${userId} joined chat ${conversationId}.`);
 
     try {
       // Update messages as read in DB
@@ -111,13 +107,13 @@ io.on('connection', (socket) => {
         }
       );
 
-      console.log(`✅ Marking messages as read for user ${userId} in chat ${conversationId}`);
+      logger.info(`✅ Marking messages as read for user ${userId} in chat ${conversationId}`);
 
       // Emit event to ALL users in the conversation, including the sender
       io.to(conversationId).emit("messages_read", { conversationId, receiverId: userId });
 
     } catch (error) {
-      console.error("❌ Error updating message status:", error);
+      logger.error("❌ Error updating message status:", error);
     }
   });
 
@@ -141,7 +137,7 @@ io.on('connection', (socket) => {
     onlineUsers.delete(userId);
     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
 
-    console.log(`🚫 User ${userId} is now OFFLINE`);
+    logger.info(`🚫 User ${userId} is now OFFLINE`);
     io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
   });
 
@@ -165,7 +161,7 @@ io.on('connection', (socket) => {
       io.to(receiver_id.toString()).emit("new_notification", notification);
   
     } catch (error) {
-      console.error("Error creating notification:", error);
+      logger.error("Error creating notification:", error);
     }
   });
 
@@ -216,13 +212,13 @@ io.on('connection', (socket) => {
       }
 
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
     }
   });
 
   // When a user disconnects, mark as offline
   socket.on("disconnect", async () => {
-    console.log("Client disconnected:", socket.id);
+    logger.warn("Client disconnected:", socket.id);
 
     try {
       let userIdToRemove = null;
@@ -238,7 +234,7 @@ io.on('connection', (socket) => {
             onlineUsers.delete(userId);
             await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() });
 
-            console.log(`🚫 User ${userId} is now OFFLINE`);
+            logger.warn(`🚫 User ${userId} is now OFFLINE`);
             io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
             socket.removeAllListeners(); // 🚀 Remove all listeners for this socket
           }
@@ -246,11 +242,11 @@ io.on('connection', (socket) => {
         }
       }
     } catch (error) {
-      console.error("❌ Error setting user offline:", error);
+      logger.error("❌ Error setting user offline:", error);
     }
   });
 })
 
 server.listen(port, () => {
-  console.log(`Server listening at ${port}`);
+  logger.info(`Server listening at ${port}`);
 });

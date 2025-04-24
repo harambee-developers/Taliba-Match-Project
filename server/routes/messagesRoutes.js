@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const User = require("../model/User");
 const multer = require('multer')
 const path = require('path')
+const logger = require('../logger')
 
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
@@ -31,6 +32,7 @@ router.get("/user/:userId", async (req, res) => {
         const conversations = await Conversation.find({ participants: userObjectId }).populate("participants", "userName email");
         res.status(200).json(conversations);
     } catch (error) {
+        logger.error(error)
         res.status(500).json({ error: error.message });
     }
 });
@@ -50,6 +52,7 @@ router.get("/:conversationId/details", async (req, res) => {
 
         res.status(200).json(conversation);
     } catch (error) {
+        logger.error(error)
         res.status(500).json({ error: error.message });
     }
 });
@@ -62,6 +65,7 @@ router.get("/:conversationId/messages", async (req, res) => {
         res.status(200).json({ messages });
 
     } catch (error) {
+        logger.error(error)
         res.status(500).json({ error: "Error fetching messages" });
     }
 });
@@ -87,7 +91,7 @@ router.post("/new-conversation", async (req, res) => {
 
         res.status(201).json({ conversation });
     } catch (error) {
-        console.error("Error creating conversation:", error);
+        logger.error("Error creating conversation:", error);
         res.status(500).json({ error: "Error creating conversation" });
     }
 });
@@ -109,7 +113,7 @@ router.get("/fetch-status/:receiverId", async (req, res) => {
 
         res.status(200).json({ isOnline: user.isOnline, lastSeen: user.lastSeen });
     } catch (error) {
-        console.error("Error fetching user status:", error);
+        logger.error("Error fetching user status:", error);
         res.status(500).json({ error: "Error fetching user status" });
     }
 });
@@ -118,29 +122,34 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     if (!req.file.filename) {
         return res.status(400).json({ message: "filename is missing!" });
     }
-    // Save the file to storage, build the message object, etc.
-    const fileUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
-    // Get mimetype, e.g., 'image/png', 'video/mp4'
-    const mimeType = req.file.mimetype;
-    // Determine file type based on mimetype
-    let type = "file";
-    if (mimeType.startsWith("image")) {
-        type = "image";
-    } else if (mimeType.startsWith("video")) {
-        type = "video";
-    }
-    const message = ({
-        text: "attachment", // or any caption if provided
-        sender_id: req.body.senderId,
-        receiver_id: req.body.receiverId,
-        conversation_id: req.body.conversationId,
-        attachment: fileUrl,
-        type: type,
-        createdAt: new Date().toISOString(),
-    });
+    try {
+        // Save the file to storage, build the message object, etc.
+        const fileUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+        // Get mimetype, e.g., 'image/png', 'video/mp4'
+        const mimeType = req.file.mimetype;
+        // Determine file type based on mimetype
+        let type = "file";
+        if (mimeType.startsWith("image")) {
+            type = "image";
+        } else if (mimeType.startsWith("video")) {
+            type = "video";
+        }
+        const message = ({
+            text: "attachment", // or any caption if provided
+            sender_id: req.body.senderId,
+            receiver_id: req.body.receiverId,
+            conversation_id: req.body.conversationId,
+            attachment: fileUrl,
+            type: type,
+            createdAt: new Date().toISOString(),
+        });
 
-    // Save the message to your DB here...
-    res.json({ message });
+        // Save the message to your DB here...
+        res.status(200).json({ message });
+    } catch (error) {
+        logger.error("Error uploading attachments: ", error)
+        res.status(500).json({ error: "Error uploading attachments" });
+    }
 });
 
 

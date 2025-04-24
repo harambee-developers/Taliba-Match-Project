@@ -6,6 +6,7 @@ const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const router = express();
 const rateLimit = require("express-rate-limit");
+const logger = require('../logger')
 
 router.use(cookieParser())
 
@@ -16,7 +17,7 @@ const loginLimiter = rateLimit({
 });
 
 if (!process.env.JWT_SECRET_TOKEN || !process.env.JWT_REFRESH_SECRET) {
-    console.error("Missing JWT_SECRET in environment variables.");
+    logger.error("Missing JWT_SECRET in environment variables.");
     process.exit(1);
 }
 
@@ -109,7 +110,7 @@ router.post("/register", async (req, res) => {
         await user.save();
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -170,7 +171,7 @@ router.post(
             res.json({ token, redirect: user.role === "admin" ? "/admin/dashboard" : "/" });
 
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             res.status(500).json({ message: "Internal server error" });
         }
     }
@@ -233,7 +234,7 @@ router.post("/refresh-token", async (req, res) => {
         res.json({ token: newAccessToken });
 
     } catch (error) {
-        console.error("Refresh token error:", error);
+        logger.error("Refresh token error:", error);
         res.status(403).json({ message: "Invalid or expired refresh token" });
     }
 });
@@ -246,7 +247,7 @@ router.post("/logout", async (req, res) => {
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         await User.findByIdAndUpdate(decoded.userId, { refreshToken: null });
         } catch (err) {
-        console.warn("Error clearing refresh token:", err);
+        logger.warn("Error clearing refresh token:", err);
         }
   }
 
@@ -273,7 +274,7 @@ router.get("/verify-token", async (req, res) => {
             role: decoded.role
         });
     } catch (error) {
-        console.error("Token verification error:", error);
+        logger.error("Token verification error:", error);
         res.status(401).json({ message: "Invalid or expired token" });
     }
 });

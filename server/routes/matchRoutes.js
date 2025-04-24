@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-router.use(express.json())
 const Match = require('../model/Match')
+const logger = require('../logger')
+
+router.use(express.json())
 
 router.get('/pending/sent/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -20,7 +22,7 @@ router.get('/pending/sent/:userId', async (req, res) => {
 
         res.status(200).json(sentRequests);
     } catch (error) {
-        console.error('Could not fetch sent requests', error);
+        logger.error('Could not fetch sent requests', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -43,7 +45,7 @@ router.get('/pending/received/:userId', async (req, res) => {
 
         res.status(200).json(receivedRequests);
     } catch (error) {
-        console.error('Could not fetch received requests', error);
+        logger.error('Could not fetch received requests', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -68,7 +70,7 @@ router.get('/matches/:userId', async (req, res) => {
 
         res.status(200).json(matches);
     } catch (error) {
-        console.error('Error fetching matches:', error);
+        logger.error('Error fetching matches:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -104,7 +106,7 @@ router.post('/send-request', async (req, res) => {
 
         res.status(201).json({ message: 'Match request sent successfully', match });
     } catch (error) {
-        console.error('Error sending match:', error);
+        logger.error('Error sending match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 })
@@ -127,7 +129,7 @@ router.put('/accept/:matchId', async (req, res) => {
 
         res.status(200).json(match);
     } catch (error) {
-        console.error('Error accepting match:', error);
+        logger.error('Error accepting match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -150,7 +152,7 @@ router.put('/reject/:matchId', async (req, res) => {
 
         res.status(200).json(match);
     } catch (error) {
-        console.error('Error rejecting match:', error);
+        logger.error('Error rejecting match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
