@@ -37,6 +37,8 @@ const port = 7777;
 const app = express();
 const server = http.createServer(app)
 
+logger.info(process.env.BACKEND_URL, process.env.FRONTEND_URL)
+
 const corsOptions = {
   origin: [process.env.BACKEND_URL, process.env.FRONTEND_URL],
   credentials: true,

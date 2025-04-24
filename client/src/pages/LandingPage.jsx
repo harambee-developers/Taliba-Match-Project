@@ -28,7 +28,7 @@ const LandingPage = () => {
   }, [navigate, user]);
 
   usePageTitle("Welcome to Talibah Match!")
-
+  console.log(`Backend URL: ${import.meta.env.VITE_BACKEND_URL}`)
   return (
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
       {/* Main Content */}
@@ -40,7 +40,7 @@ const LandingPage = () => {
           </h1>
           {/* Get Started Button */}
           <button className="bg-[#E01D42] text-white text-lg font-semibold py-4 px-6 mt-4 hover:bg-[#A52A2A] transition duration-300 rounded-lg"
-            onClick={() => { navigate("/register") }}>
+            onClick={() => {navigate("/register") }}>
             Get Started Now
           </button>
         </div>
