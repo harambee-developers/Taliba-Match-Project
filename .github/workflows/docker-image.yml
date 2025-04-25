@@ -36,4 +36,5 @@ jobs:
           script: |
             echo "Logged into VPS!"
             cd /docker_projects/talibah-test.ddns.net/
-            docker compose up -d --build
+            docker compose down
+            docker compose up -d 

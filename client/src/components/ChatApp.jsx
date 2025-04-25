@@ -325,7 +325,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     : "url('/wallpaper_woman.svg')"
             }} loading='lazy'>
 
-            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4`}>
+            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 z-50 sm:static`}>
                 <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
                     <ChevronLeft className="w-10-h-10" />
                 </div>
@@ -349,7 +349,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     ) : null /* If offline & lastSeen exists, show nothing */}
                 </div>
             </div>
-            <div className="flex-1 p-10 md:ml-10 overflow-y-auto">
+            <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
                 {Object.keys(groupedMessages).length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
