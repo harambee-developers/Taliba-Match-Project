@@ -2,20 +2,49 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../model/Notifications');
+const logger = require('../logger')
 
-// GET /api/notifications/:userId
+/**
+ * GET /api/notifications/:userId
+ * Query:
+ *   - before: ISO timestamp to page older notifications
+ *   - limit:  number of notifications to fetch (default 20, max 50)
+ */
 router.get('/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { before, limit = 20 } = req.query;
+  const pageSize = Math.min(parseInt(limit, 10) || 20, 50);
+
   try {
-    const { userId } = req.params;
-    // Optionally: ensure the authenticated user matches userId or has proper permissions
-    const notifications = await Notification.find({ userId })
-      .sort({ createdAt: -1 }); // Most recent notifications first
-    res.json({ notifications });
+    // Build the query filter
+    const filter = { userId };
+    if (before) {
+      const beforeDate = new Date(before);
+      if (!isNaN(beforeDate)) {
+        filter.createdAt = { $lt: beforeDate };
+      }
+    }
+
+    const notifications = await Notification.find(filter, {
+      // Project only the fields your client needs:
+      _id: 1,
+      text: 1,
+      type: 1,
+      isRead: 1,
+      createdAt: 1,
+    })
+      .sort({ createdAt: -1 }) // newest first
+      .limit(pageSize)
+      .lean();
+
+    // Return in descending order (newest first)
+    return res.json({ notifications });
   } catch (error) {
-    console.error("Error fetching notifications:", error);
-    res.status(500).json({ message: "Server error fetching notifications" });
+    logger.error('Error fetching notifications:', error);
+    return res.status(500).json({ message: 'Server error fetching notifications' });
   }
 });
+
 
 // PATCH /api/notifications/read/:id
 router.patch("/read/:id", async (req, res) => {

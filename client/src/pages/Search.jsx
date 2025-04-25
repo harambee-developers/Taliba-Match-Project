@@ -1,6 +1,5 @@
 // pages/Search.js
 import React, { useState, useEffect } from "react";
-import "../app.css";
 import Icon47 from "../components/icons/Icon47";
 import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
@@ -21,7 +20,6 @@ const Search = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-  const [selectedProfileUrl, setSelectedProfileUrl] = useState(null)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
 
@@ -175,7 +173,7 @@ const Search = () => {
                 name="ageRange"
                 value={filters.ageRange}
                 onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
               >
                 <option value="">Select</option>
                 <option value="18-25">18-25</option>
@@ -195,7 +193,7 @@ const Search = () => {
                 name="location"
                 value={filters.location}
                 onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
               >
                 <option value="">Select</option>
                 <option value="London">London</option>
@@ -215,7 +213,7 @@ const Search = () => {
                 name="ethnicity"
                 value={filters.ethnicity}
                 onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
               >
                 <option value="">Select</option>
                 {ethnicityOptions.map(option => (
@@ -240,7 +238,7 @@ const Search = () => {
                   {countActiveFilters()}
                 </span>
               )}
-              <Icon49 width={24} height={24} />
+              <Icon49 width={24} height={24} className={'hover:bg-red-500'}/>
             </button>
           </div>
         </div>

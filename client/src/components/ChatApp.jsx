@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl }) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -40,6 +40,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const CACHE_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${currentConversationId}`
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
+
+    const photoUrl = propPhotoUrl
+    || location.state?.photoUrl
+    || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
 
     // Fetch and set receiver details
     useEffect(() => {

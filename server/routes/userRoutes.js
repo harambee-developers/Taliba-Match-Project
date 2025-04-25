@@ -172,14 +172,81 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.get("/user/:id", async (req, res) => {
+/**
+ * GET /user/:id
+ * Returns only the fields needed to populate profile cards.
+ */
+router.get('/user/:id', async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    const user = await User.findById(id);
-    res.json(user);
+    const user = await User.findById(id)
+      .select({
+        userName: 1,
+        firstName: 1,
+        lastName: 1,
+        gender: 1,
+        dob: 1,
+        email: 1,
+        phone: 1,
+        ethnicity: 1,
+        nationality: 1,
+        occupation: 1,
+        location: 1,
+        sect: 1,
+        maritalStatus: 1,
+        // entire profile object—but we’ll project only the needed subfields
+        profile: 1,
+      })
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Build a response matching exactly your front-end shape:
+    const resp = {
+      userName: user.userName || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      dob: user.dob ? user.dob.toISOString().split('T')[0] : "",
+      gender: user.gender || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      ethnicity: user.ethnicity || "",
+      nationality: user.nationality || "",
+      language: user.profile?.language || [],
+
+      bio: user.profile?.bio || "",
+      personality: user.profile?.personality || "",
+      dealBreakers: user.profile?.dealBreakers || "",
+
+      sect: user.sect || "",
+      madhab: user.profile?.madhab || "",
+      salahPattern: user.profile?.salahPattern || "",
+      quranMemorization: user.profile?.quranMemorization || "",
+      dressingStyle: user.profile?.dressingStyle || "",
+      openToPolygamy: user.profile?.openToPolygamy || "",
+      islamicAmbitions: user.profile?.islamicAmbitions || "",
+      islamicBooks: user.profile?.islamicBooks || "",
+
+      children: user.profile?.children || "",
+      occupation: user.occupation || "",
+      location: user.location || "",
+      openToHijrah: user.profile?.openToHijrah || "",
+      hijrahDestination: user.profile?.hijrahDestination || "",
+      maritalStatus: user.maritalStatus || "",
+      revert: user.profile?.revert || "",
+
+      weight: user.profile?.weight || "",
+      height: user.profile?.height || "",
+      appearancePreference: user.profile?.appearancePreference || "",
+    };
+
+    return res.json(resp);
   } catch (error) {
-    logger.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    logger.error('Error fetching user profile:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

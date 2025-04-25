@@ -171,7 +171,11 @@ const Match = () => {
                       }
                       if (window.innerWidth < 768) {
                         // On mobile, navigate directly to chat using the existing conversation.
-                        navigate(`/chat/${conversation._id}`);
+                        navigate(`/chat/${conversation._id}`, {
+                          state: {
+                            photoUrl: opponent.photos?.[0]?.url || fallbackUrl
+                          }
+                        });
                       } else {
                         // On desktop, select the match.
                         setSelectedMatch(opponent);

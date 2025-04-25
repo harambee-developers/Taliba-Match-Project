@@ -177,67 +177,55 @@ router.post(
     }
 );
 
-// set refresh token
-router.post("/refresh-token", async (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
-
-    if (!refreshToken) {
-        return res.status(401).json({ message: "Refresh token missing" });
-    }
-
+router.post('/refresh-token', async (req, res) => {
+    const oldToken = req.cookies.refreshToken;
+    if (!oldToken) return res.status(401).json({ message: 'Refresh token missing' });
+  
+    // 1) Verify the old refresh token first
+    let payload;
     try {
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
-        const user = await User.findById(decoded.userId);
-        if (!user || user.refreshToken !== refreshToken) {
-            return res.status(403).json({ message: "Invalid refresh token" });
-        }
-
-        // Generate new tokens
-        const newAccessToken = jwt.sign(
-            {
-                userId: user._id,
-                username: user.userName,
-                gender: user.gender,
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET_TOKEN,
-            { expiresIn: "1h" }
-        );
-
-        const newRefreshToken = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_REFRESH_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        // Update DB
-        user.refreshToken = newRefreshToken;
-        await user.save();
-
-        // Set new cookies
-        res.cookie("token", newAccessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
-            maxAge: 60 * 60 * 1000
-        });
-
-        res.cookie("refreshToken", newRefreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        res.json({ token: newAccessToken });
-
-    } catch (error) {
-        logger.error("Refresh token error:", error);
-        res.status(403).json({ message: "Invalid or expired refresh token" });
+      payload = jwt.verify(oldToken, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      logger.error('Refresh token verify failed', err);
+      return res.status(403).json({ message: 'Invalid or expired refresh token' });
     }
-});
+  
+    const userId = payload.userId;
+    const newRefreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    const newAccessToken = jwt.sign(
+      { userId, /* optionally only include minimal claims */ },
+      process.env.JWT_SECRET_TOKEN,
+      { expiresIn: '1h' }
+    );
+  
+    try {
+      // 2) Atomically check oldToken and replace with the new one
+      const user = await User.findOneAndUpdate(
+        { _id: userId, refreshToken: oldToken },
+        { $set: { refreshToken: newRefreshToken } },
+        { projection: { _id: 1 }, new: true }
+      );
+  
+      if (!user) {
+        // Either user doesn’t exist or token mismatch
+        return res.status(403).json({ message: 'Invalid refresh token' });
+      }
+  
+      // 3) Send cookies
+      const cookieOpts = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+      };
+      res.cookie('token', newAccessToken, { ...cookieOpts, maxAge: 60 * 60 * 1000 });
+      res.cookie('refreshToken', newRefreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  
+      return res.json({ token: newAccessToken });
+    } catch (err) {
+      logger.error('Error updating refresh token in DB:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  });
 
 router.post("/logout", async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
@@ -256,7 +244,7 @@ router.post("/logout", async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
 });
 
-router.get("/verify-token", async (req, res) => {
+router.get("/verify-token", (req, res) => {
     const token = req.cookies.token; // Get the token directly from cookies
 
     if (!token) {

@@ -37,36 +37,76 @@ router.get("/user/:userId", async (req, res) => {
     }
 });
 
-// Fetch specific conversation details
-router.get("/:conversationId/details", async (req, res) => {
-    try {
-        const { conversationId } = req.params;
+router.get('/:conversationId/details', async (req, res) => {
+    const { conversationId } = req.params;
 
-        // ✅ Find the conversation by _id and populate participant details
-        const conversation = await Conversation.findById(conversationId)
-            .populate("participants", "userName email firstName lastName");
+    try {
+        const conversation = await Conversation.findById(conversationId,
+            // Project only fields you actually need:
+            {
+                participants: 1,
+                last_message: 1,
+                last_sender_id: 1,
+                updatedAt: 1
+            }
+        )
+            .lean()  // Return a plain JS object
+            .populate({
+                path: 'participants',
+                select: 'userName email firstName lastName photos'
+            });
 
         if (!conversation) {
-            return res.status(404).json({ error: "Conversation not found" });
+            return res.status(404).json({ error: 'Conversation not found' });
         }
 
-        res.status(200).json(conversation);
+        return res.status(200).json(conversation);
     } catch (error) {
-        logger.error(error)
-        res.status(500).json({ error: error.message });
+        logger.error('Error fetching conversation details:', error);
+        return res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Fetch messages for a specific conversation
-router.get("/:conversationId/messages", async (req, res) => {
-    try {
-        const { conversationId } = req.params
-        const messages = await Message.find({ conversation_id: conversationId }).sort("sent_at");
-        res.status(200).json({ messages });
+router.get('/:conversationId/messages', async (req, res) => {
+    const { conversationId } = req.params;
+    const { before, limit = 50 } = req.query;
 
+    // Enforce sane limits
+    const pageSize = Math.min(parseInt(limit, 10) || 50, 100);
+
+    try {
+        // Build filter
+        const filter = { conversation_id: conversationId };
+        if (before) {
+            const beforeDate = new Date(before);
+            if (!isNaN(beforeDate)) {
+                // Only messages older than the cursor
+                filter.createdAt = { $lt: beforeDate };
+            }
+        }
+
+        // Fetch messages: newest first, limited, lean + projection
+        let messages = await Message.find(filter, {
+            sender_id: 1,
+            receiver_id: 1,
+            text: 1,
+            attachment: 1,
+            type: 1,
+            status: 1,
+            createdAt: 1,
+        })
+            .sort({ createdAt: -1 })
+            .limit(pageSize)
+            .lean();
+
+        // Reverse to chronological order before returning
+        messages = messages.reverse();
+
+        // If no messages found and this was the first page, you might still return empty array
+        return res.status(200).json({ messages });
     } catch (error) {
-        logger.error(error)
-        res.status(500).json({ error: "Error fetching messages" });
+        logger.error('Error fetching messages:', error);
+        return res.status(500).json({ error: 'Server error fetching messages' });
     }
 });
 
