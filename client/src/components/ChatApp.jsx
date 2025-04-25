@@ -314,11 +314,11 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
     // Show loading state if the current user is not yet available or receiverId is not set
     if (!currentUserId || !receiverId || !user) {
-        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
 
     return (
-        <div className={`flex flex-col h-screen w-full md:border-0 theme-border bg-repeat bg-center`}
+        <div className={`flex flex-col min-h-screen w-full bg-repeat bg-center`}
             style={{
                 backgroundImage: user?.gender === "Male"
                     ? "url('/wallpaper_man.svg')"
