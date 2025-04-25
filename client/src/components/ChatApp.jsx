@@ -323,7 +323,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                 backgroundImage: user?.gender === "Male"
                     ? "url('/wallpaper_man.svg')"
                     : "url('/wallpaper_woman.svg')"
-            }}>
+            }} loading='lazy'>
 
             <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4`}>
                 <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
@@ -443,9 +443,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
             </div>
 
 
-            <div className="md:p-10 flex items-center m-6">
+            <div className="md:p-10 flex items-center space-x-2 p-2">
                 {/* File Attachment Input */}
-                <label htmlFor="file-attachment" className="cursor-pointer mr-4 group">
+                <label htmlFor="file-attachment" className="cursor-pointer mr-2 group">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -484,7 +484,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     name="chatbox"
                     id="chatbox"
                     disabled={isUploading}
-                    className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300`}
+                    className={`flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg 
+                        focus:outline-none theme-border hover:bg-white 
+                        transition-all duration-300`}
                     placeholder={isUploading ? "Uploading..." : "Type a message..."}
                     value={input}
                     onChange={(e) => {
@@ -495,8 +497,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                 />
                 <button onClick={sendMessage}
                     disabled={isUploading}
-                    className={`ml-2 mr-2 p-2 rounded-lg ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
-                    <Send className="w-10 h-10" />
+                    className={`flex-shrink-0 w-10 h-10 rounded-lg 
+                    ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
+                    <Send className="w-full h-full" />
                 </button>
             </div>
         </div>

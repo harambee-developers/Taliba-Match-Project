@@ -15,7 +15,8 @@ body {
   padding: 20px;
   max-width: 1600px;
   margin: 0 auto;
-  min-height: 100vh; /* 👈 This makes it fill at least the full viewport height */
+  min-height: 100vh;
+  /* 👈 This makes it fill at least the full viewport height */
 }
 
 .search-title {
@@ -63,13 +64,17 @@ body {
 }
 
 [data-theme="Male"] .custom-select select {
-  background-color: #e6f2ff; /* light blue */
-  border-color: #1e5a8d;     /* male border */
+  background-color: #e6f2ff;
+  /* light blue */
+  border-color: #1e5a8d;
+  /* male border */
 }
 
 [data-theme="Female"] .custom-select select {
-  background-color: #FFF1FE; /* soft pink */
-  border-color: #d61c72;     /* female border */
+  background-color: #FFF1FE;
+  /* soft pink */
+  border-color: #d61c72;
+  /* female border */
 }
 
 .select-arrow {
@@ -107,8 +112,20 @@ body {
 /* Profiles Grid */
 .profiles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .profiles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .profiles-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .age-badge {
@@ -129,16 +146,18 @@ body {
 }
 
 [data-theme="Male"] .age-badge {
-  border-color: #1e5a8d;     /* male border */
+  border-color: #1e5a8d;
+  /* male border */
 }
 
 [data-theme="Female"] .age-badge {
-  border-color: #d61c72;     /* female border */
+  border-color: #d61c72;
+  /* female border */
 }
 
 .profile-left {
-  margin-right: 15px;
-  margin-left: 10px
+  margin-left: 16px;
+  margin-right: 16px;
 }
 
 .profile-icon {
@@ -155,18 +174,23 @@ body {
   align-items: center;
   border: 2px solid #d61c72;
   border-radius: 10px;
-  padding: 30x;
+  padding: 16x;
+  transition: background 0.3s;
   height: 140px;
 }
 
 [data-theme="Male"] .profile-card {
-  background-color: #e6f2ff; /* light blue */
-  border-color: #1e5a8d;     /* male border */
+  background-color: #e6f2ff;
+  /* light blue */
+  border-color: #1e5a8d;
+  /* male border */
 }
 
 [data-theme="Female"] .profile-card {
-  background-color: #FFF1FE; /* soft pink */
-  border-color: #d61c72;     /* female border */
+  background-color: #FFF1FE;
+  /* soft pink */
+  border-color: #d61c72;
+  /* female border */
 }
 
 .profile-center {
@@ -199,7 +223,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 16px; /* <-- this adds space from the right edge */
+  padding-right: 16px;
+  /* <-- this adds space from the right edge */
 }
 
 .bio-container {
@@ -209,7 +234,8 @@ body {
   margin-right: -8px;
 }
 
-.view-bio, .request-match {
+.view-bio,
+.request-match {
   padding: 8px 12px;
   border: none;
   border-radius: 5px;
@@ -234,11 +260,13 @@ body {
 }
 
 [data-theme="Male"] .request-match {
-  background-color: #1e5a8d; /* light blue */
+  background-color: #1e5a8d;
+  /* light blue */
 }
 
-[data-theme="Female"] .request-match{
-  background-color: #d61c72; /* soft pink */
+[data-theme="Female"] .request-match {
+  background-color: #d61c72;
+  /* soft pink */
 }
 
 .request-match:disabled {
@@ -251,11 +279,13 @@ body {
 }
 
 [data-theme="Male"] .request-match:hover {
-  background-color: #174b75; /* light blue */
+  background-color: #174b75;
+  /* light blue */
 }
 
 [data-theme="Female"] .request-match:hover {
-  background-color: #FF1F5A; /* soft pink */
+  background-color: #FF1F5A;
+  /* soft pink */
 }
 
 /* Pagination */
@@ -275,19 +305,23 @@ body {
 }
 
 [data-theme="Male"] .next-page {
-  background-color: #1e5a8d; /* light blue */
+  background-color: #1e5a8d;
+  /* light blue */
 }
 
 [data-theme="Female"] .next-page {
-  background-color: #d61c72; /* soft pink */
+  background-color: #d61c72;
+  /* soft pink */
 }
 
 [data-theme="Male"] .next-page:hover {
-  background-color: #174b75; /* light blue */
+  background-color: #174b75;
+  /* light blue */
 }
 
 [data-theme="Female"] .next-page:hover {
-  background-color: #FF1F5A; /* soft pink */
+  background-color: #FF1F5A;
+  /* soft pink */
 }
 
 /* Media Queries */
@@ -295,10 +329,6 @@ body {
   .filter-row {
     flex-direction: column;
     align-items: stretch;
-  }
-  
-  .profiles-grid {
-    grid-template-columns: 1fr;
   }
 }
 

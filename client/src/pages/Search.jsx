@@ -159,46 +159,64 @@ const Search = () => {
   };
 
   return (
-    <div className="search-container">
-      {/* Render alert component */}
+    <div className="px-4 py-6 max-w-[1600px] mx-auto min-h-screen">
       {alert && <Alert />}
-      <h1 className="search-title"></h1>
+
+      <h1 className="text-left text-2xl font-bold mb-6">Search</h1>
 
       {/* Filters */}
-      <div className="filters-container">
-        <div className="filter-row">
-          <div className="filter-group">
-            <label>Age Range</label>
-            <div className="custom-select">
-              <select name="ageRange" value={filters.ageRange} onChange={handleFilterChange}>
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+          {/* Age Range */}
+          <div className="flex flex-col flex-1">
+            <label className="text-sm mb-1">Age Range</label>
+            <div className="relative">
+              <select
+                name="ageRange"
+                value={filters.ageRange}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+              >
                 <option value="">Select</option>
                 <option value="18-25">18-25</option>
                 <option value="26-35">26-35</option>
                 <option value="36-45">36-45</option>
                 <option value="46-55">46-55</option>
               </select>
-              <span className="select-arrow">▼</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
             </div>
           </div>
 
-          <div className="filter-group">
-            <label>Location</label>
-            <div className="custom-select">
-              <select name="location" value={filters.location} onChange={handleFilterChange}>
+          {/* Location */}
+          <div className="flex flex-col flex-1">
+            <label className="text-sm mb-1">Location</label>
+            <div className="relative">
+              <select
+                name="location"
+                value={filters.location}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+              >
                 <option value="">Select</option>
                 <option value="London">London</option>
                 <option value="Birmingham">Birmingham</option>
                 <option value="Manchester">Manchester</option>
                 <option value="Leeds">Leeds</option>
               </select>
-              <span className="select-arrow">▼</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
             </div>
           </div>
 
-          <div className="filter-group">
-            <label>Ethnicity</label>
-            <div className="custom-select">
-              <select name="ethnicity" value={filters.ethnicity} onChange={handleFilterChange}>
+          {/* Ethnicity */}
+          <div className="flex flex-col flex-1">
+            <label className="text-sm mb-1">Ethnicity</label>
+            <div className="relative">
+              <select
+                name="ethnicity"
+                value={filters.ethnicity}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none"
+              >
                 <option value="">Select</option>
                 {ethnicityOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -206,102 +224,128 @@ const Search = () => {
                   </option>
                 ))}
               </select>
-              <span className="select-arrow">▼</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
             </div>
           </div>
 
-          <div className="more-filters-container">
-            <button className="more-filters-btn flex items-center gap-2 relative" onClick={() => setIsFilterModalOpen(true)}>
+          {/* More Filters Button */}
+          <div className="flex items-end">
+            <button
+              className="relative flex items-center gap-2 text-base px-3 py-2"
+              onClick={() => setIsFilterModalOpen(true)}
+            >
               More Filters
               {countActiveFilters() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                <span className="absolute -top-1 -right-2 bg-rose-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                   {countActiveFilters()}
                 </span>
               )}
-              <Icon49 width={30} height={30} className="filter-icon" />
+              <Icon49 width={24} height={24} />
             </button>
-            <FilterModal
-              isOpen={isFilterModalOpen}
-              onClose={() => setIsFilterModalOpen(false)}
-              filters={pendingFilters}
-              onChange={(e) =>
-                setPendingFilters((prev) => ({
-                  ...prev,
-                  [e.target.name]: e.target.value,
-                }))
-              }
-              onApply={() => { setFilters(pendingFilters); fetchProfiles(); }}
-            />
           </div>
         </div>
       </div>
 
-      {/* Error State */}
-      {error && <div className="error">Error: {error}</div>}
-
-      {/* Loading State */}
-      {loading && <div className="loading">Loading profiles...</div>}
-
-      {/* No Results State */}
+      {/* State Displays */}
+      {error && <div className="text-center p-4 text-red-500 bg-red-100 rounded mb-4">Error: {error}</div>}
+      {loading && <div className="text-center p-4 text-gray-600">Loading profiles...</div>}
       {!loading && !error && profiles.length === 0 && (
-        <div className="no-results">No profiles found matching your criteria</div>
+        <div className="text-center p-6 text-gray-600 bg-gray-100 rounded mb-4">No profiles found matching your criteria</div>
       )}
 
-      {/* Profiles Grid */}
+      {/* Profiles */}
       {!loading && !error && visibleProfiles.length > 0 && (
-        <div className="profiles-grid">
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {visibleProfiles.map((profile) => (
-            <div key={profile.id} className="profile-card">
-              <div className="age-badge">{profile.age || 'N/A'}</div>
-              <div className="profile-left theme-border rounded-full object-contain">
+            <div
+              key={profile.id}
+              className="relative flex flex-col sm:flex-row items-start sm:items-center rounded-lg p-4 theme-bg theme-border space-y-4 sm:space-y-0 sm:space-x-4"
+            >
+              {/* Age badge */}
+              <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
+                {profile.age || 'N/A'}
+              </div>
+
+              {/* MOBILE: avatar + name & stacked subtext */}
+              <div className="flex flex-col w-full sm:hidden">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={getProfileImageUrl(profile)}
+                    alt="Profile"
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = icon_placeholder
+                    }}
+                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                  />
+                  <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
+                </div>
+                <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
+                  <div className="flex items-center gap-1 truncate">
+                    <Icon47 width={16} height={16} />
+                    <span className="truncate">{profile.location || 'Location not specified'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 truncate">
+                    <Icon48 width={16} height={16} />
+                    <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* DESKTOP (sm+): original avatar + center info */}
+              <div className="hidden sm:flex flex-shrink-0">
                 <img
                   src={getProfileImageUrl(profile)}
                   alt="Profile"
-                  className="profile-icon"
                   onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = icon_placeholder;
+                    e.target.onerror = null
+                    e.target.src = icon_placeholder
                   }}
+                  className="w-16 h-16 rounded-full object-cover"
                 />
               </div>
-
-              <div className="profile-center">
-                <h3 className="profile-name">{profile.name}</h3>
-                <div className="profile-detail">
-                  <Icon47 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
-                  <span>{profile.location || 'Location not specified'}</span>
+              <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
+                <h3 className="text-base font-semibold truncate">{profile.name}</h3>
+                <div className="flex items-center gap-2 text-sm truncate">
+                  <Icon47 width={20} height={20} />
+                  <span className="truncate">{profile.location || 'Location not specified'}</span>
                 </div>
-                <div className="profile-detail">
-                  <Icon48 width={44} height={44} className="detail-icon" style={{ marginRight: '-6px' }} />
-                  <span>{profile.nationality || 'Nationality not specified'}</span>
+                <div className="flex items-center gap-2 text-sm truncate">
+                  <Icon48 width={20} height={20} />
+                  <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
                 </div>
               </div>
 
-              <div className="profile-right">
-                <div className="bio-container">
+              {/* Actions (all sizes) */}
+              <div className="flex flex-col items-start gap-2 w-full sm:w-auto">
+                {/* View Bio + Icon */}
+                <div className="flex items-center w-full sm:w-auto gap-2">
                   <button
-                    className="view-bio"
                     onClick={() => handleViewBio(profile)}
+                    className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
                   >
                     View Bio
                   </button>
-                  <Icon50 width={24} height={24} className="premium-icon" color="#1e5a8d" />
+                  <Icon50 width={20} height={20} color="#1e5a8d" />
                 </div>
-                <button className="request-match"
-                  onClick={() => { setIsOpen(true); setSelectedProfile(profile.id); }}
-                  disabled={profile.hasPendingRequest}>
-                  {profile.hasPendingRequest ? "Pending...." : "Request Match"}
-                </button>
-                <MessageModal
-                  isOpen={isOpen}
-                  onClose={() => setIsOpen(false)}
-                  title="Match Request Confirmation"
-                  onConfirm={() => {
-                    handleMatchRequest(selectedProfile)
-                    setIsOpen(false);
+
+                {/* Request Match */}
+                <button
+                  onClick={() => {
+                    setIsOpen(true)
+                    setSelectedProfile(profile.id)
                   }}
-                  text="You are about to submit a match request. Would you like to continue?"
-                />
+                  disabled={profile.hasPendingRequest}
+                  className={`
+      text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
+      ${profile.hasPendingRequest
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'theme-btn'
+                    }
+    `}
+                >
+                  {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
+                </button>
               </div>
             </div>
           ))}
@@ -316,9 +360,42 @@ const Search = () => {
         photoUrl={selectedProfile ? getProfileImageUrl(selectedProfile) : fallbackUrl}
       />
 
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={pendingFilters}
+        onChange={(e) =>
+          setPendingFilters((prev) => ({
+            ...prev,
+            [e.target.name]: e.target.value,
+          }))
+        }
+        onApply={() => {
+          setFilters(pendingFilters);
+          fetchProfiles();
+        }}
+      />
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Match Request Confirmation"
+        onConfirm={() => {
+          handleMatchRequest(selectedProfile);
+          setIsOpen(false);
+        }}
+        text="You are about to submit a match request. Would you like to continue?"
+      />
+
       {visibleProfiles.length > 0 && (
-        <div className="pagination">
-          <button className="next-page">Next Page</button>
+        <div className="flex justify-end mt-6">
+          <button
+            className="text-white text-base px-5 py-2 rounded theme-btn"
+          >
+            Next Page
+          </button>
         </div>
       )}
     </div>

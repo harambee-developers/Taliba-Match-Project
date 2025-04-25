@@ -5,17 +5,17 @@ import Select from 'react-select';
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { customSelectStyles } from "../styles/selectStyles";
-import { 
-  salahPatternOptions, 
-  madhabOptions, 
-  sectOptions, 
-  ethnicityOptions, 
+import {
+  salahPatternOptions,
+  madhabOptions,
+  sectOptions,
+  ethnicityOptions,
   countries,
   quranMemorizationOptions,
   dressStyleOptions,
   polygamyOptions,
   languages,
-  yesNoOptions 
+  yesNoOptions
 } from "../data/fieldData";
 
 const Profile = () => {
@@ -127,7 +127,7 @@ const Profile = () => {
       if (user.photos && user.photos.length > 0) {
         setProfilePhoto(user.photos[0].url);
       }
-      
+
       setLoading(false);
     }
   }, [user]);
@@ -170,7 +170,7 @@ const Profile = () => {
   const handleCropSave = async () => {
     if (selectedImage && imgRef.current && crop.width && crop.height) {
       setIsUploading(true);
-      
+
       const canvas = document.createElement("canvas");
       const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
       const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
@@ -194,16 +194,16 @@ const Profile = () => {
         try {
           const formData = new FormData();
           formData.append('profileImage', blob, 'profile-pic.jpg');
-          
+
           const response = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/upload`,
             formData,
-            { 
+            {
               withCredentials: true,
               headers: { "Content-Type": "multipart/form-data" }
             }
           );
-          
+
           if (response.status === 200) {
             setProfilePhoto(response.data.url);
             setShowCropper(false);
@@ -230,7 +230,7 @@ const Profile = () => {
           { avatar: selectedAvatar },
           { withCredentials: true }
         );
-        
+
         if (response.status === 200) {
           setProfilePhoto(selectedAvatar);
           setShowAvatarModal(false);
@@ -281,7 +281,7 @@ const Profile = () => {
     const commonClasses = "w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors";
     const viewClasses = "p-4 theme-bg rounded-xl";
 
-    switch(currentCard) {
+    switch (currentCard) {
       case 0:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -343,7 +343,6 @@ const Profile = () => {
                 </div>
               )}
             </div>
-
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
                 Email
@@ -354,11 +353,13 @@ const Profile = () => {
                   name="email"
                   value={profileData.email}
                   onChange={handleInputChange}
-                  className={commonClasses}
+                  className={`${commonClasses} break-words whitespace-normal`}
                   placeholder="Your email..."
                 />
               ) : (
-                <div className={viewClasses}>
+                <div
+                  className={`${viewClasses} break-words whitespace-normal`}
+                >
                   {profileData.email || "Not specified"}
                 </div>
               )}
@@ -455,8 +456,8 @@ const Profile = () => {
                 />
               ) : (
                 <div className={viewClasses}>
-                  {profileData.language && profileData.language.length > 0 
-                    ? profileData.language.join(', ') 
+                  {profileData.language && profileData.language.length > 0
+                    ? profileData.language.join(', ')
                     : "Not specified"}
                 </div>
               )}
@@ -970,22 +971,22 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen theme-bg p-6">
+    <div className="min-h-screen theme-bg px-4 py-6 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <h1 className="text-2xl font-bold text-[#4A0635]">My Profile</h1>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             {isEditing ? (
               <button
                 onClick={handleSubmit}
-                className="theme-btn px-6 py-3 rounded-full text-lg font-semibold"
+                className="theme-btn px-4 py-2 sm:px-6 sm:py-3 rounded-full text-base sm:text-lg font-semibold"
               >
                 Save Changes
               </button>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="theme-btn px-6 py-3 rounded-full text-lg font-semibold"
+                className="theme-btn px-4 py-2 sm:px-6 sm:py-3 rounded-full text-base sm:text-lg font-semibold"
               >
                 Edit Profile
               </button>
@@ -1006,9 +1007,9 @@ const Profile = () => {
                 <div className="relative mr-4">
                   <div className="w-24 h-24 rounded-full overflow-hidden theme-border bg-gray-100 flex items-center justify-center">
                     {profilePhoto ? (
-                      <img 
-                        src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`} 
-                        alt="Profile" 
+                      <img
+                        src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`}
+                        alt="Profile"
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -1017,61 +1018,61 @@ const Profile = () => {
                       </div>
                     )}
                   </div>
-                  <button 
+                  <button
                     onClick={() => setShowAvatarModal(true)}
                     className="absolute bottom-0 right-0 theme-btn text-white rounded-full w-8 h-8 flex items-center justify-center"
                     title="Change profile picture"
                   >
-                    <span>✏️</span>
+                    <span className="text-xs sm:text-base">✏️</span>
                   </button>
                 </div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="text-lg sm:text-2xl font-semibold break-words">
                   {profileData.userName} {user?.gender === 'Male' ? '♂' : '♀'}
                 </h2>
               </div>
-              <div className="text-3xl font-arabic text-[#4A0635]">
+              <div className="text-2xl sm:text-3xl font-arabic text-[#4A0635] text-right sm:text-left">
                 السَّلامُ عَلَيْكُم
               </div>
             </div>
-
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-[#4A0635] mb-4">
+            
+            {/* Card content */}
+            <div className="mb-6 sm:mb-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-[#4A0635] mb-3 sm:mb-4">
                 {cardTitles[currentCard]}
               </h3>
               {renderCardContent()}
             </div>
-
-            <div className="flex justify-between items-center mt-8">
+            
+            {/* Navigation controls */}
+            <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-6 sm:mt-8 gap-4">
               <button
                 onClick={prevCard}
                 disabled={currentCard === 0}
-                className={`px-4 py-2 rounded-full ${
-                  currentCard === 0
+                className={`px-4 py-2 rounded-full text-sm sm:text-base ${currentCard === 0
                     ? "bg-gray-200 cursor-not-allowed"
                     : "theme-btn"
-                } transition-colors`}
+                  } transition-colors`}
               >
                 Previous
               </button>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center">
                 {cardTitles.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentCard(index)}
-                    className={`w-3 h-3 rounded-full ${
-                      currentCard === index ? "theme-btn" : "bg-gray-300"
-                    }`}
+                    className={`w-3 h-3 rounded-full 
+                      ${currentCard === index ? "theme-btn" : "bg-gray-300"
+                      }`}
                   />
                 ))}
               </div>
               <button
                 onClick={nextCard}
                 disabled={currentCard === 4}
-                className={`px-4 py-2 rounded-full ${
-                  currentCard === 4
+                className={`px-4 py-2 rounded-full text-sm sm:text-base ${currentCard === 4
                     ? "bg-gray-200 cursor-not-allowed"
                     : "theme-btn"
-                } transition-colors`}
+                  } transition-colors`}
               >
                 Next
               </button>
@@ -1085,7 +1086,7 @@ const Profile = () => {
           <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">Change Profile Picture</h3>
-              <button 
+              <button
                 onClick={() => {
                   setShowAvatarModal(false);
                   setSelectedAvatar('');
@@ -1102,13 +1103,13 @@ const Profile = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {user?.gender === 'Male' ? (
                   [1, 2, 3, 4].map((num) => (
-                    <div 
+                    <div
                       key={`man${num}`}
                       className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
                       onClick={() => handleAvatarSelect(`icon_man${num === 1 ? '' : num}.svg`)}
                     >
-                      <img 
-                        src={`/icon_man${num === 1 ? '' : num}.svg`} 
+                      <img
+                        src={`/icon_man${num === 1 ? '' : num}.svg`}
                         alt={`Male Avatar ${num}`}
                         className="w-full h-auto"
                       />
@@ -1118,13 +1119,13 @@ const Profile = () => {
                   <>
                     <div className="grid grid-cols-2 gap-4 col-span-full">
                       {[1, 2, 3, 4, 5].map((num) => (
-                        <div 
+                        <div
                           key={`woman${num}`}
                           className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
                           onClick={() => handleAvatarSelect(`icon_woman${num === 1 ? '' : num}.svg`)}
                         >
-                          <img 
-                            src={`/icon_woman${num === 1 ? '' : num}.svg`} 
+                          <img
+                            src={`/icon_woman${num === 1 ? '' : num}.svg`}
                             alt={`Female Avatar ${num}`}
                             className="w-full h-auto"
                           />
@@ -1132,12 +1133,12 @@ const Profile = () => {
                       ))}
                     </div>
                     <div className="col-span-full flex justify-center">
-                      <div 
+                      <div
                         className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === 'icon_woman5.svg' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/3`}
                         onClick={() => handleAvatarSelect('icon_woman5.svg')}
                       >
-                        <img 
-                          src="/icon_woman5.svg" 
+                        <img
+                          src="/icon_woman5.svg"
                           alt="Female Avatar 5"
                           className="w-full h-auto"
                         />
@@ -1159,10 +1160,10 @@ const Profile = () => {
 
             <div className="mb-6 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
               <h4 className="text-lg font-medium mb-3">Upload your own image</h4>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageChange} 
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
                 className="mb-2"
               />
               <p className="text-xs text-gray-500">For best results, use a square image</p>
