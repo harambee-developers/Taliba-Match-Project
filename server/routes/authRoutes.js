@@ -31,6 +31,7 @@ router.post("/register", async (req, res) => {
         lastName,
         kunya,
         dob,
+        gender,
         email,
         phone,
         location,
@@ -50,11 +51,15 @@ router.post("/register", async (req, res) => {
         children,
         occupation,
         personality,
-        dealBreakers
+        dealBreakers,
+        height,
+        weight,
+        photos,
+        appearancePreference
     } = req.body;
 
     try {
-
+ 
         const lowerCaseEmail = email.trim().toLowerCase(); // Convert email to lowercase and remove spaces
 
         const existingUser = await User.findOne({ email });
@@ -64,6 +69,8 @@ router.post("/register", async (req, res) => {
 
         // Hash the password
         const hashedPassword = await bcrypt.hash("defaultPassword123", 10);
+
+        const userPhotos = (photos || []).map(p => ({ url: p.url }))
 
         function generateProfile() {
             return {
@@ -75,7 +82,8 @@ router.post("/register", async (req, res) => {
                 dressingStyle,
                 islamicAmbitions,
                 children, personality,
-                dealBreakers
+                dealBreakers, height,
+                weight, appearancePreference
             }
         }
 
@@ -85,6 +93,7 @@ router.post("/register", async (req, res) => {
             lastName,
             password: hashedPassword,
             role: "user",
+            gender,
             dob,
             email: lowerCaseEmail,
             phone,
@@ -94,7 +103,8 @@ router.post("/register", async (req, res) => {
             maritalStatus,
             sect,
             occupation,
-            profile: generateProfile()
+            profile: generateProfile(),
+            photos: userPhotos // 👈 insert here
         });
         await user.save();
         res.status(201).json({ message: "User registered successfully" });

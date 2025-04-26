@@ -15,6 +15,7 @@ body {
   padding: 20px;
   max-width: 1600px;
   margin: 0 auto;
+  min-height: 100vh; /* 👈 This makes it fill at least the full viewport height */
 }
 
 .search-title {
@@ -57,9 +58,18 @@ body {
   padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background-color: #fef4f3;
   font-size: 16px;
   cursor: pointer;
+}
+
+[data-theme="Male"] .custom-select select {
+  background-color: #e6f2ff; /* light blue */
+  border-color: #1e5a8d;     /* male border */
+}
+
+[data-theme="Female"] .custom-select select {
+  background-color: #FFF1FE; /* soft pink */
+  border-color: #d61c72;     /* female border */
 }
 
 .select-arrow {
@@ -108,7 +118,7 @@ body {
   left: 35px;
   top: -12px;
   background-color: white;
-  border: 2px solid #d61c72;
+  border: 2px solid;
   color: #000;
   width: 40px;
   height: 40px;
@@ -119,6 +129,22 @@ body {
   font-weight: bold;
   font-size: 18px;
   z-index: 1;
+}
+
+[data-theme="Male"] .age-badge {
+  border-color: #1e5a8d;     /* male border */
+}
+
+[data-theme="Female"] .age-badge {
+  border-color: #d61c72;     /* female border */
+}
+
+[data-theme="Male"] .age-badge {
+  border-color: #1e5a8d;     /* male border */
+}
+
+[data-theme="Female"] .age-badge {
+  border-color: #d61c72;     /* female border */
 }
 
 .profile-left {
@@ -142,13 +168,32 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  background: #fef4f3;
   border: 2px solid #d61c72;
   border-radius: 12px;
   padding: 20px;
   height: 180px;
   width: 100%;
   gap: 15px;
+}
+
+[data-theme="Male"] .profile-card {
+  background-color: #e6f2ff; /* light blue */
+  border-color: #1e5a8d;     /* male border */
+}
+
+[data-theme="Female"] .profile-card {
+  background-color: #FFF1FE; /* soft pink */
+  border-color: #d61c72;     /* female border */
+}
+
+[data-theme="Male"] .profile-card {
+  background-color: #e6f2ff; /* light blue */
+  border-color: #1e5a8d;     /* male border */
+}
+
+[data-theme="Female"] .profile-card {
+  background-color: #FFF1FE; /* soft pink */
+  border-color: #d61c72;     /* female border */
 }
 
 .profile-center {
@@ -231,9 +276,24 @@ body {
 }
 
 .request-match {
-  background-color: #1e5a8d;
   color: white;
   width: 140px;
+}
+
+[data-theme="Male"] .request-match {
+  background-color: #1e5a8d; /* light blue */
+}
+
+[data-theme="Female"] .request-match{
+  background-color: #d61c72; /* soft pink */
+}
+
+[data-theme="Male"] .request-match {
+  background-color: #1e5a8d; /* light blue */
+}
+
+[data-theme="Female"] .request-match{
+  background-color: #d61c72; /* soft pink */
 }
 
 .request-match:disabled {
@@ -242,8 +302,15 @@ body {
 }
 
 .request-match:hover {
-  background-color: #174b75; /* darker shade */
   transition: background-color 0.3s ease;
+}
+
+[data-theme="Male"] .request-match:hover {
+  background-color: #174b75; /* light blue */
+}
+
+[data-theme="Female"] .request-match:hover {
+  background-color: #FF1F5A; /* soft pink */
 }
 
 /* Pagination */
@@ -254,13 +321,28 @@ body {
 }
 
 .next-page {
-  background-color: #1e5a8d;
   color: white;
   border: none;
   border-radius: 5px;
   padding: 12px 24px;
   font-size: 16px;
   cursor: pointer;
+}
+
+[data-theme="Male"] .next-page {
+  background-color: #1e5a8d; /* light blue */
+}
+
+[data-theme="Female"] .next-page {
+  background-color: #d61c72; /* soft pink */
+}
+
+[data-theme="Male"] .next-page:hover {
+  background-color: #174b75; /* light blue */
+}
+
+[data-theme="Female"] .next-page:hover {
+  background-color: #FF1F5A; /* soft pink */
 }
 
 /* Media Queries */

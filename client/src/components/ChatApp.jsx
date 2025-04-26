@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl }) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -48,7 +48,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             if (cached) {
                 setReceiverId(cached._id);
                 setReceiverName([cached.userName, cached.firstName, cached.lastName]);
-                return;
             }
             try {
                 const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`);
@@ -74,7 +73,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             if (cachedStatus) {
                 console.info("✅ Loaded status from cache");
                 setLocalReceiverStatus(cachedStatus.data);
-                return;
             }
             try {
                 const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
@@ -94,7 +92,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
             const cached = await getCachedData(CACHE_MESSAGES, chatCache);
             if (cached) {
                 setMessages(cached)
-                return;
             }
             try {
                 const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/messages`);
@@ -190,6 +187,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         }
 
         console.info("Sending message: ", messageData);
+
         socket.emit("send_message", messageData);
         socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
         socket.emit("notification", notificationObject)
@@ -319,31 +317,27 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
         return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
 
-    const borderClass = user?.gender === "Male"
-        ? "border-2 border-[#203449]"
-        : "border-2 border-[#E01D42]";
-
     return (
-        <div className={`flex flex-col h-screen w-full md:border-0 ${borderClass} bg-repeat bg-center`}
+        <div className={`flex flex-col h-screen w-full md:border-0 theme-border bg-repeat bg-center`}
             style={{
                 backgroundImage: user?.gender === "Male"
                     ? "url('/wallpaper_man.svg')"
                     : "url('/wallpaper_woman.svg')"
             }}>
 
-            <div className={`p-[0.65rem] text-xl font-bold ${borderClass} ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#FFF1FE]"} bg-opacity-60 text-black inline-flex items-center space-x-4`}>
-                <div className={`md:hidden cursor-pointer ${user?.gender === "Male" ? "text-white" : "text-black"}`} onClick={() => navigate("/matches")}>
+            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4`}>
+                <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
                     <ChevronLeft className="w-10-h-10" />
                 </div>
-                <div className={`rounded-full bg-white overflow-hidden w-16 h-16`} >
-                    <img src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
+                <div className={`rounded-full bg-white theme-border overflow-hidden w-16 h-16`} >
+                    <img src={photoUrl} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
                 </div>
                 <div className="flex flex-col items-start">
-                    <span className={`text-lg font-semibold ${user?.gender === "Male" ? "text-white" : "text-black"}`}>
+                    <span className={`text-lg font-semibold theme-bg`}>
                         {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
                     </span>
                     {localReceiverStatus && !localReceiverStatus?.isOnline && localReceiverStatus?.lastSeen && (
-                        <span className={`text-sm ${user?.gender === "Male" ? "text-white" : "text-black"}`}>{formattedLastSeen}</span>
+                        <span className={`text-sm theme-bg`}>{formattedLastSeen}</span>
                     )}
                 </div>
                 {/* Status Dot (Green or Grey) */}
@@ -356,7 +350,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                 </div>
             </div>
             <div className="flex-1 p-10 md:ml-10 overflow-y-auto">
-                {groupedMessages.length === 0 ? (
+                {Object.keys(groupedMessages).length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
                     </div>
@@ -490,7 +484,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate }) 
                     name="chatbox"
                     id="chatbox"
                     disabled={isUploading}
-                    className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none ${borderClass} hover:bg-white transition-all duration-300`}
+                    className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300`}
                     placeholder={isUploading ? "Uploading..." : "Type a message..."}
                     value={input}
                     onChange={(e) => {

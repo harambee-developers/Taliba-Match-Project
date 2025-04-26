@@ -35,7 +35,7 @@ const Icon30 = ({
       {/* Open book shape */}
       <path
         d="M 512 255 L 512 320 C 512 320 493 310 472 310 L 472 255 L 512 255 Z M 512 255 L 512 320 C 512 320 531 310 552 310 L 552 255 L 512 255 Z"
-        fill={color}
+        fill="theme-btn"
       />
       {/* Book lines */}
       <path

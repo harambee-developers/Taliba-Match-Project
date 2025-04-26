@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#E01D42] text-white transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 h-full w-64 theme-sidebar text-white transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
         <nav className="flex flex-col h-full">
@@ -47,7 +47,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 <Link
                   to="/"
                   onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Home</span>
                   <Icon26 width={24} height={24} color="#FFF" />
@@ -57,7 +57,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 <Link
                   to="/profile"
                   onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Your Profile</span>
                   <Icon27 width={24} height={24} color="#FFF" />
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
               <li>
                 <button
                   onClick={() => setMatchesOpen(!matchesOpen)}
-                  className="flex items-center justify-between w-full p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                  className="flex items-center justify-between w-full p-2 rounded theme-btn transition-colors"
                 >
                   <span>Your Matches</span>
                   <Icon28 width={24} height={24} color="#FFF" />
@@ -77,7 +77,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                       <Link
                         to="/pending-matches"
                         onClick={toggleMenu}
-                        className="block p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                        className="block p-2 rounded theme-btn transition-colors"
                       >
                         Pending
                       </Link>
@@ -86,7 +86,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                       <Link
                         to="/matches"
                         onClick={toggleMenu}
-                        className="block p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                        className="block p-2 rounded theme-btn transition-colors"
                       >
                         Matches
                       </Link>
@@ -98,7 +98,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 <Link
                   to="/search"
                   onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Search</span>
                   <Icon29 width={24} height={24} color="#FFF" />
@@ -108,7 +108,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 <Link
                   to="/library"
                   onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded hover:bg-[#FF1F5A] transition-colors"
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Library</span>
                   <Icon30 width={24} height={24} color="#FFF" />
@@ -117,10 +117,10 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
             </ul>
           </div>
           {/* Logout Button */}
-          <div className="p-4 border-t border-[#FF1F5A]">
+          <div className="p-4 theme-border">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center p-2 rounded hover:bg-[#FF1F5A] transition-colors text-white"
+              className="w-full flex items-center justify-center p-2 rounded theme-btn transition-colors text-white"
             >
               Logout
             </button>

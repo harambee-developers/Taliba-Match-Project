@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
+import { useNavigate } from 'react-router-dom';
 
 const LoginModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ const LoginModal = ({ isOpen, onClose }) => {
     });
     const { showAlert } = useAlert();
     const { login } = useAuth();
+    const navigate = useNavigate()
 
     const resetForm = () => {
         setEmail("");
@@ -78,6 +80,7 @@ const LoginModal = ({ isOpen, onClose }) => {
             showAlert("You have successfully logged in!", "success");
             resetForm();
             onClose();
+            navigate("/profile")
         } catch (error) {
             // Extract error message with fallback
             const errorMessage = error.message || "Login failed";

@@ -279,7 +279,7 @@ const Profile = () => {
 
   const renderCardContent = () => {
     const commonClasses = "w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors";
-    const viewClasses = "p-4 bg-[#FFF1FE] rounded-xl";
+    const viewClasses = "p-4 theme-bg rounded-xl";
 
     switch(currentCard) {
       case 0:
@@ -970,7 +970,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF1FE] p-6">
+    <div className="min-h-screen theme-bg p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-[#4A0635]">My Profile</h1>
@@ -978,14 +978,14 @@ const Profile = () => {
             {isEditing ? (
               <button
                 onClick={handleSubmit}
-                className="bg-[#E01D42] text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-[#FF1F5A] transition-colors"
+                className="theme-btn px-6 py-3 rounded-full text-lg font-semibold"
               >
                 Save Changes
               </button>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-[#E01D42] text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-[#FF1F5A] transition-colors"
+                className="theme-btn px-6 py-3 rounded-full text-lg font-semibold"
               >
                 Edit Profile
               </button>
@@ -1004,7 +1004,7 @@ const Profile = () => {
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center">
                 <div className="relative mr-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#E01D42] bg-gray-100 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden theme-border bg-gray-100 flex items-center justify-center">
                     {profilePhoto ? (
                       <img 
                         src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`} 
@@ -1019,7 +1019,7 @@ const Profile = () => {
                   </div>
                   <button 
                     onClick={() => setShowAvatarModal(true)}
-                    className="absolute bottom-0 right-0 bg-[#E01D42] text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    className="absolute bottom-0 right-0 theme-btn text-white rounded-full w-8 h-8 flex items-center justify-center"
                     title="Change profile picture"
                   >
                     <span>✏️</span>
@@ -1048,7 +1048,7 @@ const Profile = () => {
                 className={`px-4 py-2 rounded-full ${
                   currentCard === 0
                     ? "bg-gray-200 cursor-not-allowed"
-                    : "bg-[#E01D42] text-white hover:bg-[#FF1F5A]"
+                    : "theme-btn"
                 } transition-colors`}
               >
                 Previous
@@ -1059,7 +1059,7 @@ const Profile = () => {
                     key={index}
                     onClick={() => setCurrentCard(index)}
                     className={`w-3 h-3 rounded-full ${
-                      currentCard === index ? "bg-[#E01D42]" : "bg-gray-300"
+                      currentCard === index ? "theme-btn" : "bg-gray-300"
                     }`}
                   />
                 ))}
@@ -1070,7 +1070,7 @@ const Profile = () => {
                 className={`px-4 py-2 rounded-full ${
                   currentCard === 4
                     ? "bg-gray-200 cursor-not-allowed"
-                    : "bg-[#E01D42] text-white hover:bg-[#FF1F5A]"
+                    : "theme-btn"
                 } transition-colors`}
               >
                 Next
@@ -1117,7 +1117,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-4 col-span-full">
-                      {[1, 2, 3, 4].map((num) => (
+                      {[1, 2, 3, 4, 5].map((num) => (
                         <div 
                           key={`woman${num}`}
                           className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}

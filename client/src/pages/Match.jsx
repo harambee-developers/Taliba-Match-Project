@@ -32,7 +32,6 @@ const Match = () => {
     const cached = await getCachedData(CACHE_MATCHES, chatCache);
     if (cached) {
       setMatches(cached)
-      return;
     }
 
     try {
@@ -49,7 +48,6 @@ const Match = () => {
     const cached = await getCachedData(CACHE_CONVERSATION, chatCache);
     if (cached) {
       setConversations(cached)
-      return;
     }
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`);
@@ -110,10 +108,6 @@ const Match = () => {
     ) || null; // ✅ Return `null` if no conversation is found
   }, [conversations]);
 
-  const borderClass = user?.gender === "Male"
-    ? "border-2 border-[#203449]"
-    : "border-2 border-[#E01D42]";
-
   const getUnreadCount = (conversation) => {
     // If the last message wasn't sent by the current user, mark it as unread
     return conversation.last_sender_id !== user.userId ? 1 : 0;
@@ -126,6 +120,8 @@ const Match = () => {
       </div>
 
     const conversation = getConversationWithMatch(selectedMatch);
+    const photoUrl = selectedMatch?.photos?.[0]?.url || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
+
     // If conversation is still null, display a placeholder (or a loading spinner)
     if (!conversation) {
       return (
@@ -135,15 +131,15 @@ const Match = () => {
       );
     }
 
-    return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} />;
+    return <ChatApp conversation={conversation._id} user_id={user.userId} onLastMessageUpdate={handleLastMessageUpdate} photoUrl={photoUrl} />;
   }, [selectedMatch, conversations, user?.userId, handleLastMessageUpdate, getConversationWithMatch]);
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8">
-      <div className={`flex flex-col md:flex-row ${borderClass} items-stretch rounded-lg shadow-md`}>
-        <div className={`w-full md:w-1/3 ${borderClass} min-h-screen`}>
+      <div className={`flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md`}>
+        <div className={`w-full md:w-1/3 theme-border min-h-screen`}>
           {/* Full-width Title with Border */}
-          <h1 className={`${user?.gender === "Male" ? "bg-[#203449] text-white" : "bg-[#FFF1FE] text-black"} bg-opacity-60 text-3xl font-bold text-left pt-[1.5rem] pb-[1.45rem] px-4 ${borderClass}`}>
+          <h1 className={`theme-bg bg-opacity-60 text-3xl font-bold text-left pt-[1.6rem] pb-[1.45rem] px-4 theme-border`}>
             Matched
           </h1>
           <div className='p-4'>
@@ -152,11 +148,14 @@ const Match = () => {
                 const opponent = match.sender._id !== user?.userId ? match.sender : match.receiver;
                 const conversation = getConversationWithMatch(opponent);
                 const lastMessageTime = conversation ? formatTimestamp(conversation.updatedAt) : null;
+                
+                const photoUrl = opponent.photos[0]?.url
+                const fallbackUrl = user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png";
 
                 return (
                   <div
                     key={index}
-                    className={`flex items-center p-4 mb-2 cursor-pointer rounded-lg ${borderClass} bg-white hover:bg-[#FFF1FE] transition-all duration-300`}
+                    className={`flex items-center p-4 mb-2 cursor-pointer rounded-lg theme-border bg-white hover:bg-[#FFF1FE] transition-all duration-300`}
                     onClick={async () => {
                       if (!conversation) {
                         setIsCreatingConversation(true);
@@ -183,8 +182,8 @@ const Match = () => {
                     {/* User Icon */}
                     <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">
                       <img
-                        src={`${user?.gender === "Male" ? "/icon_woman.svg" : "/icon_man.svg"}`}
-                        alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
+                        src={photoUrl || fallbackUrl}
+                        alt={`${match.receiver?.firstName}-photo`}
                         className="w-full h-full object-cover"
                         loading='lazy'
                       />

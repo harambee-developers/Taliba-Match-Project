@@ -6,19 +6,22 @@ import { SocketProvider } from './components/contexts/SocketContext.jsx'
 import { NotificationProvider } from './components/contexts/NotificationContext.jsx'
 import './index.css'
 import App from './App.jsx'
+import { ThemeProvider } from './components/contexts/ThemeProvider.jsx'
 
 
 // Allows deeply nested context objects
 const AppProviders = ({ children }) => {
   return (
     <AuthProvider>
-      <SocketProvider>
-        <NotificationProvider>
-          <AlertProvider>
-            {children}
-          </AlertProvider>
-        </NotificationProvider>
-      </SocketProvider>
+      <ThemeProvider>
+        <SocketProvider>
+          <NotificationProvider>
+            <AlertProvider>
+              {children}
+            </AlertProvider>
+          </NotificationProvider>
+        </SocketProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 };

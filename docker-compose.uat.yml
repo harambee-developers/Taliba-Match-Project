@@ -5,8 +5,8 @@ services:
       context: "./server"
       dockerfile: Dockerfile.prod
     ports: 
-      - "6002:7777"
-    image: hmohammed2/taliba-match-backend:latest
+      - "4002:7777"
+    image: hmohammed2/talibah-uat-backend:latest
     env_file:
       - ./server/.env.production
     environment:
@@ -17,7 +17,7 @@ services:
     build:
       context: "./client"
       dockerfile: Dockerfile.prod
-    image: hmohammed2/taliba-match-frontend:latest
+    image: hmohammed2/talibah-uat-frontend:latest
     env_file:
       - ./client/.env.production
     ports: 
