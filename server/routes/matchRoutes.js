@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-router.use(express.json())
 const Match = require('../model/Match')
+const logger = require('../logger')
+
+router.use(express.json())
 
 router.get('/pending/sent/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -20,7 +22,7 @@ router.get('/pending/sent/:userId', async (req, res) => {
 
         res.status(200).json(sentRequests);
     } catch (error) {
-        console.error('Could not fetch sent requests', error);
+        logger.error('Could not fetch sent requests', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -43,32 +45,38 @@ router.get('/pending/received/:userId', async (req, res) => {
 
         res.status(200).json(receivedRequests);
     } catch (error) {
-        console.error('Could not fetch received requests', error);
+        logger.error('Could not fetch received requests', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 
-// Fetch accepted matches for User2
 router.get('/matches/:userId', async (req, res) => {
     const { userId } = req.params;
+    const page = parseInt(req.query.page) || 0;
 
     try {
-        // Get all matches where the current user is either user1 or user2 and the status is 'accepted'
         const matches = await Match.find({
             $or: [{ sender_id: userId }, { receiver_id: userId }],
             match_status: 'Interested',
+        }, {
+            sender_id: 1,
+            receiver_id: 1,
+            updatedAt: 1,
         })
-            .populate("sender")
-            .populate("receiver");
+            .sort({ updatedAt: -1 })        // newest first
+            .skip(page * 20)
+            .limit(20)
+            .lean()
+            .populate('sender', 'firstName lastName photos')
+            .populate('receiver', 'firstName lastName photos');
 
-        if (matches.length === 0) {
+        if (!matches.length) {
             return res.status(404).json({ message: 'No matches found' });
         }
-
-        res.status(200).json(matches);
-    } catch (error) {
-        console.error('Error fetching matches:', error);
+        res.json(matches);
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -104,7 +112,7 @@ router.post('/send-request', async (req, res) => {
 
         res.status(201).json({ message: 'Match request sent successfully', match });
     } catch (error) {
-        console.error('Error sending match:', error);
+        logger.error('Error sending match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 })
@@ -127,7 +135,7 @@ router.put('/accept/:matchId', async (req, res) => {
 
         res.status(200).json(match);
     } catch (error) {
-        console.error('Error accepting match:', error);
+        logger.error('Error accepting match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -150,7 +158,7 @@ router.put('/reject/:matchId', async (req, res) => {
 
         res.status(200).json(match);
     } catch (error) {
-        console.error('Error rejecting match:', error);
+        logger.error('Error rejecting match:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

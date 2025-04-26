@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl }) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -40,6 +40,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const CACHE_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${currentConversationId}`
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
+
+    const photoUrl = propPhotoUrl
+    || location.state?.photoUrl
+    || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
 
     // Fetch and set receiver details
     useEffect(() => {
@@ -314,18 +318,18 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
     // Show loading state if the current user is not yet available or receiverId is not set
     if (!currentUserId || !receiverId || !user) {
-        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
 
     return (
-        <div className={`flex flex-col h-screen w-full md:border-0 theme-border bg-repeat bg-center`}
+        <div className={`flex flex-col min-h-screen w-full bg-repeat bg-center`}
             style={{
                 backgroundImage: user?.gender === "Male"
                     ? "url('/wallpaper_man.svg')"
                     : "url('/wallpaper_woman.svg')"
-            }}>
+            }} loading='lazy'>
 
-            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4`}>
+            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 z-50 sm:static`}>
                 <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
                     <ChevronLeft className="w-10-h-10" />
                 </div>
@@ -349,7 +353,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     ) : null /* If offline & lastSeen exists, show nothing */}
                 </div>
             </div>
-            <div className="flex-1 p-10 md:ml-10 overflow-y-auto">
+            <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
                 {Object.keys(groupedMessages).length === 0 ? (
                     <div className="flex justify-center items-center h-full">
                         <p className="text-gray-400 text-center">Why not introduce yourself?</p>
@@ -443,9 +447,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
             </div>
 
 
-            <div className="md:p-10 flex items-center m-6">
+            <div className="md:p-10 flex items-center space-x-2 p-2">
                 {/* File Attachment Input */}
-                <label htmlFor="file-attachment" className="cursor-pointer mr-4 group">
+                <label htmlFor="file-attachment" className="cursor-pointer mr-2 group">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -484,7 +488,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     name="chatbox"
                     id="chatbox"
                     disabled={isUploading}
-                    className={`flex-1 p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300`}
+                    className={`flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg 
+                        focus:outline-none theme-border hover:bg-white 
+                        transition-all duration-300`}
                     placeholder={isUploading ? "Uploading..." : "Type a message..."}
                     value={input}
                     onChange={(e) => {
@@ -495,8 +501,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                 />
                 <button onClick={sendMessage}
                     disabled={isUploading}
-                    className={`ml-2 mr-2 p-2 rounded-lg ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
-                    <Send className="w-10 h-10" />
+                    className={`flex-shrink-0 w-10 h-10 rounded-lg 
+                    ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
+                    <Send className="w-full h-full" />
                 </button>
             </div>
         </div>

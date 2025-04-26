@@ -148,7 +148,7 @@ const Match = () => {
                 const opponent = match.sender._id !== user?.userId ? match.sender : match.receiver;
                 const conversation = getConversationWithMatch(opponent);
                 const lastMessageTime = conversation ? formatTimestamp(conversation.updatedAt) : null;
-                
+
                 const photoUrl = opponent.photos[0]?.url
                 const fallbackUrl = user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png";
 
@@ -171,7 +171,11 @@ const Match = () => {
                       }
                       if (window.innerWidth < 768) {
                         // On mobile, navigate directly to chat using the existing conversation.
-                        navigate(`/chat/${conversation._id}`);
+                        navigate(`/chat/${conversation._id}`, {
+                          state: {
+                            photoUrl: opponent.photos?.[0]?.url || fallbackUrl
+                          }
+                        });
                       } else {
                         // On desktop, select the match.
                         setSelectedMatch(opponent);
@@ -180,7 +184,7 @@ const Match = () => {
                     }
                   >
                     {/* User Icon */}
-                    <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-300 mr-4">
+                    <div className="w-20 h-20 flex-shrink-0 rounded-full overflow-hidden border border-gray-300 mr-4">
                       <img
                         src={photoUrl || fallbackUrl}
                         alt={`${match.receiver?.firstName}-photo`}
@@ -190,44 +194,54 @@ const Match = () => {
                     </div>
 
                     {/* User Details */}
-                    <div className="flex-1 flex flex-col justify-center">
-                      {/* Top row: Name and Time */}
-                      <div className="flex justify-between items-center w-full mb-1">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      {/* Name + time row */}
+                      <div className="flex justify-between items-center mb-1">
                         <h3 className="font-semibold text-base truncate">
                           {opponent.firstName} {opponent.lastName}
                         </h3>
-
-                        {/* Time + Unread Badge */}
                         <div className="flex flex-col items-end min-w-[48px] ml-2">
                           {lastMessageTime && (
-                            <p className="text-xs text-gray-500 whitespace-nowrap">{lastMessageTime}</p>
+                            <p className="text-xs text-gray-500 whitespace-nowrap">
+                              {lastMessageTime}
+                            </p>
                           )}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-500 truncate flex justify-between items-center w-full">
-                        <span className="truncate">
+
+                      {/* Last message + unread badge row */}
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-500 truncate">
                           {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
-                            <span className="text-gray-500 font-semibold">
+                            <span className="font-semibold">
                               {opponent.firstName} is typing...
                             </span>
                           ) : conversation ? (
                             <>
                               <span className="font-semibold">
                                 {conversation.last_sender_id === user?.userId ? "You" : opponent.firstName}:
-                              </span> {conversation.last_message}
+                              </span>{" "}
+                              {conversation.last_message}
                             </>
                           ) : (
                             "No messages yet"
                           )}
-                        </span>
+                          {conversation && getUnreadCount(conversation) > 0 && (
+                            <span className="ml-2 bg-red-500 text-white text-[10px] font-semibold px-2 py-[1px] rounded-full shrink-0">
+                              {getUnreadCount(conversation)}
+                            </span>
+                          )}
 
-                        {/* Push badge to the right */}
-                        {conversation && getUnreadCount(conversation) > 0 && (
-                          <span className="ml-2 bg-red-500 text-white text-[10px] font-semibold px-2 py-[1px] rounded-full shrink-0">
-                            {getUnreadCount(conversation)}
-                          </span>
-                        )}
-                      </p>
+                          {/* Push badge to the right */}
+                          {
+                            conversation && getUnreadCount(conversation) > 0 && (
+                              <span className="ml-2 bg-red-500 text-white text-[10px] font-semibold px-2 py-[1px] rounded-full shrink-0">
+                                {getUnreadCount(conversation)}
+                              </span>
+                            )
+                          }
+                        </p>
+                      </div>
                     </div>
 
                   </div>
@@ -236,14 +250,14 @@ const Match = () => {
             ) : (
               <p className="text-center text-gray-500">No matches found.</p>
             )}
-          </div>
-        </div>
+          </div >
+        </div >
         {/* Conversation Panel - Only Shows on Desktop */}
-        <div className="hidden md:block w-2/3">
+        < div className="hidden md:block w-2/3" >
           {chatComponent}
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 };
 

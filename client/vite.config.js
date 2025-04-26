@@ -6,7 +6,7 @@ import removeConsole from 'vite-plugin-remove-console';
 export default defineConfig({
   plugins: [
     react(),
-    // removeConsole()
+    removeConsole()
   ],
   server: {
     watch: {

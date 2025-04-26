@@ -7,6 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware')
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const logger = require('../logger')
 
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
@@ -45,7 +46,7 @@ router.get("/search", async (req, res) => {
   try {
 
     const { ageRange, location, ethnicity } = req.query;
-    console.log('Search params:', { ageRange, location, ethnicity });
+    logger.info('Search params:', { ageRange, location, ethnicity });
     
     let query = { role: "user" };
     
@@ -57,7 +58,7 @@ router.get("/search", async (req, res) => {
       query.ethnicity = ethnicity;
     }
 
-    console.log('MongoDB query:', query);
+    logger.info('MongoDB query:', query);
 
     const senderId = req.user?.id || req.query.senderId;
     
@@ -66,11 +67,11 @@ router.get("/search", async (req, res) => {
       .lean() // Convert to plain JavaScript objects
       .exec();
 
-    console.log('Found users:', users.length);
-    console.log(req.query)
+    logger.info('Found users:', users.length);
+    logger.info(req.query)
     
     if (!users) {
-      console.log('No users found');
+      logger.warn('No users found');
       return res.json([]);
     }
 
@@ -108,17 +109,17 @@ router.get("/search", async (req, res) => {
     // Filter by age range after calculating ages
     if (ageRange && ageRange !== '') {
       const [minAge, maxAge] = ageRange.split("-").map(Number);
-      console.log('Filtering by age range:', minAge, '-', maxAge);
+      logger.info('Filtering by age range:', minAge, '-', maxAge);
       filteredProfiles = profiles.filter(profile => 
         profile.age && profile.age >= minAge && profile.age <= maxAge
       );
     }
 
-    console.log('Filtered profiles:', filteredProfiles.length);
+    logger.info('Filtered profiles:', filteredProfiles.length);
     res.json(filteredProfiles.slice(0, 20)); // Limit to 20 results after filtering
 
   } catch (error) {
-    console.error('Search error details:', {
+    logger.error('Search error details:', {
       message: error.message,
       stack: error.stack,
       name: error.name
@@ -150,7 +151,7 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     
     res.json(user);
   } catch (error) {
-    console.error("Error fetching profile:", error);
+    logger.error("Error fetching profile:", error);
     if (error.name === 'CastError') {
       return res.status(400).json({ message: "Invalid user ID format" });
     }
@@ -166,19 +167,89 @@ router.get("/users", async (req, res) => {
     const user = await User.find({});
     res.json(user);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-router.get("/user/:id", async (req, res) => {
+/**
+ * GET /user/:id
+ * Returns only the fields needed to populate profile cards.
+ */
+router.get('/user/:id', async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    const user = await User.findById(id);
-    res.json(user);
+    const user = await User.findById(id)
+      .select({
+        _id: 1,
+        userName: 1,
+        firstName: 1,
+        lastName: 1,
+        gender: 1,
+        dob: 1,
+        email: 1,
+        phone: 1,
+        ethnicity: 1,
+        nationality: 1,
+        occupation: 1,
+        location: 1,
+        sect: 1,
+        maritalStatus: 1,
+        photos: 1,
+        // entire profile object—but we’ll project only the needed subfields
+        profile: 1,
+      })
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Build a response matching exactly your front-end shape:
+    const resp = {
+      _id: user._id,
+      userName: user.userName || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      dob: user.dob ? user.dob.toISOString().split('T')[0] : "",
+      gender: user.gender || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      ethnicity: user.ethnicity || "",
+      nationality: user.nationality || "",
+      photos: user.photos || [],  
+      language: user.profile?.language || [],
+
+      bio: user.profile?.bio || "",
+      personality: user.profile?.personality || "",
+      dealBreakers: user.profile?.dealBreakers || "",
+
+      sect: user.sect || "",
+      madhab: user.profile?.madhab || "",
+      salahPattern: user.profile?.salahPattern || "",
+      quranMemorization: user.profile?.quranMemorization || "",
+      dressingStyle: user.profile?.dressingStyle || "",
+      openToPolygamy: user.profile?.openToPolygamy || "",
+      islamicAmbitions: user.profile?.islamicAmbitions || "",
+      islamicBooks: user.profile?.islamicBooks || "",
+
+      children: user.profile?.children || "",
+      occupation: user.occupation || "",
+      location: user.location || "",
+      openToHijrah: user.profile?.openToHijrah || "",
+      hijrahDestination: user.profile?.hijrahDestination || "",
+      maritalStatus: user.maritalStatus || "",
+      revert: user.profile?.revert || "", 
+      weight: user.profile?.weight || "",
+      height: user.profile?.height || "",
+      appearancePreference: user.profile?.appearancePreference || "",
+    };
+
+    return res.json(resp);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    logger.error('Error fetching user profile:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -193,7 +264,7 @@ router.delete("/user/delete/:id", async (req, res) => {
 
     res.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(500).json({ message: "Internal Server error" });
   }
 });
@@ -296,7 +367,7 @@ router.put("/profile", authMiddleware, async (req, res) => {
 
     res.json({ message: "Profile updated successfully", user });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    logger.error("Error updating profile:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -337,7 +408,7 @@ router.post("/profile/avatar", authMiddleware, async (req, res) => {
     await user.save();
     res.json({ message: "Avatar updated successfully", url: avatar });
   } catch (error) {
-    console.error("Error updating avatar:", error);
+    logger.error("Error updating avatar:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -375,7 +446,7 @@ router.post("/profile/upload", authMiddleware, upload.single('profileImage'), as
     await user.save();
     res.json({ message: "Profile image uploaded successfully", url: fileUrl });
   } catch (error) {
-    console.error("Error uploading profile image:", error);
+    logger.error("Error uploading profile image:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

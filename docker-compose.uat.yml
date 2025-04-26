@@ -1,31 +1,26 @@
 services:
   backend:
-    container_name: backend
+    container_name: backend_UAT
     build:
       context: "./server"
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile.UAT
     ports: 
-      - "4002:7777"
+      - "7777:7777"
     image: hmohammed2/talibah-uat-backend:latest
-    env_file:
-      - ./server/.env.production
     environment:
-      - NODE_ENV=production
-      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=UAT
   frontend:
-    container_name: frontend
+    container_name: frontend_UAT
     build:
       context: "./client"
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile.UAT
     image: hmohammed2/talibah-uat-frontend:latest
-    env_file:
-      - ./client/.env.production
     ports: 
       - "80:80"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=UAT
   mongo:
     image: mongo:latest
-    container_name: mongo-server
+    container_name: uat-mongo-server
     ports: 
-      - "27017:27017" 
+      - "27017:27017"
