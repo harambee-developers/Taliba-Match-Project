@@ -182,6 +182,7 @@ router.get('/user/:id', async (req, res) => {
   try {
     const user = await User.findById(id)
       .select({
+        _id: 1,
         userName: 1,
         firstName: 1,
         lastName: 1,
@@ -195,6 +196,7 @@ router.get('/user/:id', async (req, res) => {
         location: 1,
         sect: 1,
         maritalStatus: 1,
+        photos: 1,
         // entire profile object—but we’ll project only the needed subfields
         profile: 1,
       })
@@ -206,6 +208,7 @@ router.get('/user/:id', async (req, res) => {
 
     // Build a response matching exactly your front-end shape:
     const resp = {
+      _id: user._id,
       userName: user.userName || "",
       firstName: user.firstName || "",
       lastName: user.lastName || "",
@@ -215,6 +218,7 @@ router.get('/user/:id', async (req, res) => {
       phone: user.phone || "",
       ethnicity: user.ethnicity || "",
       nationality: user.nationality || "",
+      photos: user.photos || [],  
       language: user.profile?.language || [],
 
       bio: user.profile?.bio || "",
@@ -236,8 +240,7 @@ router.get('/user/:id', async (req, res) => {
       openToHijrah: user.profile?.openToHijrah || "",
       hijrahDestination: user.profile?.hijrahDestination || "",
       maritalStatus: user.maritalStatus || "",
-      revert: user.profile?.revert || "",
-
+      revert: user.profile?.revert || "", 
       weight: user.profile?.weight || "",
       height: user.profile?.height || "",
       appearancePreference: user.profile?.appearancePreference || "",
