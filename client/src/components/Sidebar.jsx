@@ -45,16 +45,6 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
             <ul className="space-y-4">
               <li>
                 <Link
-                  to="/"
-                  onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
-                >
-                  <span>Home</span>
-                  <Icon26 width={24} height={24} color="#FFF" />
-                </Link>
-              </li>
-              <li>
-                <Link
                   to="/profile"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"

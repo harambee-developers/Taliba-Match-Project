@@ -83,7 +83,9 @@ const UserSchema = new Schema({
   isOnline: { type: Boolean, default: false }, // Track if the user is online or offline
   lastSeen: { type: Date, default: null }, // Timestamp for last seen when offline
   socketId: { type: String, default: null }, // Store the socket ID to track the user
-  refreshToken: { type: String, default: null }
+  refreshToken: { type: String, default: null },
+  resetToken: { type: String, default: null },
+  resetTokenExpiration: { type: Date }
 });
 
 // Optionally, you can define a method for updating status based on socket activity

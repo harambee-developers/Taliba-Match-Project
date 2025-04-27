@@ -23,7 +23,7 @@ const LandingPage = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/profile');
+      navigate('/search');
     }
   }, [navigate, user]);
 
@@ -119,24 +119,7 @@ const LandingPage = () => {
                 “And of His signs is that He created for you from yourselves mates that you may find tranquility in them; and He placed between you affection and mercy. Indeed, in that are signs for a people who give thought.” — <span className="font-semibold">Surah Ar-Rum (30:21)</span>
               </blockquote>
             </div>
-
-            {/* Vision */}
-            {/* <div>
-              <h2 className="text-3xl font-semibold mb-3">
-                Our Vision
-              </h2>
-              <p className="text-lg lg:text-xl leading-relaxed">
-                Talibah Match isn’t just about marriage; it’s about building a union that prioritizes spiritual growth, fosters a love for knowledge, and ensures that both partners remain steadfast in their deen. We are committed to helping you find a spouse who shares your values, supports your goals, and walks with you hand in hand toward the ultimate destination—Jannah.
-              </p>
-            </div> */}
           </div>
-
-          {/* Closing Statement */}
-          {/* <footer>
-            <p className="text-lg lg:text-xl italic leading-relaxed font-medium">
-              "Welcome to Talibah Match—where knowledge meets marriage."
-            </p>
-          </footer> */}
         </div>
       </section>
 

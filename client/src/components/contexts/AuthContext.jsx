@@ -110,44 +110,62 @@ const verifyToken = useCallback(async () => {
     verifyTokenAndFetchData();
   }, []);
 
-  /**
-   * Logs in the user by verifying credentials.
-   *
-   * @async
-   * @function
-   * @param {string} email - User's email.
-   * @param {string} password - User's password.
-   * @throws {Error} Throws an error if login fails.
-   */
-  const login = async (email, password) => {
-    const lowerCaseEmail = email.trim().toLowerCase(); // Convert email to lowercase and trim spaces
-    try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email: lowerCaseEmail, password });
-      if (response.status === 200) {
-        // Emit the disconnect event before logging out
-        await verifyTokenAndFetchData(); // Re-verify token and fetch user data after login
+/**
+ * Logs in the user by verifying credentials.
+ *
+ * @async
+ * @function
+ * @param {string} email - User's email.
+ * @param {string} password - User's password.
+ * @throws {Error} Throws an error if login fails.
+ */
+const login = async (email, password) => {
+  const lowerCaseEmail = email.trim().toLowerCase(); // Normalize email
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+      { email: lowerCaseEmail, password }
+    );
 
-        if (socket && user) {
-          socket.emit('user_connected', { userId: user.userId });  // This will trigger the backend to handle user disconnection
-        }
-      } else {
-        throw new Error("Login failed!");
+    if (response.status === 200) {
+      const { isDefaultPassword, redirect, resetToken} = response.data;
+
+      // If user logged in with default password, force password change
+      if (isDefaultPassword) {
+        window.location.href = `/change-password/${resetToken}`;
+        return; // Stop further execution
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      
-      // Preserve the original error details from the backend
-      if (error.response && error.response.data) {
-        // If there's a specific message from the server, use it
-        const errorMessage = error.response.data.message || "Invalid credentials";
-        throw new Error(errorMessage);
-      } else {
-        // Otherwise, use a more specific error than just "Login process failed"
-        const errorMessage = error.message || "Unable to connect to the server. Please try again.";
-        throw error; // Preserve the original error object
+
+      // Re-verify token and fetch user data after login
+      await verifyTokenAndFetchData();
+
+      // Notify backend of the user connection
+      if (socket && user) {
+        socket.emit('user_connected', { userId: user.userId });
       }
+
+      // Redirect based on user's role (optional)
+      if (redirect) {
+        window.location.href = redirect;
+      }
+
+    } else {
+      throw new Error("Login failed!");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+
+    // Handle server errors better
+    let errorMessage = "Unable to connect to the server. Please try again.";
+    if (error.response && error.response.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    throw new Error(errorMessage);
+  }
+};
 
   /**
    * Logs out the user and clears authentication state.
@@ -177,8 +195,60 @@ const verifyToken = useCallback(async () => {
     }
   };
 
+     /**
+   * Sends a password reset email by calling the backend endpoint.
+   * The backend endpoint should handle email generation and sending.
+   *
+   * @param {string} email - The email address of the user who wants to reset their password.
+   * @returns {Promise<Object>} - Returns response data if successful.
+   * @throws {Error} - Throws an error if the process fails.
+   */
+     const resetPassword = async (email) => {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/auth/reset-password`,
+          { email }
+        );
+        if (response.status === 200) {
+          console.log("Reset password email sent");
+          return response.data;
+        } else {
+          throw new Error("Reset password failed!");
+        }
+      } catch (error) {
+        console.error("Reset password error:", error);
+        throw new Error("Reset password process failed!");
+      }
+    };
+  
+    /**
+     * Changes the user's password.
+     *
+     * @param {string} oldPassword - The user's current password.
+     * @param {string} newPassword - The new password the user wants to set.
+     * @returns {Promise<Object>} - The response data from the backend.
+     * @throws {Error} - Throws an error if the password change process fails.
+     */
+    const changePassword = async (token, newPassword) => {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/auth/change-password/${token}`,
+          { newPassword }
+        );
+        if (response.status === 200) {
+          console.log("Password changed successfully");
+          return response.data;
+        } else {
+          throw new Error("Change password failed!");
+        }
+      } catch (error) {
+        console.error("Change password error:", error);
+        throw new Error("Change password process failed!");
+      }
+    };
+
   // 🔥 Memoizing the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({ user, loading, login, logout }), [user]);
+  const contextValue = useMemo(() => ({ user, loading, login, logout, resetPassword, changePassword }), [user]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };

@@ -19,6 +19,8 @@ import MessageNotification from "./components/MessageNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
 import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 function ChatLayout() {
   // Wrap only the chat-related routes in ChatEventsProvider
@@ -47,6 +49,8 @@ function AppLayout() {
         <Route path="/subscribe" element={<Subscription />} />
         <Route path="/register-success" element={<RegisterSuccess />} />
         <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/forgotten-password" element={<ForgotPasswordPage />} />
+        <Route path="/change-password/:resetToken" element={<ChangePasswordPage />} />
         {/* Protected Routes */}
         <Route element={<ProtectedRoute user={user} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
