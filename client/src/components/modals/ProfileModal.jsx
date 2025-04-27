@@ -79,6 +79,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
     };
 
     if (isOpen) {
+      setCurrentCard(0);
       fetchProfile();
     }
   }, [userId, isOpen]);
@@ -144,8 +145,8 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Languages
               </label>
               <div className={viewClasses}>
-                {profileData.language && profileData.language.length > 0
-                  ? profileData.language.join(', ')
+                {profileData.profile?.language && profileData.profile.language.length > 0
+                  ? profileData.profile.language.join(', ')
                   : "Not specified"}
               </div>
             </div>
@@ -160,7 +161,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Bio
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.bio || "Not specified"}
+                {profileData.profile?.bio || "Not specified"}
               </div>
             </div>
 
@@ -169,7 +170,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Personality
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.personality || "Not specified"}
+                {profileData.profile?.personality || "Not specified"}
               </div>
             </div>
 
@@ -178,7 +179,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Deal Breakers & Non-Negotiables
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.dealBreakers || "Not specified"}
+                {profileData.profile?.dealBreakers || "Not specified"}
               </div>
             </div>
           </>
@@ -201,7 +202,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Madhab
               </label>
               <div className={viewClasses}>
-                {madhabOptions.find(opt => opt.value === profileData.madhab)?.label || "Not specified"}
+                {madhabOptions.find(opt => opt.value === profileData.profile?.madhab)?.label || "Not specified"}
               </div>
             </div>
 
@@ -210,7 +211,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Pattern of Salah
               </label>
               <div className={viewClasses}>
-                {salahPatternOptions.find(opt => opt.value === profileData.salahPattern)?.label || "Not specified"}
+                {salahPatternOptions.find(opt => opt.value === profileData.profile?.salahPattern)?.label || "Not specified"}
               </div>
             </div>
 
@@ -219,7 +220,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Quran Memorisation
               </label>
               <div className={viewClasses}>
-                {quranMemorizationOptions.find(opt => opt.value === profileData.quranMemorization)?.label || "Not specified"}
+                {quranMemorizationOptions.find(opt => opt.value === profileData.profile?.quranMemorization)?.label || "Not specified"}
               </div>
             </div>
 
@@ -228,7 +229,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Dressing Style
               </label>
               <div className={viewClasses}>
-                {dressStyleOptions.find(opt => opt.value === profileData.dressingStyle)?.label || "Not specified"}
+                {dressStyleOptions.find(opt => opt.value === profileData.profile?.dressingStyle)?.label || "Not specified"}
               </div>
             </div>
 
@@ -237,7 +238,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Open to Polygamy
               </label>
               <div className={viewClasses}>
-                {polygamyOptions.find(opt => opt.value === profileData.openToPolygamy)?.label || "Not specified"}
+                {polygamyOptions.find(opt => opt.value === profileData.profile?.openToPolygamy)?.label || "Not specified"}
               </div>
             </div>
 
@@ -246,7 +247,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Islamic Books/Mutuun Studied
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.islamicBooks || "Not specified"}
+                {profileData.profile?.islamicBooks || "Not specified"}
               </div>
             </div>
 
@@ -255,7 +256,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Islamic Ambitions
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.islamicAmbitions || "Not specified"}
+                {profileData.profile?.islamicAmbitions || "Not specified"}
               </div>
             </div>
           </div>
@@ -269,7 +270,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Children
               </label>
               <div className={viewClasses}>
-                {profileData.children === "yes" ? "Yes" : profileData.children === "no" ? "No" : "Not specified"}
+                {profileData.profile?.children === "yes" ? "Yes" : profileData.profile?.children === "no" ? "No" : "Not specified"}
               </div>
             </div>
 
@@ -296,17 +297,17 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Open to Making Hijrah
               </label>
               <div className={viewClasses}>
-                {profileData.openToHijrah === "yes" ? "Yes" : profileData.openToHijrah === "no" ? "No" : "Not specified"}
+                {profileData.profile?.openToHijrah === "yes" ? "Yes" : profileData.profile?.openToHijrah === "no" ? "No" : "Not specified"}
               </div>
             </div>
 
-            {profileData.openToHijrah === "yes" && (
+            {profileData.profile?.openToHijrah === "yes" && (
               <div>
                 <label className="block text-lg font-medium text-gray-700 mb-2">
                   Hijrah Destination
                 </label>
                 <div className={viewClasses}>
-                  {profileData.hijrahDestination || "Not specified"}
+                  {profileData.profile?.hijrahDestination || "Not specified"}
                 </div>
               </div>
             )}
@@ -325,7 +326,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Revert
               </label>
               <div className={viewClasses}>
-                {profileData.revert === "yes" ? "Yes" : profileData.revert === "no" ? "No" : "Not specified"}
+                {profileData.profile?.revert === "yes" ? "Yes" : profileData.profile?.revert === "no" ? "No" : "Not specified"}
               </div>
             </div>
           </div>
@@ -339,7 +340,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Height (cm)
               </label>
               <div className={viewClasses}>
-                {profileData.height ? `${profileData.height} cm` : "Not specified"}
+                {profileData.profile?.height ? `${profileData.profile.height} cm` : "Not specified"}
               </div>
             </div>
 
@@ -348,7 +349,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Weight (kg)
               </label>
               <div className={viewClasses}>
-                {profileData.weight ? `${profileData.weight} kg` : "Not specified"}
+                {profileData.profile?.weight ? `${profileData.profile.weight} kg` : "Not specified"}
               </div>
             </div>
 
@@ -357,7 +358,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Describe Your Appearance Preferences
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.appearancePreference || "Not specified"}
+                {profileData.profile?.appearancePreference || "Not specified"}
               </div>
             </div>
           </div>
