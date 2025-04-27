@@ -45,6 +45,7 @@ router.post("/register", async (req, res) => {
         yearsRevert,
         salahPattern,
         sect,
+        madhab,
         islamicBooks,
         quranMemorization,
         dressingStyle,
@@ -76,15 +77,21 @@ router.post("/register", async (req, res) => {
         function generateProfile() {
             return {
                 openToHijrah,
-                hijrahDestination, revert,
+                hijrahDestination,
+                revert,
                 yearsRevert,
-                salahPattern, islamicBooks,
+                salahPattern,
+                madhab,
+                islamicBooks,
                 quranMemorization,
                 dressingStyle,
                 islamicAmbitions,
-                children, personality,
-                dealBreakers, height,
-                weight, appearancePreference
+                children,
+                personality,
+                dealBreakers,
+                height,
+                weight,
+                appearancePreference
             }
         }
 
@@ -207,7 +214,7 @@ router.post('/refresh-token', async (req, res) => {
       );
   
       if (!user) {
-        // Either user doesn’t exist or token mismatch
+        // Either user doesn't exist or token mismatch
         return res.status(403).json({ message: 'Invalid refresh token' });
       }
   

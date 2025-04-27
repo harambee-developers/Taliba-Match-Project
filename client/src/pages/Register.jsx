@@ -3,7 +3,7 @@ import Select from 'react-select';
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import occupationData from '../data/Occupations.json';
-import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions } from '../data/fieldData'
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions } from '../data/fieldData'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -90,6 +90,8 @@ const RegisterPage = () => {
     yearsRevert: '',
     salahPattern: '',
     sect: '',
+    madhab: '',
+    madhabOther: '',
     islamicBooks: '',
     quranMemorization: '',
     dressingStyle: '',
@@ -131,6 +133,10 @@ const RegisterPage = () => {
   const imgRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
+  
+  // Add state for email and phone validation
+  const [emailValid, setEmailValid] = useState(null);
+  const [phoneValid, setPhoneValid] = useState(null);
   
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -215,7 +221,9 @@ const RegisterPage = () => {
       'phone', 
       'location', 
       'ethnicity', 
-      'nationality'
+      'nationality',
+      'dob',   // Date of birth is required
+      'gender' // Gender is required
     ];
     
     // Fields that become required based on other selections
@@ -229,6 +237,10 @@ const RegisterPage = () => {
     
     if (formData.sect === 'other') {
       requiredFields.push('sectOther');
+    }
+    
+    if (formData.madhab === 'other') {
+      requiredFields.push('madhabOther');
     }
     
     if (formData.occupation === 'other') {
@@ -245,12 +257,12 @@ const RegisterPage = () => {
 
     // Additional optional fields that count towards progress
     const optionalFields = [
-      'dob', 
       'openToHijrah', 
       'maritalStatus', 
       'revert', 
       'salahPattern', 
       'sect', 
+      'madhab',
       'islamicBooks',
       'quranMemorization',
       'dressingStyle',
@@ -260,10 +272,19 @@ const RegisterPage = () => {
       'occupation',
       'personality',
       'hobbies',
-      'dealBreakers'
+      'dealBreakers',
+      'bio',
+      'appearancePreference',
+      'height',
+      'weight',
+      'avatar'  // Include avatar selection in progress calculation
     ];
     
     const filledOptionalFields = optionalFields.filter(field => {
+      if (field === 'avatar' && formData.avatar === 'custom' && formData.customImage) {
+        return true; // Custom image counts as filled
+      }
+      
       if (typeof formData[field] === 'string') {
         return formData[field].trim() !== '';
       }
@@ -295,14 +316,76 @@ const RegisterPage = () => {
     setFormData((prev) => {
       const updatedData = { ...prev, [field]: value };
       localStorage.setItem('formData', JSON.stringify(updatedData)); // Save to localStorage
+      
+      // Email validation
+      if (field === 'email') {
+        validateEmail(value);
+      }
+      
+      // Phone validation
+      if (field === 'phone') {
+        validatePhone(value);
+      }
+      
       return updatedData;
     });
+  };
+  
+  // Email validation function
+  const validateEmail = (email) => {
+    if (!email) {
+      setEmailValid(null);
+      return;
+    }
+    
+    // More comprehensive email regex
+    const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    setEmailValid(emailRegex.test(email));
+  };
+  
+  // Phone validation function
+  const validatePhone = (phone) => {
+    if (!phone) {
+      setPhoneValid(null);
+      return;
+    }
+    
+    // Allow different international formats with optional country codes
+    // This accepts formats like: +1234567890, (123) 456-7890, 123-456-7890, 123.456.7890, etc.
+    const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+    setPhoneValid(phoneRegex.test(phone));
   };
 
   const nextSection = () => {
     if (currentSection === 3 && !formData.gender) {
       showAlert("Please select your gender in section 1 before choosing an avatar", "warning");
       setCurrentSection(1);
+    } else if (currentSection === 1) {
+      // Check age before proceeding from section 1
+      if (!formData.dob) {
+        showAlert("Please enter your date of birth", "warning");
+        setErrors((prev) => ({ ...prev, dob: "Date of Birth is required" }));
+        return;
+      }
+      
+      // Validate age
+      const birthDate = new Date(formData.dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDifference = today.getMonth() - birthDate.getMonth();
+      
+      // If birthday hasn't occurred yet this year, subtract a year
+      if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 18) {
+        showAlert("You must be at least 18 years old to register", "warning");
+        setErrors((prev) => ({ ...prev, dob: "You must be at least 18 years old to register" }));
+        return;
+      }
+      
+      setCurrentSection((prev) => prev + 1);
     } else {
       setCurrentSection((prev) => prev + 1);
     }
@@ -317,14 +400,27 @@ const RegisterPage = () => {
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
+      // Navigate to the appropriate section with errors
+      if (validationErrors.avatar) {
+        setCurrentSection(4);
+      } else if (validationErrors.bio || validationErrors.personality || validationErrors.hobbies || 
+                validationErrors.dealBreakers || validationErrors.occupation || 
+                validationErrors.occupationOther || validationErrors.appearancePreference || 
+                validationErrors.height || validationErrors.weight || validationErrors.children) {
+        setCurrentSection(3);
+      } else if (validationErrors.revert || validationErrors.yearsRevert || 
+                validationErrors.salahPattern || validationErrors.sect || 
+                validationErrors.sectOther || validationErrors.madhab || 
+                validationErrors.madhabOther || validationErrors.islamicBooks || 
+                validationErrors.quranMemorization || validationErrors.dressingStyle || 
+                validationErrors.openToPolygamy || validationErrors.islamicAmbitions) {
+        setCurrentSection(2);
+      } else {
+        setCurrentSection(1);
+      }
+      
       showAlert("Some required fields are missing!", 'warning');
       setErrors(validationErrors);
-      return;
-    }
-
-    // Check if avatar is selected (either preset or custom)
-    if (!formData.avatar) {
-      showAlert("Please select an avatar or upload your own image", 'warning');
       return;
     }
 
@@ -399,15 +495,82 @@ const RegisterPage = () => {
 
   const validate = () => {
     const errors = {};
-    if (!formData.kunya) errors.kunya = "Kunya is required";
+    
+    // Required personal information
     if (!formData.firstName) errors.firstName = "First Name is required";
     if (!formData.lastName) errors.lastName = "Last Name is required";
+    if (!formData.kunya) errors.kunya = "Kunya is required";
     if (!formData.gender) errors.gender = "Gender is required";
     if (!formData.email) {
       errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email is invalid";
+    } else {
+      // More comprehensive email regex for validation
+      const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      if (!emailRegex.test(formData.email)) {
+        errors.email = "Please enter a valid email address";
+      }
     }
+    
+    if (!formData.phone) {
+      errors.phone = "Phone number is required";
+    } else {
+      // Phone validation
+      const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        errors.phone = "Please enter a valid phone number";
+      }
+    }
+    
+    if (!formData.location) errors.location = "Location is required";
+    if (!formData.ethnicity || formData.ethnicity.length === 0) errors.ethnicity = "Ethnicity is required";
+    if (!formData.nationality) errors.nationality = "Nationality is required";
+    
+    // Check if avatar is selected
+    if (!formData.avatar) {
+      errors.avatar = "Please select an avatar or upload your own image";
+    }
+    
+    // Check if dob is provided
+    if (!formData.dob) {
+      errors.dob = "Date of Birth is required";
+    } else {
+      // Check if user is at least 18 years old
+      const birthDate = new Date(formData.dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDifference = today.getMonth() - birthDate.getMonth();
+      
+      // If birthday hasn't occurred yet this year, subtract a year
+      if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 18) {
+        errors.dob = "You must be at least 18 years old to register";
+      }
+    }
+    
+    // Conditional validations
+    if (formData.openToHijrah === 'yes' && !formData.hijrahDestination) {
+      errors.hijrahDestination = "Hijrah destination is required when open to Hijrah";
+    }
+    
+    if (formData.revert === 'yes' && !formData.yearsRevert) {
+      errors.yearsRevert = "Years as a revert is required";
+    }
+    
+    if (formData.sect === 'other' && !formData.sectOther) {
+      errors.sectOther = "Please specify your sect";
+    }
+    
+    if (formData.madhab === 'other' && !formData.madhabOther) {
+      errors.madhabOther = "Please specify your madhab";
+    }
+    
+    if (formData.occupation === 'other' && !formData.occupationOther) {
+      errors.occupationOther = "Please specify your occupation";
+    }
+    
     return errors;
   };
 
@@ -496,7 +659,7 @@ const RegisterPage = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">First Name</label>
+                <label className="text-gray-600 mb-2">First Name<span className="text-red-600 ml-1">*</span></label>
                 <input
                   type="text"
                   name="firstName"
@@ -510,7 +673,7 @@ const RegisterPage = () => {
                 )}
               </div>
               <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">Last Name</label>
+                <label className="text-gray-600 mb-2">Last Name<span className="text-red-600 ml-1">*</span></label>
                 <input
                   type="text"
                   name="lastName"
@@ -543,14 +706,18 @@ const RegisterPage = () => {
               </div>
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Date of Birth (DOB)</label>
+              <label className="text-gray-600 mb-2">Date of Birth (DOB)<span className="text-red-600 ml-1">*</span></label>
               <input
                 type="date"
                 name="dob"
                 value={formData.dob}
                 onChange={(e) => handleInputChange('dob', e.target.value)}
                 className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                required
               />
+              {errors.dob && (
+                <p className="mt-2 text-sm text-red-600">{errors.dob}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Gender<span className="text-red-600 ml-1">*</span></label>
@@ -563,32 +730,69 @@ const RegisterPage = () => {
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Please enter your Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
-                placeholder="Enter your email..."
-              />
-              {errors.email && (
+              <label className="text-gray-600 mb-2">Please enter your Email<span className="text-red-600 ml-1">*</span></label>
+              <div className="relative">
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className={`p-3 border rounded-md focus:outline-none focus:ring-2 w-full ${
+                    emailValid === true ? 'border-green-500 focus:ring-green-500' : 
+                    emailValid === false ? 'border-red-500 focus:ring-red-500' : 
+                    'border-[#1A495D] focus:ring-[#1A495D]'
+                  } bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70`}
+                  placeholder="Enter your email..."
+                />
+                {emailValid === true && (
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              {errors.email ? (
                 <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              ) : emailValid === false && formData.email ? (
+                <p className="mt-2 text-sm text-red-600">Please enter a valid email address</p>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500">We'll never share your email with anyone else.</p>
               )}
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Please enter your phone number</label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
-                placeholder="Enter your phone number..."
-              />
+              <label className="text-gray-600 mb-2">Please enter your phone number<span className="text-red-600 ml-1">*</span></label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className={`p-3 border rounded-md focus:outline-none focus:ring-2 w-full ${
+                    phoneValid === true ? 'border-green-500 focus:ring-green-500' : 
+                    phoneValid === false ? 'border-red-500 focus:ring-red-500' : 
+                    'border-[#1A495D] focus:ring-[#1A495D]'
+                  } bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70`}
+                  placeholder="e.g., +1234567890 or (123) 456-7890"
+                />
+                {phoneValid === true && (
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              {errors.phone ? (
+                <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+              ) : phoneValid === false && formData.phone ? (
+                <p className="mt-2 text-sm text-red-600">Please enter a valid phone number</p>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500">Include country code for international numbers (e.g., +44 for UK)</p>
+              )}
             </div>
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Which Country Do You Currently Live In?</label>
+              <label className="text-gray-600 mb-2">Which Country Do You Currently Live In?<span className="text-red-600 ml-1">*</span></label>
               <Select
                 options={countryOptions}
                 value={countryOptions.find(option => option.value === formData.location) || null}
@@ -596,6 +800,9 @@ const RegisterPage = () => {
                 onChange={(option) => handleInputChange('location', option ? option.value : '')}
                 styles={customSelectStyles}
               />
+              {errors.location && (
+                <p className="mt-2 text-sm text-red-600">{errors.location}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
@@ -609,7 +816,7 @@ const RegisterPage = () => {
             </div>
             {formData.openToHijrah === 'yes' && (
               <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">If so, where?</label>
+                <label className="text-gray-600 mb-2">If so, where?<span className="text-red-600 ml-1">*</span></label>
                 <input
                   type="text"
                   name="hijrahDestination"
@@ -618,10 +825,13 @@ const RegisterPage = () => {
                   className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter potential hijrah destination..."
                 />
+                {errors.hijrahDestination && (
+                  <p className="mt-2 text-sm text-red-600">{errors.hijrahDestination}</p>
+                )}
               </div>
             )}
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">What is your Ethnicity?</label>
+              <label className="text-gray-600 mb-2">What is your Ethnicity?<span className="text-red-600 ml-1">*</span></label>
               <Select
                 options={ethnicityOptions}
                 value={ethnicityOptions.find(option => option.value === formData.ethnicity) || null}
@@ -629,10 +839,13 @@ const RegisterPage = () => {
                 onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions.value || '')}
                 styles={customSelectStyles}
               />
+              {errors.ethnicity && (
+                <p className="mt-2 text-sm text-red-600">{errors.ethnicity}</p>
+              )}
             </div>
             {formData.ethnicity === 'Other' && (
               <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">Specify Ethnicity</label>
+                <label className="text-gray-600 mb-2">Specify Ethnicity<span className="text-red-600 ml-1">*</span></label>
                 <input
                   type="text"
                   name="ethnicity"
@@ -643,7 +856,7 @@ const RegisterPage = () => {
               </div>
             )}
             <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">What is your Nationality?</label>
+              <label className="text-gray-600 mb-2">What is your Nationality?<span className="text-red-600 ml-1">*</span></label>
               <Select
                 options={countryOptions}
                 value={countryOptions.find(option => option.value === formData.nationality) || null}
@@ -651,6 +864,9 @@ const RegisterPage = () => {
                 onChange={(option) => handleInputChange('nationality', option ? option.value : '')}
                 styles={customSelectStyles}
               />
+              {errors.nationality && (
+                <p className="mt-2 text-sm text-red-600">{errors.nationality}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are you Married?</label>
@@ -686,7 +902,7 @@ const RegisterPage = () => {
             </div>
             {formData.revert === 'yes' && (
               <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">If so, for how many years?</label>
+                <label className="text-gray-600 mb-2">If so, for how many years?<span className="text-red-600 ml-1">*</span></label>
                 <input
                   type="number"
                   name="yearsRevert"
@@ -695,6 +911,9 @@ const RegisterPage = () => {
                   className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
                   placeholder="Enter number of years..."
                 />
+                {errors.yearsRevert && (
+                  <p className="mt-2 text-sm text-red-600">{errors.yearsRevert}</p>
+                )}
               </div>
             )}
             <div className="flex flex-col">
@@ -727,7 +946,33 @@ const RegisterPage = () => {
                     placeholder="Specify other sect..."
                   />
                 )}
+                {errors.sectOther && (
+                  <p className="mt-2 text-sm text-red-600">{errors.sectOther}</p>
+                )}
               </div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Madhab</label>
+              <Select
+                options={madhabOptions}
+                value={madhabOptions.find(option => option.value === formData.madhab) || null}
+                placeholder="Select Madhab..."
+                onChange={(option) => handleInputChange('madhab', option ? option.value : '')}
+                styles={customSelectStyles}
+              />
+              {formData.madhab === 'other' && (
+                <input
+                  type="text"
+                  name="madhabOther"
+                  value={formData.madhabOther || ''}
+                  onChange={(e) => handleInputChange('madhabOther', e.target.value)}
+                  className="mt-2 p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70 w-full"
+                  placeholder="Specify other madhab..."
+                />
+              )}
+              {errors.madhabOther && (
+                <p className="mt-2 text-sm text-red-600">{errors.madhabOther}</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Islamic Books/Mutuun Studied</label>
@@ -869,6 +1114,9 @@ const RegisterPage = () => {
                     className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70 w-full"
                     placeholder="Specify other occupation"
                   />
+                )}
+                {errors.occupationOther && (
+                  <p className="mt-2 text-sm text-red-600">{errors.occupationOther}</p>
                 )}
               </div>
             </div>
@@ -1017,6 +1265,12 @@ const RegisterPage = () => {
               {!formData.gender && (
                 <div className="text-center text-red-500 mt-4 mb-8">
                   Please select your gender in the first section before choosing an avatar.
+                </div>
+              )}
+              
+              {errors.avatar && (
+                <div className="text-center text-red-600 mt-4 mb-4 w-full">
+                  {errors.avatar}
                 </div>
               )}
               
