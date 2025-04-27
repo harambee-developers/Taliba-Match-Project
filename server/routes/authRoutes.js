@@ -395,10 +395,10 @@ router.post("/reset-password", async (req, res) => {
         <a href="${resetLink}" class="button">Reset Password</a>
       </p>
       <p>If you did not request a password reset, please ignore this email or contact our support team.</p>
-      <p>Thank you,<br>The SimpleGeoAPI Team</p>
+      <p>Thank you,<br>The Talibah match team</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} SimpleGeoApi. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Talibah. All rights reserved.</p>
     </div>
   </div>
 </body>

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState} from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Send, ChevronLeft } from "lucide-react";
-import { format, isToday, isYesterday, previousMonday } from "date-fns";
+import { format, isToday, isYesterday} from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
 import { useChatEvents } from "./contexts/ChatEventsContext";
@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl}) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -34,6 +34,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const { conversationId: conversationIdFromParams } = useParams();
     const currentConversationId = conversation || conversationIdFromParams;
     const currentUserId = user_id || user?.userId;
+    
+    const { state } = useLocation(); 
+    const locationPhotoUrl = state?.photoUrl;
 
     const chatCache = "chat-cache";
     const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
@@ -41,9 +44,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const CACHE_STATUS = `chat_status_${currentConversationId}`
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
-    const photoUrl = propPhotoUrl
-    || location.state?.photoUrl
-    || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
+    const photoUrl = propPhotoUrl || locationPhotoUrl ||
+    (user?.gender === 'Male'
+      ? '/icon_woman6.png'
+      : '/icon_man5.png');
 
     // Fetch and set receiver details
     useEffect(() => {
