@@ -4,7 +4,7 @@ import Icon47 from "../components/icons/Icon47";
 import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
 import Icon50 from "../components/icons/Icon50";
-import { ethnicityOptions } from "../data/fieldData";
+import { ethnicityOptions, countries } from "../data/fieldData";
 import MessageModal from "../components/modals/MessageModal";
 import { useAuth } from "../components/contexts/AuthContext";
 import Alert from "../components/Alert";
@@ -103,10 +103,11 @@ const Search = () => {
 
   useEffect(() => {
     fetchProfiles();
-  }, []);
+  }, [filters]);
 
   const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
   const handleViewBio = (profile) => {
@@ -116,7 +117,11 @@ const Search = () => {
   };
 
   const countActiveFilters = () => {
-    return Object.values(filters).filter(value => value !== "").length;
+    // Skip system-managed fields like senderId and alreadyMatched
+    const systemFields = ['senderId', 'alreadyMatched'];
+    return Object.entries(filters)
+      .filter(([key, value]) => !systemFields.includes(key) && value !== "")
+      .length;
   };
 
   // Filter profiles based on logged-in user gender
@@ -196,10 +201,11 @@ const Search = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
               >
                 <option value="">Select</option>
-                <option value="London">London</option>
-                <option value="Birmingham">Birmingham</option>
-                <option value="Manchester">Manchester</option>
-                <option value="Leeds">Leeds</option>
+                {countries.map(country => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
               </select>
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
             </div>
@@ -272,7 +278,7 @@ const Search = () => {
                     alt="Profile"
                     onError={(e) => {
                       e.target.onerror = null
-                      e.target.src = icon_placeholder
+                      e.target.src = fallbackUrl
                     }}
                     className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                   />
@@ -297,7 +303,7 @@ const Search = () => {
                   alt="Profile"
                   onError={(e) => {
                     e.target.onerror = null
-                    e.target.src = icon_placeholder
+                    e.target.src = fallbackUrl
                   }}
                   className="w-16 h-16 rounded-full object-cover"
                 />
