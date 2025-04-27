@@ -333,7 +333,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     : "url('/wallpaper_woman.svg')"
             }} loading='lazy'>
 
-            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 z-50 sm:static`}>
+            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:z-50 sm:static`}>
                 <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
                     <ChevronLeft className="w-10-h-10" />
                 </div>
