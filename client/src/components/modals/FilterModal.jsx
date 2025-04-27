@@ -10,6 +10,27 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
 
     if (!isOpen) return null;
 
+    const handleClearFilters = () => {
+        // Create an object with the same keys but empty values
+        const clearedFilters = Object.keys(filters).reduce((acc, key) => {
+            acc[key] = "";
+            return acc;
+        }, {});
+        
+        // Keep any non-filter related fields like senderId
+        if (filters.senderId) clearedFilters.senderId = filters.senderId;
+        if (filters.alreadyMatched !== undefined) clearedFilters.alreadyMatched = filters.alreadyMatched;
+        
+        // Call onChange for each cleared field
+        Object.entries(clearedFilters).forEach(([name, value]) => {
+            onChange({ target: { name, value } });
+        });
+        
+        // Apply the cleared filters
+        onApply();
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 bg-gray-300 bg-opacity-50 flex items-center justify-center z-50">
             <div className="theme-bg rounded-2xl shadow-lg p-6 md:w-full max-w-md">
@@ -140,6 +161,12 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
                         className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
                     >
                         Cancel
+                    </button>
+                    <button
+                        onClick={handleClearFilters}
+                        className="px-4 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700"
+                    >
+                        Clear Filters
                     </button>
                     <button
                         onClick={() => {

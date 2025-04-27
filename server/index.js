@@ -51,7 +51,7 @@ app.use(cors(corsOptions));
 app.use('/uploads', express.static('public/uploads'));
 
 // Modularized routes
-app.use("/api/payment", paymentRoutes);
+// app.use("/api/payment", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);
