@@ -16,7 +16,7 @@ const ForgotPasswordPage = () => {
       await resetPassword(email);
       showAlert("Password reset email sent. Please check your inbox.", "success");
       // Optionally, navigate back to the login page after successful request
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       showAlert(error.message, "error");
       console.error("Password reset failed:", error);
@@ -27,8 +27,8 @@ const ForgotPasswordPage = () => {
     <>
       <div className="flex items-center justify-center min-h-screen theme-bg">
         {alert && <Alert />}
-        <div className="w-96 p-8 bg-white rounded-xl shadow-2xl transform transition-all duration-300 hover:scale-105">
-          <h1 className="text-4xl text-center font-semibold text-gray-800 mb-6">
+        <div className="w-96 p-8 bg-white rounded-xl shadow-2xl transform transition-all duration-300">
+          <h1 className="text-2xl text-center font-semibold text-gray-800 mb-6">
             Reset Password
           </h1>
           <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
@@ -43,21 +43,21 @@ const ForgotPasswordPage = () => {
                 placeholder="Enter your email..."
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF1F5A] focus:border-[#FF1F5A] transition duration-200"
                 required
               />
             </div>
             <div>
               <button
                 type="submit"
-                className="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 transition duration-200"
+                className="w-full theme-btn text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200"
               >
                 Send Reset Instructions
               </button>
             </div>
           </form>
           <div className="mt-4 text-center">
-            <a href="/login" className="text-sm text-indigo-600 hover:text-indigo-500">
+            <a href="/login" className="text-sm text-blue-600 hover:text-indigo-400">
               Back to Login
             </a>
           </div>

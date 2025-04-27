@@ -181,7 +181,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                     <div className="mt-3 flex justify-between items-center">
                         <div>
                             <a
-                                href="/"
+                                href="/forgotten-password"
                                 className="text-white hover:text-blue-300 text-sm"
                             >
                                 Forgot Password?
