@@ -47,7 +47,7 @@ const upload = multer({
 router.use(cookieParser())
 
 // Public routes
-router.get("/search", async (req, res) => {
+router.get("/search", authMiddleware, async (req, res) => {
   try {
 
     const { ageRange, location, ethnicity } = req.query;
