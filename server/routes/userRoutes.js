@@ -180,7 +180,7 @@ router.get("/users", async (req, res) => {
  * GET /user/:id
  * Returns only the fields needed to populate profile cards.
  */
-router.get('/user/:id', authMiddleware, async (req, res) => {
+router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
