@@ -27,17 +27,18 @@ const server = http.createServer(app)
 
 const corsOptions = {
   origin: [process.env.BACKEND_URL, process.env.FRONTEND_URL],
+  allowedHeaders: ['Content-Type', 'Authorization'], // Headers needed by Stripe
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   transports: ['websocket', 'polling'], // Allow fallback transport // Ensure all necessary methods are allowed
 }
 
-app.use(express.json())
 app.use(cors(corsOptions));
 app.use('/uploads', express.static('public/uploads'));
 
+
 // Modularized routes
-app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);

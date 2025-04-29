@@ -21,6 +21,8 @@ import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import PaymentConfirmation from "./pages/PaymentConfirmation";
+import Settings from "./pages/Settings";
 
 function ChatLayout() {
   // Wrap only the chat-related routes in ChatEventsProvider
@@ -51,6 +53,7 @@ function AppLayout() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/forgotten-password" element={<ForgotPasswordPage />} />
         <Route path="/change-password/:resetToken" element={<ChangePasswordPage />} />
+        <Route path="/payment-success" element={<PaymentConfirmation />} />
         {/* Protected Routes */}
         <Route element={<ProtectedRoute user={user} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -60,6 +63,7 @@ function AppLayout() {
             <Route path="/matches" element={<Match />} />
           </Route>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />

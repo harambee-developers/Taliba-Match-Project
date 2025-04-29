@@ -28,7 +28,7 @@ const LandingPage = () => {
   }, [navigate, user]);
 
   usePageTitle("Welcome to Talibah Match!")
-  console.log(`Backend URL: ${import.meta.env.VITE_BACKEND_URL}`)
+
   return (
     <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
       {/* Main Content */}

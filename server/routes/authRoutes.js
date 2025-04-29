@@ -11,6 +11,7 @@ const logger = require('../logger')
 const sendEmail = require('../utils/sendEmail')
 
 router.use(cookieParser())
+router.use(express.json())
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -417,6 +418,7 @@ router.post("/reset-password", async (req, res) => {
 
 
 })
+
 /**
  * POST /api/auth/change-password/:token
  * Endpoint to change the password using a reset token.

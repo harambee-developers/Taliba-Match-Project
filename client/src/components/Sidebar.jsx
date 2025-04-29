@@ -106,15 +106,6 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
               </li>
             </ul>
           </div>
-          {/* Logout Button */}
-          <div className="p-4 theme-border">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center p-2 rounded theme-btn transition-colors text-white"
-            >
-              Logout
-            </button>
-          </div>
         </nav>
       </aside>
     </>

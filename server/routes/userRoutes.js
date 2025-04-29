@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../model/User");
 const Match = require("../model/Match");
+const Subscription = require("../model/Subscription");
+const Message = require("../model/Message");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware')
@@ -9,34 +11,36 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../logger')
 
+router.use(express.json())
+
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
-        // Create directory if it doesn't exist
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        // Use current timestamp to ensure unique filenames
-        cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // Use current timestamp to ensure unique filenames
+    cb(null, 'profile-' + Date.now() + path.extname(file.originalname));
+  }
 });
 
 // Set up multer with the storage engine
-const upload = multer({ 
-    storage: storage, 
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        // Accept only images
-        if (file.mimetype.startsWith('image')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed'), false);
-        }
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Accept only images
+    if (file.mimetype.startsWith('image')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
     }
+  }
 });
 
 router.use(cookieParser())
@@ -47,13 +51,13 @@ router.get("/search", async (req, res) => {
 
     const { ageRange, location, ethnicity } = req.query;
     logger.info('Search params:', { ageRange, location, ethnicity });
-    
+
     let query = { role: "user" };
-    
+
     if (location) {
       query.location = location;
     }
-    
+
     if (ethnicity) {
       query.ethnicity = ethnicity;
     }
@@ -61,7 +65,7 @@ router.get("/search", async (req, res) => {
     logger.info('MongoDB query:', query);
 
     const senderId = req.user?.id || req.query.senderId;
-    
+
     const users = await User.find(query)
       .select('userName dob location nationality photos profile gender firstName lastName')
       .lean() // Convert to plain JavaScript objects
@@ -69,19 +73,19 @@ router.get("/search", async (req, res) => {
 
     logger.info('Found users:', users.length);
     logger.info(req.query)
-    
+
     if (!users) {
       logger.warn('No users found');
       return res.json([]);
     }
 
-    const pendingRequests = await Match.find({ 
-      sender_id: senderId, 
-      match_status: "pending" 
+    const pendingRequests = await Match.find({
+      sender_id: senderId,
+      match_status: "pending"
     }).select("receiver_id");
-    
+
     const pendingReceiverIds = new Set(pendingRequests.map(m => m.receiver_id.toString()));
-    
+
     const profiles = users.map(user => {
       try {
         const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
@@ -105,12 +109,12 @@ router.get("/search", async (req, res) => {
     }).filter(Boolean); // Remove any null entries from errors
 
     let filteredProfiles = profiles;
-    
+
     // Filter by age range after calculating ages
     if (ageRange && ageRange !== '') {
       const [minAge, maxAge] = ageRange.split("-").map(Number);
       logger.info('Filtering by age range:', minAge, '-', maxAge);
-      filteredProfiles = profiles.filter(profile => 
+      filteredProfiles = profiles.filter(profile =>
         profile.age && profile.age >= minAge && profile.age <= maxAge
       );
     }
@@ -124,7 +128,7 @@ router.get("/search", async (req, res) => {
       stack: error.stack,
       name: error.name
     });
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Internal server error",
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -135,7 +139,7 @@ router.get("/search", async (req, res) => {
 router.get("/profile/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Validate ID parameter
     if (!id || id === 'undefined') {
       return res.status(400).json({ message: "Invalid user ID" });
@@ -144,18 +148,18 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     const user = await User.findById(id)
       .select('-password -__v -email -phone -dob') // Exclude sensitive information
       .lean();
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     res.json(user);
   } catch (error) {
     logger.error("Error fetching profile:", error);
     if (error.name === 'CastError') {
       return res.status(400).json({ message: "Invalid user ID format" });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Internal server error",
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -176,7 +180,7 @@ router.get("/users", async (req, res) => {
  * GET /user/:id
  * Returns only the fields needed to populate profile cards.
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -200,11 +204,23 @@ router.get('/user/:id', async (req, res) => {
         // entire profile object—but we’ll project only the needed subfields
         profile: 1,
       })
-      .lean();
+      .lean()
+      .populate({
+        path: 'subscription',
+        options: {
+          sort: { current_period_end: -1, updatedAt: -1 },
+          limit: 1,                // if you only want the latest subscription
+        },
+        select: 'status_type current_period_start current_period_end customer_id',
+        // pick only the fields frontend needs
+      });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // ← DESCTRUCTURE here, before you build `resp`
+    const [sub] = user.subscription || [];
 
     // Build a response matching exactly your front-end shape:
     const resp = {
@@ -218,7 +234,7 @@ router.get('/user/:id', async (req, res) => {
       phone: user.phone || "",
       ethnicity: user.ethnicity || "",
       nationality: user.nationality || "",
-      photos: user.photos || [],  
+      photos: user.photos || [],
       language: user.profile?.language || [],
 
       bio: user.profile?.bio || "",
@@ -240,10 +256,18 @@ router.get('/user/:id', async (req, res) => {
       openToHijrah: user.profile?.openToHijrah || "",
       hijrahDestination: user.profile?.hijrahDestination || "",
       maritalStatus: user.maritalStatus || "",
-      revert: user.profile?.revert || "", 
+      revert: user.profile?.revert || "",
       weight: user.profile?.weight || "",
       height: user.profile?.height || "",
       appearancePreference: user.profile?.appearancePreference || "",
+      // finally: subscription status
+      subscription: sub ? {
+        status: sub.status_type,
+        currentPeriodStart: sub.current_period_start,
+        currentPeriodEnd: sub.current_period_end,
+        customerId: sub.customer_id
+      }
+        : null
     };
 
     return res.json(resp);
@@ -253,21 +277,42 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-router.delete("/user/delete/:id", async (req, res) => {
+router.delete('/delete/:id', authMiddleware, async (req, res) => {
+  const session = await mongoose.startSession();
   try {
-    const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
+    session.startTransaction();
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const userId = req.params.id
+    // 1) Delete the User document
+    const userResult = await User.deleteOne({ _id: userId }, { session });
+    if (userResult.deletedCount === 0) {
+      throw new Error('User not found');
     }
 
-    res.json({ message: "User deleted successfully" });
-  } catch (error) {
-    logger.error(error);
-    res.status(500).json({ message: "Internal Server error" });
+    // 2) Delete related docs in other collections
+    await Promise.all([
+      Subscription.deleteMany({ user_id: userId }, { session }),
+      Message.deleteMany({ $or: [{ from: userId }, { to: userId }] }, { session }),
+      Match.deleteMany({ $or: [{ userA: userId }, { userB: userId }] }, { session }),
+      Notification.deleteMany({ user: userId }, { session }),
+      // … any other collections …
+    ]);
+
+    // 3) Commit
+    await session.commitTransaction();
+    session.endSession();
+
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ message: 'Account and related data deleted.' });
+    
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(err);
+    return res.status(500).json({ message: 'Could not delete account.' });
   }
-});
+})
 
 // Protected Route
 router.put("/profile", authMiddleware, async (req, res) => {
@@ -351,7 +396,7 @@ router.put("/profile", authMiddleware, async (req, res) => {
     };
 
     // Remove undefined fields
-    Object.keys(updateData).forEach(key => 
+    Object.keys(updateData).forEach(key =>
       updateData[key] === undefined && delete updateData[key]
     );
 
@@ -422,7 +467,7 @@ router.post("/profile/upload", authMiddleware, upload.single('profileImage'), as
 
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
