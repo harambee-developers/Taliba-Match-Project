@@ -104,6 +104,16 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   <Icon30 width={24} height={24} color="#FFF" />
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/membership"
+                  onClick={toggleMenu}
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
+                >
+                  <span>Membership</span>
+                  <Icon27 width={24} height={24} color="#FFF" />
+                </Link>
+              </li>
             </ul>
           </div>
           {/* Logout Button */}

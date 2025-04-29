@@ -6,6 +6,7 @@ import Icon38 from './icons/Icon38';
 import Sidebar from './Sidebar';
 import LoginModal from './modals/LoginModal';
 import { useNotification } from './contexts/NotificationContext';
+import ProfileMenu from './modals/ProfileMenu';
 
 const Navbar = () => {
   const { user } = useAuth()
@@ -77,7 +78,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Greeting Text */}
             <div className="hidden lg:block text-right">
-              <span className="block text-sm text-gray-600">Asalamualeikum,</span>
+              <span className="block text-sm text-gray-600">Asalamu aleykum,</span>
               <span className="block text-base font-semibold text-gray-800">
                 Welcome {user.firstName}!
               </span>
@@ -139,21 +140,12 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Profile Icon Placeholder */}
-            <div className="cursor-pointer rounded-full object-contain theme-border" title="Profile">
-              <img
-                src={photoUrl || fallbackUrl}
-                alt={user?.gender === "Male" ? "man" : "woman"}
-                className="h-16 w-16 object-contain rounded-full"
-              />
-            </div>
+            <ProfileMenu />
           </div>
         ) : (
           // When user is not logged in, show navigation links
           <div className="flex items-center gap-8">
-            <Link to="/about" className="text-[#4A0635] hover:text-[#E01D42] font-medium">
-              About
-            </Link>
+
             <button
               onClick={toggleLoginModal}
               className="text-[#4A0635] hover:text-[#E01D42] font-medium"
@@ -162,6 +154,9 @@ const Navbar = () => {
             </button>
             <Link to="/register" className="text-[#4A0635] hover:text-[#E01D42] font-medium">
               Register
+            </Link>
+            <Link to="/subscribe" className="text-[#4A0635] hover:text-[#E01D42] font-medium">
+              Pricing
             </Link>
           </div>
         )}

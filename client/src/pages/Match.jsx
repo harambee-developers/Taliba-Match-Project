@@ -140,7 +140,7 @@ const Match = () => {
         <div className={`w-full md:w-1/3 theme-border min-h-screen`}>
           {/* Full-width Title with Border */}
           <h1 className={`theme-bg bg-opacity-60 text-3xl font-bold text-left pt-[1.6rem] pb-[1.45rem] px-4 theme-border`}>
-            Matched
+            Marriage Meeting
           </h1>
           <div className='p-4'>
             {matches.length > 0 ? (

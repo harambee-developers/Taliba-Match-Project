@@ -4,6 +4,8 @@ const router = express.Router();
 const Notification = require('../model/Notifications');
 const logger = require('../logger')
 
+router.use(express.json())
+
 /**
  * GET /api/notifications/:userId
  * Query:

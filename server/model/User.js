@@ -96,6 +96,17 @@ UserSchema.methods.setOnlineStatus = function (status, socketId) {
   return this.save();
 };
 
+// Virtual field for subscription
+UserSchema.virtual("subscription", {
+  ref: "Subscription", // Name of the Subscription model
+  localField: "_id",   // Field in User model
+  foreignField: "user_id", // Field in Subscription model
+});
+
+// Enable virtuals in JSON output
+UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true });
+
 const User = mongoose.model('User', UserSchema);
 
 module.exports = User;
