@@ -331,7 +331,7 @@ router.delete('/delete/:id', authMiddleware, async (req, res) => {
 })
 
 // Protected Route
-router.put("/profile", authMiddleware, async (req, res) => {
+router.put("/profile/:userId", async (req, res) => {
   try {
     const {
       // Personal Details
@@ -374,7 +374,7 @@ router.put("/profile", authMiddleware, async (req, res) => {
       appearancePreference
     } = req.body;
 
-    const userId = req.user.userId;
+    const userId = req.params.userId;
 
     const updateData = {
       // Root level fields

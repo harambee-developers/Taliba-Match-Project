@@ -119,8 +119,8 @@ const Profile = () => {
         revert: user.profile?.revert || "",
 
         // Card 5 - Appearance
-        weight: user.profile?.weight || "",
-        height: user.profile?.height || "",
+        weight: user.weight || "",
+        height: user.height || "",
         appearancePreference: user.profile?.appearancePreference || "",
       });
 
@@ -248,7 +248,7 @@ const Profile = () => {
     try {
       setError(null);
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/${user?.userId}`,
         profileData,
         { withCredentials: true }
       );
