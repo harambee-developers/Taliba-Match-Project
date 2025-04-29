@@ -4,8 +4,8 @@ import { useAuth } from '../components/contexts/AuthContext'
 import { useAlert } from '../components/contexts/AlertContext'
 import Alert from '../components/Alert'
 
-export default function MembershipArea() {
-  const { user, token } = useAuth()
+export default function Settings() {
+  const { user, token, logout } = useAuth()
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -72,12 +72,33 @@ export default function MembershipArea() {
     }
   };
 
+  /**
+   * Handles account deletion confirmation and request.
+  */
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/user/delete/${user.userId}`);
+
+      if (response.status === 200) {
+        showAlert("Your account has been deleted successfully.", "success");
+        logout(); // Log out the user after deletion
+        navigate("/")
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      showAlert(error.response?.data?.message || "Failed to delete account", "error");
+    }
+  };
+
   return (
     <div className="min-h-screen theme-bg px-4 py-6 sm:p-6">
       {alert && <Alert />}
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold text-[#4A0635]">Membership</h1>
+          <h1 className="text-2xl font-bold text-[#4A0635]">Settings</h1>
         </div>
 
         {error && (
@@ -126,6 +147,23 @@ export default function MembershipArea() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden mt-6">
+          <div className="p-8">
+            <h2 className="text-xl font-semibold text-[#4A0635] mb-4">
+              Danger Zone
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Deleting your account will permanently remove all your data,
+              and cannot be undone.
+            </p>
+            <button
+              onClick={handleDeleteAccount}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition"
+            >
+              Delete My Account
+            </button>
           </div>
         </div>
       </div>

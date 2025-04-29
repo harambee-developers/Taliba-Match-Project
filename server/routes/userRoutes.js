@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../model/User");
 const Match = require("../model/Match");
+const Subscription = require("../model/Subscription");
+const Message = require("../model/Message");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware')
@@ -178,7 +180,7 @@ router.get("/users", async (req, res) => {
  * GET /user/:id
  * Returns only the fields needed to populate profile cards.
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -275,21 +277,42 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-router.delete("/user/delete/:id", async (req, res) => {
+router.delete('/delete/:id', authMiddleware, async (req, res) => {
+  const session = await mongoose.startSession();
   try {
-    const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
+    session.startTransaction();
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const userId = req.params.id
+    // 1) Delete the User document
+    const userResult = await User.deleteOne({ _id: userId }, { session });
+    if (userResult.deletedCount === 0) {
+      throw new Error('User not found');
     }
 
-    res.json({ message: "User deleted successfully" });
-  } catch (error) {
-    logger.error(error);
-    res.status(500).json({ message: "Internal Server error" });
+    // 2) Delete related docs in other collections
+    await Promise.all([
+      Subscription.deleteMany({ user_id: userId }, { session }),
+      Message.deleteMany({ $or: [{ from: userId }, { to: userId }] }, { session }),
+      Match.deleteMany({ $or: [{ userA: userId }, { userB: userId }] }, { session }),
+      Notification.deleteMany({ user: userId }, { session }),
+      // … any other collections …
+    ]);
+
+    // 3) Commit
+    await session.commitTransaction();
+    session.endSession();
+
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ message: 'Account and related data deleted.' });
+    
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(err);
+    return res.status(500).json({ message: 'Could not delete account.' });
   }
-});
+})
 
 // Protected Route
 router.put("/profile", authMiddleware, async (req, res) => {
