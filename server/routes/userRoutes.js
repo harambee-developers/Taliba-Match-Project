@@ -10,6 +10,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../logger')
+const mongoose = require('mongoose')
 
 router.use(express.json())
 
@@ -64,7 +65,22 @@ router.get("/search", async (req, res) => {
 
     logger.info('MongoDB query:', query);
 
-    const senderId = req.user?.id || req.query.senderId;
+    // Force senderId to come from the logged-in user
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const senderId = req.user.id;
+
+    if (!senderId) {
+      return res.status(400).json({
+        message: "Missing senderId. Either authenticate or provide ?senderId=<yourId>"
+      });
+    }
+
+    // Optional: verify it’s a valid ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(senderId)) {
+      return res.status(400).json({ message: "Invalid senderId format" });
+    }
 
     const users = await User.find(query)
       .select('userName dob location nationality photos profile gender firstName lastName')
@@ -305,7 +321,7 @@ router.delete('/delete/:id', authMiddleware, async (req, res) => {
     res.clearCookie('token');
     res.clearCookie('refreshToken');
     return res.status(200).json({ message: 'Account and related data deleted.' });
-    
+
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
