@@ -44,5 +44,14 @@ services:
       - ME_CONFIG_BASICAUTH_PASSWORD=password
     depends_on:
       - mongo
+  stripe:
+    image: stripe/stripe-cli
+    container_name: stripe
+    command: ["listen", "--forward-to", "http://backend:7777/api/payments/webhook"]
+    volumes:
+      - stripe-cli-config:/root/.config/stripe
+    depends_on:
+      - backend
 volumes:
   mongo-data:
+  stripe-cli-config:
