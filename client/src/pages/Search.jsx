@@ -1,5 +1,5 @@
 // pages/Search.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Icon47 from "../components/icons/Icon47";
 import Icon48 from "../components/icons/Icon48";
 import Icon49 from "../components/icons/Icon49";
@@ -12,6 +12,28 @@ import { useAlert } from "../components/contexts/AlertContext";
 import FilterModal from "../components/modals/FilterModal";
 import { useSocket } from "../components/contexts/SocketContext";
 import ProfileModal from "../components/modals/ProfileModal";
+import { useDebouncedCallback } from "use-debounce";
+
+function ProfileImage({ src, alt, fallback }) {
+  const [errored, setErrored] = useState(false);
+
+  // Only use fallback after the first error
+  const imgSrc = errored ? fallback : src;
+
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      onError={() => {
+        if (!errored) {
+          setErrored(true);
+        }
+      }}
+      className="w-16 h-16 rounded-full object-cover"
+      loading="lazy"
+    />
+  );
+}
 
 const Search = () => {
   const [profiles, setProfiles] = useState([]);
@@ -29,39 +51,50 @@ const Search = () => {
 
   const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "", senderId: user?._id, alreadyMatched: false });
   const [pendingFilters, setPendingFilters] = useState(filters);
+  const abortControllerRef = useRef(null);
 
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
       const queryParams = new URLSearchParams(filters).toString();
-      console.log('Fetching profiles with params:', queryParams);
-
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/search?${queryParams}`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json'
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/search?${queryParams}`,
+        {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
         }
-      });
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Received profiles:', data);
-
       setProfiles(data);
-    } catch (error) {
-      console.error('Error fetching profiles:', error);
-      setError(error.message);
+    } catch (err) {
+      // Only treat real errors; ignore aborts
+      if (err.name !== "AbortError") {
+        console.error("Fetch error:", err);
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  // Wrap fetchProfiles so that it only actually runs after 300 ms of silence
+  const debouncedFetch = useDebouncedCallback(fetchProfiles, 300);
 
   const handleMatchRequest = async (profileId) => {
     try {
@@ -102,8 +135,12 @@ const Search = () => {
   }
 
   useEffect(() => {
-    fetchProfiles();
-  }, [filters]);
+    debouncedFetch();
+    return () => {
+      debouncedFetch.cancel();
+      abortControllerRef.current?.abort();
+    };
+  }, [filters, debouncedFetch]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -244,7 +281,7 @@ const Search = () => {
                   {countActiveFilters()}
                 </span>
               )}
-              <Icon49 width={24} height={24} className={'hover:bg-red-500'}/>
+              <Icon49 width={24} height={24} className={'hover:bg-red-500'} />
             </button>
           </div>
         </div>
@@ -273,14 +310,10 @@ const Search = () => {
               {/* MOBILE: avatar + name & stacked subtext */}
               <div className="flex flex-col w-full sm:hidden">
                 <div className="flex items-center gap-4">
-                  <img
+                  <ProfileImage
                     src={getProfileImageUrl(profile)}
                     alt="Profile"
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = fallbackUrl
-                    }}
-                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                    fallback={fallbackUrl}
                   />
                   <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
                 </div>
@@ -298,14 +331,10 @@ const Search = () => {
 
               {/* DESKTOP (sm+): original avatar + center info */}
               <div className="hidden sm:flex flex-shrink-0">
-                <img
+                <ProfileImage
                   src={getProfileImageUrl(profile)}
                   alt="Profile"
-                  onError={(e) => {
-                    e.target.onerror = null
-                    e.target.src = fallbackUrl
-                  }}
-                  className="w-16 h-16 rounded-full object-cover"
+                  fallback={fallbackUrl}
                 />
               </div>
               <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
