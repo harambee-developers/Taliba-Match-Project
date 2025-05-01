@@ -44,9 +44,20 @@ router.use(cookieParser())
 // Public routes
 router.get("/search", async (req, res) => {
   try {
-
-    const { ageRange, location, ethnicity } = req.query;
-    logger.info('Search params:', { ageRange, location, ethnicity });
+    const { 
+      ageRange, 
+      location, 
+      ethnicity,
+      revert,
+      salahPattern,
+      occupation,
+      maritalStatus,
+      sect,
+      quranMemorization,
+      hasChildren
+    } = req.query;
+    
+    logger.info('Search params:', req.query);
     
     let query = { role: "user" };
     
@@ -58,17 +69,45 @@ router.get("/search", async (req, res) => {
       query.ethnicity = ethnicity;
     }
 
+    // Add filters for profile fields
+    if (revert) {
+      query['profile.revert'] = revert;
+    }
+
+    if (salahPattern) {
+      query['profile.salahPattern'] = salahPattern;
+    }
+
+    if (occupation) {
+      query.occupation = occupation;
+    }
+
+    if (maritalStatus) {
+      query.maritalStatus = maritalStatus;
+    }
+
+    if (sect) {
+      query.sect = sect;
+    }
+
+    if (quranMemorization) {
+      query['profile.quranMemorization'] = quranMemorization;
+    }
+
+    if (hasChildren) {
+      query['profile.children'] = hasChildren;
+    }
+
     logger.info('MongoDB query:', query);
 
     const senderId = req.user?.id || req.query.senderId;
     
     const users = await User.find(query)
-      .select('userName dob location nationality photos profile gender firstName lastName')
-      .lean() // Convert to plain JavaScript objects
+      .select('userName dob location nationality photos profile gender firstName lastName occupation sect maritalStatus')
+      .lean()
       .exec();
 
     logger.info('Found users:', users.length);
-    logger.info(req.query)
     
     if (!users) {
       logger.warn('No users found');
@@ -96,13 +135,21 @@ router.get("/search", async (req, res) => {
           nationality: user.nationality || 'Not specified',
           image: user.photos && user.photos.length > 0 ? user.photos[0].url : null,
           gender: user.gender,
-          hasPendingRequest
+          hasPendingRequest,
+          // Add additional fields
+          revert: user.profile?.revert || 'Not specified',
+          salahPattern: user.profile?.salahPattern || 'Not specified',
+          occupation: user.occupation || 'Not specified',
+          maritalStatus: user.maritalStatus || 'Not specified',
+          sect: user.sect || 'Not specified',
+          quranMemorization: user.profile?.quranMemorization || 'Not specified',
+          hasChildren: user.profile?.children || 'Not specified'
         };
       } catch (err) {
         console.error('Error processing user:', user._id, err);
         return null;
       }
-    }).filter(Boolean); // Remove any null entries from errors
+    }).filter(Boolean);
 
     let filteredProfiles = profiles;
     
@@ -116,7 +163,7 @@ router.get("/search", async (req, res) => {
     }
 
     logger.info('Filtered profiles:', filteredProfiles.length);
-    res.json(filteredProfiles.slice(0, 20)); // Limit to 20 results after filtering
+    res.json(filteredProfiles.slice(0, 20));
 
   } catch (error) {
     logger.error('Search error details:', {
@@ -197,7 +244,7 @@ router.get('/user/:id', async (req, res) => {
         sect: 1,
         maritalStatus: 1,
         photos: 1,
-        // entire profile object—but we’ll project only the needed subfields
+        // entire profile object—but we'll project only the needed subfields
         profile: 1,
       })
       .lean();

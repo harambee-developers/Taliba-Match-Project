@@ -27,7 +27,20 @@ const Search = () => {
   const { socket } = useSocket()
   const { showAlert, alert } = useAlert()
 
-  const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "", senderId: user?._id, alreadyMatched: false });
+  const [filters, setFilters] = useState({ 
+    ageRange: "", 
+    location: "", 
+    ethnicity: "", 
+    senderId: user?._id, 
+    alreadyMatched: false,
+    revert: "",
+    salahPattern: "",
+    occupation: "",
+    maritalStatus: "",
+    sect: "",
+    quranMemorization: "",
+    hasChildren: ""
+  });
   const [pendingFilters, setPendingFilters] = useState(filters);
 
   const fetchProfiles = async () => {
@@ -236,7 +249,10 @@ const Search = () => {
           <div className="flex items-end">
             <button
               className="relative flex items-center gap-2 text-base px-3 py-2"
-              onClick={() => setIsFilterModalOpen(true)}
+              onClick={() => {
+                setPendingFilters({...filters}); // Reset pending filters to current filters
+                setIsFilterModalOpen(true);
+              }}
             >
               More Filters
               {countActiveFilters() > 0 && (

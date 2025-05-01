@@ -36,7 +36,7 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
             <div className="theme-bg rounded-2xl shadow-lg p-6 md:w-full max-w-md">
                 <h2 className="text-xl font-semibold mb-4">More Filters</h2>
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                     <div>
                         <label className="block text-sm font-medium mb-1">Age Range</label>
                         <select
@@ -90,12 +90,18 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
 
                     <div>
                         <label className="block text-sm font-medium mb-1">Revert</label>
-                        <select name="revert" value={filters.revert || ""} onChange={onChange} className="w-full border-2 border-[#203449] rounded-md p-2">
+                        <select 
+                            name="revert" 
+                            value={filters.revert || ""} 
+                            onChange={onChange} 
+                            className="w-full border-2 border-[#203449] rounded-md p-2"
+                        >
                             <option value="">Select Revert Status</option>
                             <option value="yes">Yes</option>
                             <option value="no">No</option>
                         </select>
                     </div>
+
                     <div>
                         <label className="block text-sm font-medium mb-1">Salah Pattern</label>
                         <select
@@ -112,6 +118,41 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
                             ))}
                         </select>
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Quran Memorization</label>
+                        <select
+                            name="quranMemorization"
+                            value={filters.quranMemorization || ""}
+                            onChange={onChange}
+                            className="w-full border-2 border-[#203449] rounded-md p-2"
+                        >
+                            <option value="">Select Quran Memorization</option>
+                            {quranMemorizationOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Has Children</label>
+                        <select
+                            name="hasChildren"
+                            value={filters.hasChildren || ""}
+                            onChange={onChange}
+                            className="w-full border-2 border-[#203449] rounded-md p-2"
+                        >
+                            <option value="">Select Children Status</option>
+                            {childrenOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium mb-1">Occupation</label>
                         <select
@@ -128,14 +169,21 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
                             ))}
                         </select>
                     </div>
+
                     <div>
                         <label className="block text-sm font-medium mb-1">Select Marital Status</label>
-                        <select name="maritalStatus" value={filters.maritalStatus || ""} onChange={onChange} className="w-full border-2 border-[#203449] rounded-md p-2">
+                        <select 
+                            name="maritalStatus" 
+                            value={filters.maritalStatus || ""} 
+                            onChange={onChange} 
+                            className="w-full border-2 border-[#203449] rounded-md p-2"
+                        >
                             <option value="">Select</option>
                             <option value="yes">Yes</option>
                             <option value="no">No</option>
                         </select>
                     </div>
+
                     <div>
                         <label className="block text-sm font-medium mb-1">Sect</label>
                         <select
@@ -152,7 +200,6 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply }) => {
                             ))}
                         </select>
                     </div>
-                    {/* Add more fields here as needed */}
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
