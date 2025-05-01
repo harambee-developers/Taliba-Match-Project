@@ -29,7 +29,7 @@ function ProfileImage({ src, alt, fallback }) {
           setErrored(true);
         }
       }}
-      className="w-16 h-16 rounded-full object-cover"
+      className="w-24 h-24 rounded-full object-cover"
       loading="lazy"
     />
   );
@@ -180,7 +180,7 @@ const Search = () => {
     }
 
     // Handle avatar icons (SVG files)
-    if (profile.image.includes('icon_') && profile.image.endsWith('.svg')) {
+    if (profile.image.includes('icon_') && profile.image.endsWith('.png')) {
       return `/${profile.image}`;
     }
 
@@ -421,16 +421,6 @@ const Search = () => {
         }}
         text="You are about to submit a match request. Would you like to continue?"
       />
-
-      {visibleProfiles.length > 0 && (
-        <div className="flex justify-end mt-6">
-          <button
-            className="text-white text-base px-5 py-2 rounded theme-btn"
-          >
-            Next Page
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -1133,16 +1133,6 @@ const Profile = () => {
                       ))}
                     </div>
                     <div className="col-span-full flex justify-center">
-                      <div
-                        className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === 'icon_woman5.png' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/3`}
-                        onClick={() => handleAvatarSelect('icon_woman5.png')}
-                      >
-                        <img
-                          src="/icon_woman5.svg"
-                          alt="Female Avatar 5"
-                          className="w-full h-auto"
-                        />
-                      </div>
                     </div>
                   </>
                 )}
