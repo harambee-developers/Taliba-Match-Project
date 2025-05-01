@@ -1,19 +1,30 @@
 const jwt = require("jsonwebtoken");
 
-// Middleware to verify user token
-const authMiddleware = async (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
-    }
+/**
+ * authMiddleware
+ * Verifies JWT in HTTP-only cookie and attaches `req.user.id`
+ */
+function authMiddleware(req, res, next) {
+  const { token } = req.cookies || {};
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  let payload;
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+  } catch (err) {
+    // token expired or invalid
+    const msg = err.name === 'TokenExpiredError'
+      ? 'Token expired'
+      : 'Invalid token';
+    return res.status(401).json({ message: msg });
+  }
+
+  // only keep the minimal claim we need
+  req.user = { id: payload.userId };
+  next();
+}
   
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
-      req.user = decoded;
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-  };
-  
-  module.exports = authMiddleware;
+module.exports = authMiddleware;

@@ -119,8 +119,8 @@ const Profile = () => {
         revert: user.profile?.revert || "",
 
         // Card 5 - Appearance
-        weight: user.profile?.weight || "",
-        height: user.profile?.height || "",
+        weight: user.weight || "",
+        height: user.height || "",
         appearancePreference: user.profile?.appearancePreference || "",
       });
 
@@ -196,7 +196,7 @@ const Profile = () => {
           formData.append('profileImage', blob, 'profile-pic.jpg');
 
           const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/upload`,
+            `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/upload/${user?.userId}`,
             formData,
             {
               withCredentials: true,
@@ -226,7 +226,7 @@ const Profile = () => {
     if (selectedAvatar) {
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/avatar`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/avatar/${user?.userId}`,
           { avatar: selectedAvatar },
           { withCredentials: true }
         );
@@ -248,7 +248,7 @@ const Profile = () => {
     try {
       setError(null);
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/${user?.userId}`,
         profileData,
         { withCredentials: true }
       );
@@ -1105,27 +1105,27 @@ const Profile = () => {
                   [1, 2, 3, 4].map((num) => (
                     <div
                       key={`man${num}`}
-                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
-                      onClick={() => handleAvatarSelect(`icon_man${num === 1 ? '' : num}.svg`)}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_man${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleAvatarSelect(`icon_man${num === 1 ? '' : num}.png`)}
                     >
                       <img
-                        src={`/icon_man${num === 1 ? '' : num}.svg`}
+                        src={`/icon_man${num === 1 ? '' : num}.png`}
                         alt={`Male Avatar ${num}`}
-                        className="w-full h-auto"
+                        className="w-full h-auto bg-white"
                       />
                     </div>
                   ))
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-4 col-span-full">
-                      {[1, 2, 3, 4, 5].map((num) => (
+                      {[1, 2, 3, 4, 5, 6].map((num) => (
                         <div
                           key={`woman${num}`}
-                          className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
-                          onClick={() => handleAvatarSelect(`icon_woman${num === 1 ? '' : num}.svg`)}
+                          className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                          onClick={() => handleAvatarSelect(`icon_woman${num === 1 ? '' : num}.png`)}
                         >
                           <img
-                            src={`/icon_woman${num === 1 ? '' : num}.svg`}
+                            src={`/icon_woman${num === 1 ? '' : num}.png`}
                             alt={`Female Avatar ${num}`}
                             className="w-full h-auto"
                           />
@@ -1133,16 +1133,6 @@ const Profile = () => {
                       ))}
                     </div>
                     <div className="col-span-full flex justify-center">
-                      <div
-                        className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === 'icon_woman5.svg' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/3`}
-                        onClick={() => handleAvatarSelect('icon_woman5.svg')}
-                      >
-                        <img
-                          src="/icon_woman5.svg"
-                          alt="Female Avatar 5"
-                          className="w-full h-auto"
-                        />
-                      </div>
                     </div>
                   </>
                 )}

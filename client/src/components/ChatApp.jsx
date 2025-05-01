@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Send, ChevronLeft } from "lucide-react";
-import { format, isToday, isYesterday, previousMonday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
 import { useChatEvents } from "./contexts/ChatEventsContext";
@@ -9,6 +9,7 @@ import { getCachedData, cacheData } from "../utils/cacheUtil";
 import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
+import MessageBubble from "./MessageBubble";
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
     const [input, setInput] = useState("");
@@ -35,15 +36,19 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const currentConversationId = conversation || conversationIdFromParams;
     const currentUserId = user_id || user?.userId;
 
+    const { state } = useLocation();
+    const locationPhotoUrl = state?.photoUrl;
+
     const chatCache = "chat-cache";
     const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
     const CACHE_DETAILS = `chat_details_${currentConversationId}`;
     const CACHE_STATUS = `chat_status_${currentConversationId}`
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
-    const photoUrl = propPhotoUrl
-    || location.state?.photoUrl
-    || (user?.gender === "Male" ? "/icon_woman6.png" : "/icon_man5.png");
+    const photoUrl = propPhotoUrl || locationPhotoUrl ||
+        (user?.gender === 'Male'
+            ? '/icon_woman6.png'
+            : '/icon_man5.png');
 
     // Fetch and set receiver details
     useEffect(() => {
@@ -186,6 +191,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
         const notificationObject = {
             text: `${user.firstName} sent you a message!`,
+            conversationId: currentConversationId,
             receiver_id: receiverId,
             sender_id: currentUserId,
         }
@@ -322,190 +328,182 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     }
 
     return (
-        <div className={`flex flex-col min-h-screen w-full bg-repeat bg-center`}
-            style={{
-                backgroundImage: user?.gender === "Male"
-                    ? "url('/wallpaper_man.svg')"
-                    : "url('/wallpaper_woman.svg')"
-            }} loading='lazy'>
-
-            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 z-50 sm:static`}>
-                <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
-                    <ChevronLeft className="w-10-h-10" />
-                </div>
-                <div className={`rounded-full bg-white theme-border overflow-hidden w-16 h-16`} >
-                    <img src={photoUrl} alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`} className="w-full h-full object-cover" loading='lazy' />
-                </div>
-                <div className="flex flex-col items-start">
-                    <span className={`text-lg font-semibold theme-bg`}>
-                        {currentUserId ? `${receiverName[1]} ${receiverName[2]}` : "Loading..."}
-                    </span>
-                    {localReceiverStatus && !localReceiverStatus?.isOnline && localReceiverStatus?.lastSeen && (
-                        <span className={`text-sm theme-bg`}>{formattedLastSeen}</span>
-                    )}
-                </div>
-                {/* Status Dot (Green or Grey) */}
-                <div className="ml-2">
-                    {localReceiverStatus?.isOnline === true ? ( // If online, show GREEN dot
-                        <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
-                    ) : localReceiverStatus?.isOnline === false && localReceiverStatus?.lastSeen === null ? ( // If offline & lastSeen is NULL, show GREY dot
-                        <span className="w-3 h-3 rounded-full bg-gray-400 inline-block"></span>
-                    ) : null /* If offline & lastSeen exists, show nothing */}
-                </div>
+        <div
+          className="flex flex-col min-h-screen w-full bg-repeat bg-center"
+          style={{
+            backgroundImage:
+              user?.gender === "Male"
+                ? "url('/wallpaper_man.svg')"
+                : "url('/wallpaper_woman.svg')",
+          }}
+          loading="lazy"
+        >
+          {/* Header */}
+          <div
+            className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static"
+          >
+            <div
+              className="md:hidden cursor-pointer theme-bg"
+              onClick={() => navigate("/matches")}
+            >
+              <ChevronLeft className="w-10-h-10" />
             </div>
-            <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
-                {Object.keys(groupedMessages).length === 0 ? (
-                    <div className="flex justify-center items-center h-full">
-                        <p className="text-gray-400 text-center">Why not introduce yourself?</p>
-                    </div>
-                ) : (
-                    Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
-                        <div key={dateIndex}>
-
-                            {/* Date Header */}
-                            <div className="flex justify-center m-8">
-                                <div className={`text-white ${user?.gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"} bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}>
-                                    {date}
-                                </div>
-                            </div>
-
-                            {/* Loop through each message in the array */}
-                            {msgs.map((msg, index) => (
-                                <div key={index} className={`flex w-full ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"} mb-4`}>
-                                    {/* Sender Information */}
-                                    <div className={`flex items-end ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"} mb-2`}>
-                                    </div>
-
-                                    {/* Message Bubble */}
-                                    <div
-                                        className={`max-w-xs md:max-w-md p-4 rounded-lg shadow-md break-words text-white
-                                                ${msg.sender_id === currentUserId
-                                                ? user?.gender === "Male"
-                                                    ? "bg-[#203449] rounded-br-none"  // Male user's sent messages (dark blue)
-                                                    : "bg-[#E01D42] rounded-br-none"  // Female user's sent messages (red)
-                                                : user?.gender === "Male"
-                                                    ? "bg-[#E01D42] rounded-bl-none"   // If male, receiver's messages are red
-                                                    : "bg-[#203449] rounded-bl-none"   // If female, receiver's messages are dark blue
-                                            }`}
-                                    >
-                                        {msg.attachment ? (
-                                            <div className="max-w-full w-full rounded-lg z-50">
-                                                {msg.attachment.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                                                    <a href={msg.attachment} target="_blank" rel="noopener noreferrer">
-                                                        <img
-                                                            src={msg.attachment}
-                                                            alt="attachment"
-                                                            className="w-full max-h-64 rounded-lg object-contain bg-white"
-                                                        />
-                                                    </a>
-                                                ) : msg.attachment.match(/\.(mp4|mov|webm|wmv)$/i) ? (
-                                                    <video
-                                                        controls
-                                                        className="w-full max-h-64 rounded-lg object-contain"
-                                                    >
-                                                        <source src={msg.attachment} />
-                                                        Your browser does not support the video tag.
-                                                    </video>
-                                                ) : (
-                                                    <a
-                                                        href={msg.attachment}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-blue-200 underline hover:text-blue-100"
-                                                    >
-                                                        View attachment
-                                                    </a>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <p className="font-semibold">{msg.text}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Timestamp and Message Status */}
-                                    <div className="ml-2 text-sm text-gray-600">
-                                        <span>
-                                            {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </span>
-                                        {index === msgs.length - 1 && msg.sender_id === currentUserId && (
-                                            <p className="text-xs text-[#203449]">{msg.status}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ))
-                )}
-                {isTyping.isTyping && (
-                    <TypingIndicator isTyping={true} gender={user?.gender} />
-                )}
-                {/* Smooth scrolling to the latest message */}
-                <div ref={messagesEndRef}></div>
+            <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
+              <img
+                src={photoUrl}
+                alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
             </div>
-
-
-            <div className="md:p-10 flex items-center space-x-2 p-2">
-                {/* File Attachment Input */}
-                <label htmlFor="file-attachment" className="cursor-pointer mr-2 group">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className="w-12 h-12"
+            <div className="flex flex-col items-start">
+              <span className="text-lg font-semibold theme-bg">
+                {currentUserId
+                  ? `${receiverName[1]} ${receiverName[2]}`
+                  : "Loading..."}
+              </span>
+              {localReceiverStatus &&
+                !localReceiverStatus.isOnline &&
+                localReceiverStatus.lastSeen && (
+                  <span className="text-sm theme-bg">
+                    {formattedLastSeen}
+                  </span>
+                )}
+            </div>
+            <div className="ml-2">
+              {localReceiverStatus?.isOnline === true ? (
+                <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+              ) : localReceiverStatus?.isOnline === false &&
+                localReceiverStatus?.lastSeen === null ? (
+                <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
+              ) : null}
+            </div>
+          </div>
+      
+          {/* Messages list */}
+          <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
+            {Object.keys(groupedMessages).length === 0 ? (
+              <div className="flex justify-center items-center h-full">
+                <p className="text-gray-400 text-center">
+                  Why not introduce yourself?
+                </p>
+              </div>
+            ) : (
+              Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
+                <div key={dateIndex}>
+                  {/* Date Header */}
+                  <div className="flex justify-center m-8">
+                    <div
+                      className={`text-white ${
+                        user?.gender === "Male"
+                          ? "bg-[#203449]"
+                          : "bg-[#E01D42]"
+                      } bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}
                     >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="12"
-                            className={`transition-colors duration-200 ${user.gender === "Male" ? "fill-[#203449] group-hover:fill-blue-400" : "fill-[#E01D42] group-hover:fill-red-300"}`}
+                      {date}
+                    </div>
+                  </div>
+      
+                  {/* Loop through each message */}
+                  {msgs.map((msg, index) => {
+                    const isMine = msg.sender_id === currentUserId;
+                    const prev = msgs[index - 1];
+                    const isFirstInRun =
+                      !prev || prev.sender_id !== msg.sender_id;
+      
+                    return (
+                      <div
+                        key={msg.id ?? index}
+                        className={`flex w-full ${
+                          isMine ? "justify-end" : "justify-start"
+                        } mb-2`}
+                      >
+                        {/* Bubble */}
+                        <MessageBubble
+                          msg={msg}
+                          isMine={isMine}
+                          isFirstInRun={isFirstInRun}
+                          gender={user?.gender}
                         />
-                        <path
-                            fill="white"
-                            d="M16.5 9.5l-6 6c-.8.8-2 .8-2.8 0-.8-.8-.8-2 0-2.8l6-6c1.2-1.2 3.1-1.2 4.3 0 1.2 1.2 1.2 3.1 0 4.3l-5 5c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l5-5c.6-.6.6-1.6 0-2.3-.6-.6-1.6-.6-2.3 0z"
-                        />
-                    </svg>
-                    <input
-                        type="file"
-                        id="file-attachment"
-                        accept="image/*,video/*"
-                        ref={fileInputRef}
-                        disabled={isUploading}
-                        className="hidden"
-                        onChange={handleFileSelect}
-                    />
-                    <MessageModal
-                        isOpen={isOpen}
-                        onClose={() => setIsOpen(false)}
-                        title="Guidelines"
-                        text="Only send a shariah compliant picture ensuring your 'awrah is covered and you observe modesty"
-                    />
-                </label>
-
-                <input
-                    type="text"
-                    name="chatbox"
-                    id="chatbox"
-                    disabled={isUploading}
-                    className={`flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg 
-                        focus:outline-none theme-border hover:bg-white 
-                        transition-all duration-300`}
-                    placeholder={isUploading ? "Uploading..." : "Type a message..."}
-                    value={input}
-                    onChange={(e) => {
-                        setInput(e.target.value);
-                        handleTyping();
-                    }}
-                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                />
-                <button onClick={sendMessage}
-                    disabled={isUploading}
-                    className={`flex-shrink-0 w-10 h-10 rounded-lg 
-                    ${user.gender === "Male" ? "text-[#203449] hover:text-blue-400" : "text-[#E01D42] hover:text-red-300"}`}>
-                    <Send className="w-full h-full" />
-                </button>
-            </div>
+      
+                        {/* Timestamp & status */}
+                        <div className="ml-2 text-sm text-gray-600">
+                          <span>
+                            {new Date(msg.createdAt).toLocaleTimeString(
+                              "en-GB",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                          {index === msgs.length - 1 &&
+                            isMine && (
+                              <p className="text-xs text-[#203449]">
+                                {msg.status}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+            {isTyping.isTyping && (
+              <TypingIndicator
+                isTyping
+                gender={user?.gender}
+              />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+      
+          {/* Input area */}
+          <div className="md:p-10 flex items-center space-x-2 p-2">
+            {/* File Attachment */}
+            <label
+              htmlFor="file-attachment"
+              className="cursor-pointer mr-2 group"
+            >
+              {/* ... SVG, input, Modal ... */}
+            </label>
+      
+            {/* Text input */}
+            <input
+              type="text"
+              name="chatbox"
+              id="chatbox"
+              disabled={isUploading}
+              className="flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300"
+              placeholder={
+                isUploading
+                  ? "Uploading..."
+                  : "Type a message..."
+              }
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                handleTyping();
+              }}
+              onKeyDown={(e) =>
+                e.key === "Enter" && sendMessage()
+              }
+            />
+      
+            {/* Send button */}
+            <button
+              onClick={sendMessage}
+              disabled={isUploading}
+              className={`flex-shrink-0 w-10 h-10 rounded-lg ${
+                user.gender === "Male"
+                  ? "text-[#203449] hover:text-blue-400"
+                  : "text-[#E01D42] hover:text-red-300"
+              }`}
+            >
+              <Send className="w-full h-full" />
+            </button>
+          </div>
         </div>
-    );
+      );
 }

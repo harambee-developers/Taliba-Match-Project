@@ -4,6 +4,8 @@ const router = express.Router();
 const Notification = require('../model/Notifications');
 const logger = require('../logger')
 
+router.use(express.json())
+
 /**
  * GET /api/notifications/:userId
  * Query:
@@ -31,6 +33,7 @@ router.get('/:userId', async (req, res) => {
       text: 1,
       type: 1,
       isRead: 1,
+      conversationId: 1,
       createdAt: 1,
     })
       .sort({ createdAt: -1 }) // newest first

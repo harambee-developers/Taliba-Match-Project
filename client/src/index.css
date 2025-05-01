@@ -2,41 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* styles.css (PostCSS or global styles) */
-[data-theme="Male"] .theme-bg {
-    @apply bg-male-primary text-black;
+[data-theme="Male"] .theme-bg      { @apply bg-male-primary    text-black; }
+[data-theme="Female"] .theme-bg    { @apply bg-female-primary  text-black; }
+
+[data-theme="Male"] .theme-sidebar { @apply bg-male-secondary; }
+[data-theme="Female"] .theme-sidebar { @apply bg-female-secondary; }
+
+[data-theme="Male"] .theme-border  { @apply border-male-secondary border-2; }
+[data-theme="Female"] .theme-border { @apply border-female-secondary border-2; }
+
+[data-theme="Male"] .theme-btn     { @apply bg-male-secondary hover:bg-[#174b75] text-white; }
+[data-theme="Female"] .theme-btn   { @apply bg-female-secondary hover:bg-[#FF1F5A] text-white; }
+
+[data-theme="Male"] .theme-btn-text { @apply text-male-secondary hover:text-[#174b75]; }
+[data-theme="Female"] .theme-btn-text { @apply text-female-secondary hover:text-[#FF1F5A]; }
+
+.sender::before,
+.receiver::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 10px;
+  top: -10px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
 }
 
-[data-theme="Female"] .theme-bg {
-    @apply bg-female-primary text-black;
+.sender::before {
+  right: 8px;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'>\
+<path d='M0,10 C2,0 12,0 14,10 L14,0 L0,0 Z' fill='var(--bubble-color)'/>\
+</svg>");
 }
 
-[data-theme="Male"] .theme-sidebar {
-    @apply bg-male-secondary
-}
-
-[data-theme="Female"] .theme-sidebar {
-    @apply bg-female-secondary
-}
-
-[data-theme="Male"] .theme-border {
-    @apply border-male-secondary border-2;
-}
-
-[data-theme="Female"] .theme-border {
-    @apply border-female-secondary border-2;
-}
-
-[data-theme="Male"] .theme-btn {
-    @apply bg-male-secondary hover:bg-[#174b75] text-white;
-}
-
-[data-theme="Female"] .theme-btn {
-    @apply bg-female-secondary hover:bg-[#FF1F5A] text-white;
-}
-[data-theme="Male"] .theme-btn-text {
-    @apply text-male-secondary hover:text-[#174b75]
-}
-[data-theme="Female"] .theme-btn-text {
-    @apply text-female-secondary hover:text-[#FF1F5A]
+.receiver::before {
+  left: 8px;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'>\
+<path d='M14,10 C12,0 2,0 0,10 L0,0 L14,0 Z' fill='var(--bubble-color)'/>\
+</svg>");
 }

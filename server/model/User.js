@@ -83,7 +83,9 @@ const UserSchema = new Schema({
   isOnline: { type: Boolean, default: false }, // Track if the user is online or offline
   lastSeen: { type: Date, default: null }, // Timestamp for last seen when offline
   socketId: { type: String, default: null }, // Store the socket ID to track the user
-  refreshToken: { type: String, default: null }
+  refreshToken: { type: String, default: null },
+  resetToken: { type: String, default: null },
+  resetTokenExpiration: { type: Date }
 });
 
 // Optionally, you can define a method for updating status based on socket activity
@@ -93,6 +95,17 @@ UserSchema.methods.setOnlineStatus = function (status, socketId) {
   this.lastSeen = status ? null : new Date(); // Set lastSeen only when offline
   return this.save();
 };
+
+// Virtual field for subscription
+UserSchema.virtual("subscription", {
+  ref: "Subscription", // Name of the Subscription model
+  localField: "_id",   // Field in User model
+  foreignField: "user_id", // Field in Subscription model
+});
+
+// Enable virtuals in JSON output
+UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true });
 
 const User = mongoose.model('User', UserSchema);
 

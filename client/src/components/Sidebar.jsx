@@ -45,16 +45,6 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
             <ul className="space-y-4">
               <li>
                 <Link
-                  to="/"
-                  onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
-                >
-                  <span>Home</span>
-                  <Icon26 width={24} height={24} color="#FFF" />
-                </Link>
-              </li>
-              <li>
-                <Link
                   to="/profile"
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
@@ -115,15 +105,6 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                 </Link>
               </li>
             </ul>
-          </div>
-          {/* Logout Button */}
-          <div className="p-4 theme-border">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center p-2 rounded theme-btn transition-colors text-white"
-            >
-              Logout
-            </button>
           </div>
         </nav>
       </aside>

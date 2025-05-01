@@ -1148,18 +1148,18 @@ const RegisterPage = () => {
                   {[1, 2, 3, 4].map((num) => (
                     <div 
                       key={`man${num}`}
-                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
-                      onClick={() => handleInputChange('avatar', `icon_man${num === 1 ? '' : num}.svg`)}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_man${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleInputChange('avatar', `icon_man${num === 1 ? '' : num}.png`)}
                     >
                       <img 
-                        src={`/icon_man${num === 1 ? '' : num}.svg`} 
+                        src={`/icon_man${num === 1 ? '' : num}.png`} 
                         alt={`Male Avatar ${num}`}
                         className="w-full h-auto"
                       />
                       <div className="mt-2 text-center">
                         <button
                           type="button"
-                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_man${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_man${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
                         >
                           Option {num}
                         </button>
@@ -1170,21 +1170,21 @@ const RegisterPage = () => {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                   {/* First 4 female icons in a 2x2 or 4x1 grid */}
-                  {[1, 2, 3, 4].map((num) => (
+                  {[1, 2, 3, 4, 5, 6].map((num) => (
                     <div 
                       key={`woman${num}`}
-                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
-                      onClick={() => handleInputChange('avatar', `icon_woman${num === 1 ? '' : num}.svg`)}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleInputChange('avatar', `icon_woman${num === 1 ? '' : num}.png`)}
                     >
                       <img 
-                        src={`/icon_woman${num === 1 ? '' : num}.svg`} 
+                        src={`/icon_woman${num === 1 ? '' : num}.png`} 
                         alt={`Female Avatar ${num}`}
                         className="w-full h-auto"
                       />
                       <div className="mt-2 text-center">
                         <button
                           type="button"
-                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_woman${num === 1 ? '' : num}.svg` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
                         >
                           Option {num}
                         </button>
@@ -1195,18 +1195,18 @@ const RegisterPage = () => {
                   {/* 5th female icon centered */}
                   <div className="col-span-2 md:col-span-4 flex justify-center mt-4">
                     <div 
-                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === 'icon_woman5.svg' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/2 md:w-1/4`}
-                      onClick={() => handleInputChange('avatar', 'icon_woman5.svg')}
+                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === 'icon_woman5.png' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/2 md:w-1/4`}
+                      onClick={() => handleInputChange('avatar', 'icon_woman5.png')}
                     >
                       <img 
-                        src="/icon_woman5.svg" 
+                        src="/icon_woman5.png" 
                         alt="Female Avatar 5"
                         className="w-full h-auto"
                       />
                       <div className="mt-2 text-center">
                         <button
                           type="button"
-                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === 'icon_woman5.svg' ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
+                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === 'icon_woman5.png' ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
                         >
                           Option 5
                         </button>

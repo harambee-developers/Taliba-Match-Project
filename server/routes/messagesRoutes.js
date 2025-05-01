@@ -8,6 +8,8 @@ const multer = require('multer')
 const path = require('path')
 const logger = require('../logger')
 
+router.use(express.json())
+
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
