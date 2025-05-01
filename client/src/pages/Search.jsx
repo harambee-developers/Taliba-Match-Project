@@ -49,7 +49,7 @@ const Search = () => {
   const { socket } = useSocket()
   const { showAlert, alert } = useAlert()
 
-  const [filters, setFilters] = useState({ 
+  const initialFilters = {
     ageRange: "", 
     location: "", 
     ethnicity: "", 
@@ -62,7 +62,9 @@ const Search = () => {
     sect: "",
     quranMemorization: "",
     hasChildren: ""
-  });
+  };
+
+  const [filters, setFilters] = useState(initialFilters);
   const [pendingFilters, setPendingFilters] = useState(filters);
   const abortControllerRef = useRef(null);
 
@@ -209,6 +211,18 @@ const Search = () => {
 
     // Default case: prepend with backend URL if it's a relative path
     return `${import.meta.env.VITE_BACKEND_URL}/${profile.image}`;
+  };
+
+  const handleClearFilters = () => {
+    // Keep system fields, clear everything else
+    const clearedFilters = {
+      ...initialFilters,
+      senderId: filters.senderId,
+      alreadyMatched: filters.alreadyMatched
+    };
+    setPendingFilters(clearedFilters);
+    setFilters(clearedFilters);
+    setIsFilterModalOpen(false);
   };
 
   return (
@@ -422,8 +436,10 @@ const Search = () => {
         }
         onApply={() => {
           setFilters(pendingFilters);
-          fetchProfiles();
+          setIsFilterModalOpen(false);
+          debouncedFetch();
         }}
+        onClear={handleClearFilters}
       />
 
       {/* Message Modal */}
