@@ -3,7 +3,7 @@ import Select from 'react-select';
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import occupationData from '../data/Occupations.json';
-import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions } from '../data/fieldData'
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions, openToHijrahOptions } from '../data/fieldData'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -134,9 +134,8 @@ const RegisterPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   
-  // Add state for email and phone validation
+  // Add state for email validation
   const [emailValid, setEmailValid] = useState(null);
-  const [phoneValid, setPhoneValid] = useState(null);
   
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -322,11 +321,6 @@ const RegisterPage = () => {
         validateEmail(value);
       }
       
-      // Phone validation
-      if (field === 'phone') {
-        validatePhone(value);
-      }
-      
       return updatedData;
     });
   };
@@ -341,19 +335,6 @@ const RegisterPage = () => {
     // More comprehensive email regex
     const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     setEmailValid(emailRegex.test(email));
-  };
-  
-  // Phone validation function
-  const validatePhone = (phone) => {
-    if (!phone) {
-      setPhoneValid(null);
-      return;
-    }
-    
-    // Allow different international formats with optional country codes
-    // This accepts formats like: +1234567890, (123) 456-7890, 123-456-7890, 123.456.7890, etc.
-    const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-    setPhoneValid(phoneRegex.test(phone));
   };
 
   const nextSection = () => {
@@ -510,17 +491,7 @@ const RegisterPage = () => {
         errors.email = "Please enter a valid email address";
       }
     }
-    
-    if (!formData.phone) {
-      errors.phone = "Phone number is required";
-    } else {
-      // Phone validation
-      const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        errors.phone = "Please enter a valid phone number";
-      }
-    }
-    
+    if (!formData.phone) errors.phone = "Phone number is required";
     if (!formData.location) errors.location = "Location is required";
     if (!formData.ethnicity || formData.ethnicity.length === 0) errors.ethnicity = "Ethnicity is required";
     if (!formData.nationality) errors.nationality = "Nationality is required";
@@ -762,33 +733,16 @@ const RegisterPage = () => {
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Please enter your phone number<span className="text-red-600 ml-1">*</span></label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`p-3 border rounded-md focus:outline-none focus:ring-2 w-full ${
-                    phoneValid === true ? 'border-green-500 focus:ring-green-500' : 
-                    phoneValid === false ? 'border-red-500 focus:ring-red-500' : 
-                    'border-[#1A495D] focus:ring-[#1A495D]'
-                  } bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70`}
-                  placeholder="e.g., +1234567890 or (123) 456-7890"
-                />
-                {phoneValid === true && (
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                )}
-              </div>
-              {errors.phone ? (
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Enter your phone number..."
+              />
+              {errors.phone && (
                 <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
-              ) : phoneValid === false && formData.phone ? (
-                <p className="mt-2 text-sm text-red-600">Please enter a valid phone number</p>
-              ) : (
-                <p className="mt-2 text-xs text-gray-500">Include country code for international numbers (e.g., +44 for UK)</p>
               )}
             </div>
             <div className="flex flex-col">
@@ -807,8 +761,8 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
-                options={childrenOptions}
-                value={childrenOptions.find(option => option.value === formData.openToHijrah) || null}
+                options={openToHijrahOptions}
+                value={openToHijrahOptions.find(option => option.value === formData.openToHijrah) || null}
                 placeholder="Select an option..."
                 onChange={(option) => handleInputChange('openToHijrah', option ? option.value : '')}
                 styles={customSelectStyles}

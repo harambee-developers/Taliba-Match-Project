@@ -58,6 +58,12 @@ export const polygamyOptions = [
   { value: 'maybe', label: 'Maybe' }
 ];
 
+export const openToHijrahOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+    { value: 'maybe', label: 'Maybe' }
+  ];
+
 export const quranMemorizationOptions = [
   { value: 'hafidh', label: 'Hafidh/Haafidah' },
   { value: '10_plus', label: '10 Juz +' },
