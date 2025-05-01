@@ -115,12 +115,14 @@ const Match = () => {
     <div className="min-h-screen flex flex-col p-4 md:p-8">
       <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md">
         <div className="w-full md:w-1/3 theme-border min-h-screen">
-          <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-4 theme-border">
+          <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
             Marriage Meeting
           </h1>
           <div className="p-4">
             {matches.length ? (
-              matches.map((match, idx) => {
+              matches
+              .filter(m => m.sender && m.receiver)
+              .map((match, idx) => {
                 const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
                 const conversation = getConversationWithMatch(opponent);
                 const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';

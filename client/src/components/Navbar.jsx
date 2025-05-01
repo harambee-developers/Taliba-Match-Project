@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useNavigate } from "react-router-dom";
 import talibahLogo from '../assets/talibahLogo.png';
 import { Link } from "react-router-dom";
 import { useAuth } from './contexts/AuthContext';
@@ -14,6 +15,7 @@ const Navbar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { notificationCount, notifications, markAsRead, markAllAsRead } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate()
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -44,14 +46,6 @@ const Navbar = () => {
   }, []);
 
   const unreadNotifications = notifications.filter(n => !n.isRead);
-
-  const photoUrl = user?.photos?.[0]?.url;
-
-  const fallbackUrl =
-    user?.gender === "Male"
-      ? "/icon_man5.png"
-      : "/icon_woman6.png";
-
 
   return (
     <>
@@ -121,6 +115,18 @@ const Navbar = () => {
                       {unreadNotifications.map((notif) => (
                         <li
                           key={notif._id}
+                          onClick={() => {
+                            // 1️⃣ Mark it read in state + server
+                            markAsRead(notif._id);
+                    
+                            // 2️⃣ If it's a message, navigate to the chat
+                            if (notif.type === "message" && notif.conversationId) {
+                              navigate(`/matches`);
+                            } else {
+                              // fallback for other types
+                              setShowNotifications(false);
+                            }
+                          }}
                           className="px-4 py-3 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
                         >
                           <p className="text-gray-700" onClick={() => markAsRead(notif._id)}>{notif.text}</p>

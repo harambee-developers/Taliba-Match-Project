@@ -78,7 +78,7 @@ function initializeSocket(server, corsOptions) {
       io.emit("user_offline", { userId, lastSeen: new Date().toISOString() });
     });
 
-    socket.on("notification", async ({ text, type, sender_id, receiver_id, isRead = false }) => {
+    socket.on("notification", async ({ text, type, sender_id, conversationId, receiver_id, isRead = false }) => {
       try {
         const senderUser = await User.findById(sender_id);
         const displayName = senderUser?.firstName || "Someone";
@@ -87,6 +87,7 @@ function initializeSocket(server, corsOptions) {
           userId: receiver_id,
           senderId: sender_id,
           text: text || `${displayName} sent you a notification.`,
+          conversationId,
           type,
           isRead
         });

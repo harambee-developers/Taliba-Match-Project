@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Send, ChevronLeft } from "lucide-react";
-import { format, isToday, isYesterday} from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
 import { useSocket } from "./contexts/SocketContext";
 import { useChatEvents } from "./contexts/ChatEventsContext";
@@ -10,7 +10,7 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 
-export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl}) {
+export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
     const [input, setInput] = useState("");
 
     const navigate = useNavigate()
@@ -34,8 +34,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const { conversationId: conversationIdFromParams } = useParams();
     const currentConversationId = conversation || conversationIdFromParams;
     const currentUserId = user_id || user?.userId;
-    
-    const { state } = useLocation(); 
+
+    const { state } = useLocation();
     const locationPhotoUrl = state?.photoUrl;
 
     const chatCache = "chat-cache";
@@ -45,9 +45,9 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
     const photoUrl = propPhotoUrl || locationPhotoUrl ||
-    (user?.gender === 'Male'
-      ? '/icon_woman6.png'
-      : '/icon_man5.png');
+        (user?.gender === 'Male'
+            ? '/icon_woman6.png'
+            : '/icon_man5.png');
 
     // Fetch and set receiver details
     useEffect(() => {
@@ -190,6 +190,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
         const notificationObject = {
             text: `${user.firstName} sent you a message!`,
+            conversationId: currentConversationId,
             receiver_id: receiverId,
             sender_id: currentUserId,
         }
@@ -333,7 +334,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     : "url('/wallpaper_woman.svg')"
             }} loading='lazy'>
 
-            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:z-50 sm:static`}>
+            <div className={`p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static`}>
                 <div className={`md:hidden cursor-pointer theme-bg`} onClick={() => navigate("/matches")}>
                     <ChevronLeft className="w-10-h-10" />
                 </div>
@@ -379,18 +380,25 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                                     {/* Sender Information */}
                                     <div className={`flex items-end ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"} mb-2`}>
                                     </div>
-
                                     {/* Message Bubble */}
                                     <div
-                                        className={`max-w-xs md:max-w-md p-4 rounded-lg shadow-md break-words text-white
-                                                ${msg.sender_id === currentUserId
+                                        className={`
+                                                    relative          
+                                                    max-w-xs md:max-w-md
+                                                    p-4
+                                                    rounded-lg
+                                                    shadow-md
+                                                    break-words
+                                                    text-white
+                                                    ${msg.sender_id === currentUserId
                                                 ? user?.gender === "Male"
-                                                    ? "bg-[#203449] rounded-br-none"  // Male user's sent messages (dark blue)
-                                                    : "bg-[#E01D42] rounded-br-none"  // Female user's sent messages (red)
+                                                    ? "bg-[#203449] rounded-br-none sender--male"
+                                                    : "bg-[#E01D42] rounded-br-none sender--female"
                                                 : user?.gender === "Male"
-                                                    ? "bg-[#E01D42] rounded-bl-none"   // If male, receiver's messages are red
-                                                    : "bg-[#203449] rounded-bl-none"   // If female, receiver's messages are dark blue
-                                            }`}
+                                                    ? "bg-[#E01D42] rounded-bl-none receiver--male"
+                                                    : "bg-[#203449] rounded-bl-none receiver--female"
+                                            }
+                                                    `}
                                     >
                                         {msg.attachment ? (
                                             <div className="max-w-full w-full rounded-lg z-50">

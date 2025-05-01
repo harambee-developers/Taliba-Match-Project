@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../components/contexts/AuthContext'
 import { useAlert } from '../components/contexts/AlertContext'
 import Alert from '../components/Alert'
+import MessageModal from '../components/modals/MessageModal'
 
 export default function Settings() {
   const { user, token, logout } = useAuth()
@@ -10,6 +11,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { showAlert, alert } = useAlert()
+  const [isOpen, setIsOpen] = useState(false);
 
   const subscriptions = user?.subscription || [];
 
@@ -76,9 +78,6 @@ export default function Settings() {
    * Handles account deletion confirmation and request.
   */
   const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
-    if (!confirmDelete) return;
-
     try {
       const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/user/delete/${user.userId}`);
 
@@ -159,13 +158,24 @@ export default function Settings() {
               and cannot be undone.
             </p>
             <button
-              onClick={handleDeleteAccount}
+              onClick={() => setIsOpen(true)}
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition"
             >
               Delete My Account
             </button>
           </div>
         </div>
+        {/* Message Modal */}
+        <MessageModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          title="Account Deletion"
+          onConfirm={() => {
+            handleDeleteAccount();
+            setIsOpen(false);
+          }}
+          text="Are you sure you want to delete your account? This action is irreversible"
+        />
       </div>
     </div>
   )

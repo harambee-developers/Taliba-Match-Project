@@ -33,6 +33,7 @@ router.get('/:userId', async (req, res) => {
       text: 1,
       type: 1,
       isRead: 1,
+      conversationId: 1,
       createdAt: 1,
     })
       .sort({ createdAt: -1 }) // newest first

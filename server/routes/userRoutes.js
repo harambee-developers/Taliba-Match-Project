@@ -294,41 +294,33 @@ router.get('/user/:id', async (req, res) => {
 });
 
 router.delete('/delete/:id', authMiddleware, async (req, res) => {
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
+  const userId = req.params.id;
 
-    const userId = req.params.id
+  try {
     // 1) Delete the User document
-    const userResult = await User.deleteOne({ _id: userId }, { session });
+    const userResult = await User.deleteOne({ _id: userId });
     if (userResult.deletedCount === 0) {
-      throw new Error('User not found');
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // 2) Delete related docs in other collections
+    // 2) Delete related docs in parallel
     await Promise.all([
-      Subscription.deleteMany({ user_id: userId }, { session }),
-      Message.deleteMany({ $or: [{ from: userId }, { to: userId }] }, { session }),
-      Match.deleteMany({ $or: [{ userA: userId }, { userB: userId }] }, { session }),
-      Notification.deleteMany({ user: userId }, { session }),
-      // … any other collections …
+      Subscription.deleteMany({ user_id: userId }),
+      Message.deleteMany({ $or: [{ from: userId }, { to: userId }] }),
+      Match.deleteMany({ $or: [{ userA: userId }, { userB: userId }] }),
+      Notification.deleteMany({ user: userId }),
+      // …other collections…
     ]);
 
-    // 3) Commit
-    await session.commitTransaction();
-    session.endSession();
-
+    // 3) Clear cookies and respond
     res.clearCookie('token');
     res.clearCookie('refreshToken');
     return res.status(200).json({ message: 'Account and related data deleted.' });
-
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error(err);
+    console.error('Deletion error:', err);
     return res.status(500).json({ message: 'Could not delete account.' });
   }
-})
+});
 
 // Protected Route
 router.put("/profile/:userId", async (req, res) => {
@@ -434,17 +426,17 @@ router.put("/profile/:userId", async (req, res) => {
 });
 
 // Add avatar from predefined options
-router.post("/profile/avatar", authMiddleware, async (req, res) => {
+router.post("/profile/avatar/:userId", authMiddleware, async (req, res) => {
   try {
     const { avatar } = req.body;
-    const userId = req.user.userId;
+    const userId = req.params.userId;
 
     if (!avatar) {
       return res.status(400).json({ message: "Avatar selection is required" });
     }
 
     // Check if avatar is a valid option based on naming convention
-    if (!avatar.match(/^icon_(man|woman)[1-6]?\.svg$/)) {
+    if (!avatar.match(/^icon_(man|woman)[1-6]?\.png$/)) {
       return res.status(400).json({ message: "Invalid avatar selection" });
     }
 
@@ -475,13 +467,13 @@ router.post("/profile/avatar", authMiddleware, async (req, res) => {
 });
 
 // Upload custom profile image
-router.post("/profile/upload", authMiddleware, upload.single('profileImage'), async (req, res) => {
+router.post("/profile/upload/:userId", authMiddleware, upload.single('profileImage'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
 
-    const userId = req.user.userId;
+    const userId = req.params.userId;
     const user = await User.findById(userId);
 
     if (!user) {
