@@ -60,7 +60,7 @@ const Search = () => {
   // Fetch remaining when modal opens
   useEffect(() => {
     if (!isOpen) return;
-      fetchRemaining()
+    fetchRemaining()
   }, [isOpen]);
 
   const fetchRemaining = async () => {
@@ -275,8 +275,8 @@ Would you like to continue?`;
               >
                 <option value="">Select</option>
                 {countries.map(country => (
-                  <option key={country} value={country}>
-                    {country}
+                  <option key={country.code} value={country.label}>
+                    {country.label}
                   </option>
                 ))}
               </select>
@@ -337,99 +337,126 @@ Would you like to continue?`;
       {/* Profiles */}
       {!loading && !error && visibleProfiles.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {visibleProfiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="relative flex flex-col sm:flex-row items-start sm:items-center rounded-lg p-4 theme-bg theme-border space-y-4 sm:space-y-0 sm:space-x-4"
-            >
-              {/* Age badge */}
-              <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
-                {profile.age || 'N/A'}
-              </div>
 
-              {/* MOBILE: avatar + name & stacked subtext */}
-              <div className="flex flex-col w-full sm:hidden">
-                <div className="flex items-center gap-4">
+          {visibleProfiles.map((profile) => {
+
+            const locationCountry = countries.find(c => c.label === profile.location);
+            const nationalityCountry = countries.find(c => c.label === profile.nationality);
+
+            return (
+              <div
+                key={profile.id}
+                className="relative flex flex-col sm:flex-row items-start sm:items-center rounded-lg p-4 theme-bg theme-border space-y-4 sm:space-y-0 sm:space-x-4"
+              >
+                {/* Age badge */}
+                <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
+                  {profile.age || 'N/A'}
+                </div>
+
+                {/* MOBILE: avatar + name & stacked subtext */}
+                <div className="flex flex-col w-full sm:hidden">
+                  <div className="flex items-center gap-4">
+                    <ProfileImage
+                      src={getProfileImageUrl(profile)}
+                      alt="Profile"
+                      fallback={fallbackUrl}
+                    />
+                    <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
+                  </div>
+                  <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
+                    <div className="flex items-center gap-1 truncate">
+                      <span>{locationCountry?.icon || '🌍'}</span>
+                      <span className="truncate">{profile.location || 'Location not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-1 truncate">
+                      <span>{nationalityCountry?.icon || '🌐'}</span>
+                      <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DESKTOP (sm+): original avatar + center info */}
+                <div className="hidden sm:flex flex-shrink-0">
                   <ProfileImage
                     src={getProfileImageUrl(profile)}
                     alt="Profile"
                     fallback={fallbackUrl}
                   />
-                  <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
                 </div>
-                <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
-                  <div className="flex items-center gap-1 truncate">
-                    <Icon47 width={16} height={16} />
+                <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
+                  <h3 className="text-base font-semibold truncate">{profile.name}</h3>
+                  <div className="flex items-center gap-2 text-sm truncate">
+                    {locationCountry?.code ? (
+                      <img
+                        src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
+                        alt={`${locationCountry.label} flag`}
+                        width={20}
+                        height={15}
+                        className="rounded-sm"
+                      />
+                    ) : (
+                      <span>🌍</span>
+                    )}
                     <span className="truncate">{profile.location || 'Location not specified'}</span>
                   </div>
-                  <div className="flex items-center gap-1 truncate">
-                    <Icon48 width={16} height={16} />
+                  <div className="flex items-center gap-2 text-sm truncate">
+                    {nationalityCountry?.code ? (
+                      <img
+                        src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
+                        alt={`${nationalityCountry.label} flag`}
+                        width={20}
+                        height={15}
+                        className="rounded-sm"
+                      />
+                    ) : (
+                      <span>🌐</span>
+                    )}
                     <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
                   </div>
                 </div>
-              </div>
 
-              {/* DESKTOP (sm+): original avatar + center info */}
-              <div className="hidden sm:flex flex-shrink-0">
-                <ProfileImage
-                  src={getProfileImageUrl(profile)}
-                  alt="Profile"
-                  fallback={fallbackUrl}
-                />
-              </div>
-              <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
-                <h3 className="text-base font-semibold truncate">{profile.name}</h3>
-                <div className="flex items-center gap-2 text-sm truncate">
-                  <Icon47 width={20} height={20} />
-                  <span className="truncate">{profile.location || 'Location not specified'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm truncate">
-                  <Icon48 width={20} height={20} />
-                  <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
-                </div>
-              </div>
+                {/* Actions (all sizes) */}
+                <div className="flex flex-col items-start gap-2 w-full sm:w-auto">
+                  {/* View Bio + Icon */}
+                  <div className="flex items-center w-full sm:w-auto gap-2">
+                    <button
+                      onClick={() => handleViewBio(profile)}
+                      className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
+                    >
+                      View Bio
+                    </button>
+                    <Icon50 width={20} height={20} color="#1e5a8d" />
+                  </div>
 
-              {/* Actions (all sizes) */}
-              <div className="flex flex-col items-start gap-2 w-full sm:w-auto">
-                {/* View Bio + Icon */}
-                <div className="flex items-center w-full sm:w-auto gap-2">
+                  {/* Request Match */}
                   <button
-                    onClick={() => handleViewBio(profile)}
-                    className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
-                  >
-                    View Bio
-                  </button>
-                  <Icon50 width={20} height={20} color="#1e5a8d" />
-                </div>
+                    onClick={async () => {
+                      setSelectedProfile(profile.id);
 
-                {/* Request Match */}
-                <button
-                  onClick={async () => {
-                    setSelectedProfile(profile.id);
-
-                    // grab the up-to-date count
-                    const remaining = await fetchRemaining();
-                    // Basic user with no connects left?
-                    if (isBasic && remaining === 0) {
-                      setIsUpgradeModalOpen(true);
-                    } else {
-                      setIsOpen(true);
-                    }
-                  }}
-                  disabled={profile.hasPendingRequest}
-                  className={`
+                      // grab the up-to-date count
+                      const remaining = await fetchRemaining();
+                      // Basic user with no connects left?
+                      if (isBasic && remaining === 0) {
+                        setIsUpgradeModalOpen(true);
+                      } else {
+                        setIsOpen(true);
+                      }
+                    }}
+                    disabled={profile.hasPendingRequest}
+                    className={`
       text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
       ${profile.hasPendingRequest
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'theme-btn'
-                    }
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'theme-btn'
+                      }
     `}
-                >
-                  {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
-                </button>
+                  >
+                    {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
