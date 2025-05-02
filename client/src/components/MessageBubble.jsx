@@ -13,15 +13,6 @@ export default function MessageBubble({
         ? gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"
         : gender === "Male" ? "bg-[#E01D42]" : "bg-[#203449]";
 
-    // Determine attachment emoji
-    const renderAttachmentIcon = () => {
-        if (!msg.attachment) return null;
-        // 📎 for generic attachments, 🖼️ for images, 📹 for videos
-        if (msg.attachment.match(/\.(jpeg|jpg|gif|png|webp)$/i)) return '🖼️';
-        if (msg.attachment.match(/\.(mp4|mov|webm|wmv)$/i)) return '📹';
-        return '📎';
-    };
-
     return (
         <div
             style={{ "--bubble": bgColorClass.replace("bg-[", "").replace("]", "") }}
@@ -37,12 +28,6 @@ export default function MessageBubble({
                 ${isFirstInRun ? (isMine ? "sender" : "receiver") : ""}
               `}
         >
-            {/* attachment emoji/icon */}
-            {msg.attachment && (
-                <span className="text-xl mr-2 inline-block" aria-label="Attachment Icon" role="img">
-                    {renderAttachmentIcon()}
-                </span>
-            )}
             {msg.attachment ? (
                 <div className="max-w-full w-full rounded-lg z-50">
                     {msg.attachment.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (

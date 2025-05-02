@@ -130,9 +130,9 @@ const Match = () => {
                   const photo = opponent.photos?.[0]?.url || fallback;
 
                   function attachmentEmoji(conv) {
-                    if (!conv.last_message_attachment) return null;
-                    if (conv.last_message_type === 'image') return '🖼️';
-                    if (conv.last_message_type === 'video') return '📹';
+                    if (!conv?.last_message_attachment) return null;
+                    if (conv?.last_message_type === 'image') return '🖼️';
+                    if (conv?.last_message_type === 'video') return '📹';
                     return '📎';
                   }
 
@@ -185,7 +185,7 @@ const Match = () => {
                           <p className="text-sm text-gray-500 truncate flex items-center">
                             { /* "You:" or "Name:" label */}
                             <span className="mr-1 font-semibold">
-                              {conversation.last_sender_id === user.userId
+                              {conversation?.last_sender_id === user?.userId
                                 ? 'You:'
                                 : opponent.firstName + ':'}
                             </span>
@@ -198,11 +198,11 @@ const Match = () => {
                             )}
 
                             { /* the text of the last message */}
-                            <span className={conversation.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
-                              {conversation.last_message || 'No messages yet'}
+                            <span className={conversation?.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
+                              {conversation?.last_message || 'No messages yet'}
                             </span>
                           </p>
-                          {conversation?.unreadCount > 0 && conversation && conversation.last_sender_id !== user.userId && (
+                          {conversation?.unreadCount > 0 && conversation && conversation?.last_sender_id !== user?.userId && (
                             <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
                               {conversation.unreadCount}
                             </span>
