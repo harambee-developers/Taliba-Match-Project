@@ -329,181 +329,205 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
     return (
         <div
-          className="flex flex-col min-h-screen w-full bg-repeat bg-center"
-          style={{
-            backgroundImage:
-              user?.gender === "Male"
-                ? "url('/wallpaper_man.svg')"
-                : "url('/wallpaper_woman.svg')",
-          }}
-          loading="lazy"
+            className="flex flex-col h-screen w-full bg-repeat bg-center"
+            style={{
+                backgroundImage:
+                    user?.gender === "Male"
+                        ? "url('/wallpaper_man.svg')"
+                        : "url('/wallpaper_woman.svg')",
+            }}
+            loading="lazy"
         >
-          {/* Header */}
-          <div
-            className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static"
-          >
+            {/* Header */}
             <div
-              className="md:hidden cursor-pointer theme-bg"
-              onClick={() => navigate("/matches")}
+                className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static"
             >
-              <ChevronLeft className="w-10-h-10" />
-            </div>
-            <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
-              <img
-                src={photoUrl}
-                alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-lg font-semibold theme-bg">
-                {currentUserId
-                  ? `${receiverName[1]} ${receiverName[2]}`
-                  : "Loading..."}
-              </span>
-              {localReceiverStatus &&
-                !localReceiverStatus.isOnline &&
-                localReceiverStatus.lastSeen && (
-                  <span className="text-sm theme-bg">
-                    {formattedLastSeen}
-                  </span>
-                )}
-            </div>
-            <div className="ml-2">
-              {localReceiverStatus?.isOnline === true ? (
-                <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
-              ) : localReceiverStatus?.isOnline === false &&
-                localReceiverStatus?.lastSeen === null ? (
-                <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
-              ) : null}
-            </div>
-          </div>
-      
-          {/* Messages list */}
-          <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
-            {Object.keys(groupedMessages).length === 0 ? (
-              <div className="flex justify-center items-center h-full">
-                <p className="text-gray-400 text-center">
-                  Why not introduce yourself?
-                </p>
-              </div>
-            ) : (
-              Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
-                <div key={dateIndex}>
-                  {/* Date Header */}
-                  <div className="flex justify-center m-8">
-                    <div
-                      className={`text-white ${
-                        user?.gender === "Male"
-                          ? "bg-[#203449]"
-                          : "bg-[#E01D42]"
-                      } bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}
-                    >
-                      {date}
-                    </div>
-                  </div>
-      
-                  {/* Loop through each message */}
-                  {msgs.map((msg, index) => {
-                    const isMine = msg.sender_id === currentUserId;
-                    const prev = msgs[index - 1];
-                    const isFirstInRun =
-                      !prev || prev.sender_id !== msg.sender_id;
-      
-                    return (
-                      <div
-                        key={msg.id ?? index}
-                        className={`flex w-full ${
-                          isMine ? "justify-end" : "justify-start"
-                        } mb-2`}
-                      >
-                        {/* Bubble */}
-                        <MessageBubble
-                          msg={msg}
-                          isMine={isMine}
-                          isFirstInRun={isFirstInRun}
-                          gender={user?.gender}
-                        />
-      
-                        {/* Timestamp & status */}
-                        <div className="ml-2 text-sm text-gray-600">
-                          <span>
-                            {new Date(msg.createdAt).toLocaleTimeString(
-                              "en-GB",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </span>
-                          {index === msgs.length - 1 &&
-                            isMine && (
-                              <p className="text-xs text-[#203449]">
-                                {msg.status}
-                              </p>
-                            )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div
+                    className="md:hidden cursor-pointer theme-bg"
+                    onClick={() => navigate("/matches")}
+                >
+                    <ChevronLeft className="w-10-h-10" />
                 </div>
-              ))
-            )}
-            {isTyping.isTyping && (
-              <TypingIndicator
-                isTyping
-                gender={user?.gender}
-              />
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-      
-          {/* Input area */}
-          <div className="md:p-10 flex items-center space-x-2 p-2">
-            {/* File Attachment */}
-            <label
-              htmlFor="file-attachment"
-              className="cursor-pointer mr-2 group"
-            >
-              {/* ... SVG, input, Modal ... */}
-            </label>
-      
-            {/* Text input */}
-            <input
-              type="text"
-              name="chatbox"
-              id="chatbox"
-              disabled={isUploading}
-              className="flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300"
-              placeholder={
-                isUploading
-                  ? "Uploading..."
-                  : "Type a message..."
-              }
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                handleTyping();
-              }}
-              onKeyDown={(e) =>
-                e.key === "Enter" && sendMessage()
-              }
-            />
-      
-            {/* Send button */}
-            <button
-              onClick={sendMessage}
-              disabled={isUploading}
-              className={`flex-shrink-0 w-10 h-10 rounded-lg ${
-                user.gender === "Male"
-                  ? "text-[#203449] hover:text-blue-400"
-                  : "text-[#E01D42] hover:text-red-300"
-              }`}
-            >
-              <Send className="w-full h-full" />
-            </button>
-          </div>
+                <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
+                    <img
+                        src={photoUrl}
+                        alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                    />
+                </div>
+                <div className="flex flex-col items-start">
+                    <span className="text-lg font-semibold theme-bg">
+                        {currentUserId
+                            ? `${receiverName[1]} ${receiverName[2]}`
+                            : "Loading..."}
+                    </span>
+                    {localReceiverStatus &&
+                        !localReceiverStatus.isOnline &&
+                        localReceiverStatus.lastSeen && (
+                            <span className="text-sm theme-bg">
+                                {formattedLastSeen}
+                            </span>
+                        )}
+                </div>
+                <div className="ml-2">
+                    {localReceiverStatus?.isOnline === true ? (
+                        <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+                    ) : localReceiverStatus?.isOnline === false &&
+                        localReceiverStatus?.lastSeen === null ? (
+                        <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
+                    ) : null}
+                </div>
+            </div>
+
+            {/* Messages list */}
+            <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
+                {Object.keys(groupedMessages).length === 0 ? (
+                    <div className="flex justify-center items-center h-full">
+                        <p className="text-gray-400 text-center">
+                            Why not introduce yourself?
+                        </p>
+                    </div>
+                ) : (
+                    Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
+                        <div key={dateIndex}>
+                            {/* Date Header */}
+                            <div className="flex justify-center m-8">
+                                <div
+                                    className={`text-white ${user?.gender === "Male"
+                                            ? "bg-[#203449]"
+                                            : "bg-[#E01D42]"
+                                        } bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}
+                                >
+                                    {date}
+                                </div>
+                            </div>
+
+                            {/* Loop through each message */}
+                            {msgs.map((msg, index) => {
+                                const isMine = msg.sender_id === currentUserId;
+                                const prev = msgs[index - 1];
+                                const isFirstInRun =
+                                    !prev || prev.sender_id !== msg.sender_id;
+
+                                return (
+                                    <div
+                                        key={msg.id ?? index}
+                                        className={`flex w-full ${isMine ? "justify-end" : "justify-start"
+                                            } mb-2`}
+                                    >
+                                        {/* Bubble */}
+                                        <MessageBubble
+                                            msg={msg}
+                                            isMine={isMine}
+                                            isFirstInRun={isFirstInRun}
+                                            gender={user?.gender}
+                                        />
+
+                                        {/* Timestamp & status */}
+                                        <div className="ml-2 text-sm text-gray-600">
+                                            <span>
+                                                {new Date(msg.createdAt).toLocaleTimeString(
+                                                    "en-GB",
+                                                    {
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    }
+                                                )}
+                                            </span>
+                                            {index === msgs.length - 1 &&
+                                                isMine && (
+                                                    <p className="text-xs text-[#203449]">
+                                                        {msg.status}
+                                                    </p>
+                                                )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))
+                )}
+                {isTyping.isTyping && (
+                    <TypingIndicator
+                        isTyping
+                        gender={user?.gender}
+                    />
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input area */}
+            <div className="md:p-10 flex items-center space-x-2 p-2">
+                {/* File Attachment */}
+                <label htmlFor="file-attachment" className="cursor-pointer mr-2 group">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-12 h-12"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="12"
+                            className={`transition-colors duration-200 ${user.gender === "Male" ? "fill-[#203449] group-hover:fill-blue-400" : "fill-[#E01D42] group-hover:fill-red-300"}`}
+                        />
+                        <path
+                            fill="white"
+                            d="M16.5 9.5l-6 6c-.8.8-2 .8-2.8 0-.8-.8-.8-2 0-2.8l6-6c1.2-1.2 3.1-1.2 4.3 0 1.2 1.2 1.2 3.1 0 4.3l-5 5c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l5-5c.6-.6.6-1.6 0-2.3-.6-.6-1.6-.6-2.3 0z"
+                        />
+                    </svg>
+                    <input
+                        type="file"
+                        id="file-attachment"
+                        accept="image/*,video/*"
+                        ref={fileInputRef}
+                        disabled={isUploading}
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+                    <MessageModal
+                        isOpen={isOpen}
+                        onClose={() => setIsOpen(false)}
+                        title="Guidelines"
+                        text="Only send a shariah compliant picture ensuring your 'awrah is covered and you observe modesty"
+                    />
+                </label>
+
+                {/* Text input */}
+                <input
+                    type="text"
+                    name="chatbox"
+                    id="chatbox"
+                    disabled={isUploading}
+                    className="flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300"
+                    placeholder={
+                        isUploading
+                            ? "Uploading..."
+                            : "Type a message..."
+                    }
+                    value={input}
+                    onChange={(e) => {
+                        setInput(e.target.value);
+                        handleTyping();
+                    }}
+                    onKeyDown={(e) =>
+                        e.key === "Enter" && sendMessage()
+                    }
+                />
+
+                {/* Send button */}
+                <button
+                    onClick={sendMessage}
+                    disabled={isUploading}
+                    className={`flex-shrink-0 w-10 h-10 rounded-lg ${user.gender === "Male"
+                            ? "text-[#203449] hover:text-blue-400"
+                            : "text-[#E01D42] hover:text-red-300"
+                        }`}
+                >
+                    <Send className="w-full h-full" />
+                </button>
+            </div>
         </div>
-      );
+    );
 }

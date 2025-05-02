@@ -13,6 +13,7 @@ import FilterModal from "../components/modals/FilterModal";
 import { useSocket } from "../components/contexts/SocketContext";
 import ProfileModal from "../components/modals/ProfileModal";
 import { useDebouncedCallback } from "use-debounce";
+import { useNavigate } from "react-router-dom";
 
 function ProfileImage({ src, alt, fallback }) {
   const [errored, setErrored] = useState(false);
@@ -44,14 +45,38 @@ const Search = () => {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
+  const [remainingConnects, setRemainingConnects] = useState(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const { user } = useAuth()
   const { socket } = useSocket()
   const { showAlert, alert } = useAlert()
+  const navigate = useNavigate()
 
   const [filters, setFilters] = useState({ ageRange: "", location: "", ethnicity: "", senderId: user?._id, alreadyMatched: false });
   const [pendingFilters, setPendingFilters] = useState(filters);
   const abortControllerRef = useRef(null);
+
+  // Fetch remaining when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+      fetchRemaining()
+  }, [isOpen]);
+
+  const fetchRemaining = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/match/remaining-requests/${user?.userId}`,
+        { credentials: 'include' }
+      );
+      const { remaining } = await res.json();
+      setRemainingConnects(remaining);
+      return remaining;
+    } catch {
+      setRemainingConnects(0);
+      return 0;
+    }
+  };
 
   const fetchProfiles = useCallback(async () => {
     // Cancel any previous request
@@ -103,7 +128,7 @@ const Search = () => {
           method: "POST",
           credentials: "include",
           headers: { 'Accept': 'application/json', "Content-Type": "application/json", },
-          body: JSON.stringify({ sender_id: user.userId, receiver_id: profileId })
+          body: JSON.stringify({ sender_id: user?.userId, receiver_id: profileId })
         }
       )
       if (!response.ok) {
@@ -152,6 +177,17 @@ const Search = () => {
     setSelectedProfile(profile); // this will be used to get the image
     setIsProfileModalOpen(true);
   };
+
+  // Determine if they’re on basic
+  const isBasic = user?.subscription?.status !== 'active';
+
+  // Build the modal text
+  const modalText = isBasic
+    ? `You are about to submit a match request.  
+Remaining connects: ${remainingConnects}.  
+Would you like to continue?`
+    : `You are about to submit a match request.  
+Would you like to continue?`;
 
   const countActiveFilters = () => {
     // Skip system-managed fields like senderId and alreadyMatched
@@ -273,7 +309,11 @@ const Search = () => {
           <div className="flex items-end">
             <button
               className="relative flex items-center gap-2 text-base px-3 py-2"
-              onClick={() => setIsFilterModalOpen(true)}
+              onClick={() => {
+                if (!isBasic) setIsFilterModalOpen(true);
+                else showAlert('Upgrade to a paid plan to use advanced filters', 'error')
+              }
+              }
             >
               More Filters
               {countActiveFilters() > 0 && (
@@ -364,9 +404,17 @@ const Search = () => {
 
                 {/* Request Match */}
                 <button
-                  onClick={() => {
-                    setIsOpen(true)
-                    setSelectedProfile(profile.id)
+                  onClick={async () => {
+                    setSelectedProfile(profile.id);
+
+                    // grab the up-to-date count
+                    const remaining = await fetchRemaining();
+                    // Basic user with no connects left?
+                    if (isBasic && remaining === 0) {
+                      setIsUpgradeModalOpen(true);
+                    } else {
+                      setIsOpen(true);
+                    }
                   }}
                   disabled={profile.hasPendingRequest}
                   className={`
@@ -410,6 +458,19 @@ const Search = () => {
         }}
       />
 
+      {/* Upgrade Prompt Modal */}
+      <MessageModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Connects Limit Reached"
+        text="You’ve used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
+        onConfirm={() => {
+          // send them to /subscribe
+          navigate('/subscribe');
+        }}
+        confirmText="View Pricing"
+      />
+
       {/* Message Modal */}
       <MessageModal
         isOpen={isOpen}
@@ -419,7 +480,7 @@ const Search = () => {
           handleMatchRequest(selectedProfile);
           setIsOpen(false);
         }}
-        text="You are about to submit a match request. Would you like to continue?"
+        text={modalText}
       />
     </div>
   );

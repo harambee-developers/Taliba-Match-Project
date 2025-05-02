@@ -266,7 +266,7 @@ router.post("/create-checkout-session", express.json(), async (req, res) => {
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: user.email,
       success_url: `${BACKEND_URL}/api/payments/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/cancel`,
+      cancel_url: `${FRONTEND_URL}/`,
       metadata: { userId, subscriptionType },
     });
 
