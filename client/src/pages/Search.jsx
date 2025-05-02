@@ -365,11 +365,31 @@ Would you like to continue?`;
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
-                      <span>{locationCountry?.icon || '🌍'}</span>
+                    {locationCountry?.code ? (
+                      <img
+                        src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
+                        alt={`${locationCountry.label} flag`}
+                        width={20}
+                        height={15}
+                        className="rounded-sm"
+                      />
+                    ) : (
+                      <span>🌍</span>
+                    )}
                       <span className="truncate">{profile.location || 'Location not specified'}</span>
                     </div>
                     <div className="flex items-center gap-1 truncate">
-                      <span>{nationalityCountry?.icon || '🌐'}</span>
+                    {nationalityCountry?.code ? (
+                      <img
+                        src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
+                        alt={`${nationalityCountry.label} flag`}
+                        width={20}
+                        height={15}
+                        className="rounded-sm"
+                      />
+                    ) : (
+                      <span>🌐</span>
+                    )}
                       <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
                     </div>
                   </div>
