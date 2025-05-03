@@ -17,6 +17,7 @@ import {
   languages,
   yesNoOptions
 } from "../data/fieldData";
+import citiesByCountry from '../data/citiesByCountry';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ const Profile = () => {
     // Card 4 - Life Situation
     children: "",
     occupation: "",
-    location: "",
+    location: { country: "", city: "" },
     openToHijrah: "",
     hijrahDestination: "",
     maritalStatus: "",
@@ -79,6 +80,7 @@ const Profile = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [availableCities, setAvailableCities] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -112,7 +114,7 @@ const Profile = () => {
         // Card 4 - Life Situation
         children: user.profile?.children || "",
         occupation: user.occupation || "",
-        location: user.location || "",
+        location: { country: user.location?.country || "", city: user.location?.city || "" },
         openToHijrah: user.profile?.openToHijrah || "",
         hijrahDestination: user.profile?.hijrahDestination || "",
         maritalStatus: user.maritalStatus || "",
@@ -283,6 +285,21 @@ const Profile = () => {
     "Life Situation",
     "Appearance"
   ];
+
+  const handleCountryChange = (e) => {
+    const selectedCountry = e.target.value;
+    const cities = selectedCountry ? citiesByCountry[selectedCountry] || [] : [];
+    setAvailableCities(cities);
+    handleInputChange({
+      target: {
+        name: 'location',
+        value: { 
+          country: selectedCountry,
+          city: '' // Reset city when country changes
+        }
+      }
+    });
+  };
 
   const renderCardContent = () => {
     const commonClasses = "w-full p-4 border-2 border-[#FFE1F3] rounded-xl focus:outline-none focus:border-[#E01D42] transition-colors";
@@ -793,17 +810,55 @@ const Profile = () => {
                 Location
               </label>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="location"
-                  value={profileData.location}
-                  onChange={handleInputChange}
-                  className={commonClasses}
-                  placeholder="Your location..."
-                />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Country</label>
+                    <select
+                      name="location.country"
+                      value={profileData.location?.country || ""}
+                      onChange={handleCountryChange}
+                      className={commonClasses}
+                    >
+                      <option value="">Select Country</option>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.label}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {availableCities.length > 0 && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">City</label>
+                      <select
+                        name="location.city"
+                        value={profileData.location?.city || ""}
+                        onChange={(e) => handleInputChange({
+                          target: {
+                            name: 'location',
+                            value: { 
+                              ...profileData.location,
+                              city: e.target.value
+                            }
+                          }
+                        })}
+                        className={commonClasses}
+                      >
+                        <option value="">Select City</option>
+                        {availableCities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.location || "Not specified"}
+                  {profileData.location?.city && profileData.location?.country 
+                    ? `${profileData.location.city}, ${profileData.location.country}`
+                    : "Not specified"}
                 </div>
               )}
             </div>
