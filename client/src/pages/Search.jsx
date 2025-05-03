@@ -14,6 +14,7 @@ import { useSocket } from "../components/contexts/SocketContext";
 import ProfileModal from "../components/modals/ProfileModal";
 import { useDebouncedCallback } from "use-debounce";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 
 function ProfileImage({ src, alt, fallback }) {
   const [errored, setErrored] = useState(false);
@@ -193,7 +194,7 @@ const Search = () => {
     setIsProfileModalOpen(true);
   };
 
-  // Determine if they’re on basic
+  // Determine if they're on basic
   const isBasic = user?.subscription?.status !== 'active';
 
   // Build the modal text
@@ -261,6 +262,72 @@ Would you like to continue?`;
     setIsFilterModalOpen(false);
   };
 
+  const pinkSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      backgroundColor: '#FFF6FB',
+      borderColor: '#d1d5db',
+      color: '#E01D42',
+      minHeight: '48px',
+      borderRadius: '0.75rem',
+      borderWidth: '2px',
+      boxShadow: state.isFocused ? '0 0 0 0.5px #FFE1F3' : undefined,
+      '&:hover': { borderColor: '#E01D42' }
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? '#E01D42'
+        : state.isFocused
+        ? '#FFE1F3'
+        : '#FFF6FB',
+      color: state.isSelected
+        ? '#FFF'
+        : '#4A0635',
+      '&:hover': {
+        backgroundColor: '#FFE1F3',
+        color: '#4A0635',
+      },
+    }),
+    multiValue: (base) => ({ ...base, backgroundColor: '#FFE1F3', borderRadius: '0.5rem' }),
+    multiValueLabel: (base) => ({ ...base, color: '#4A0635', padding: '2px 8px' }),
+    multiValueRemove: (base) => ({ ...base, color: '#E01D42', ':hover': { backgroundColor: '#E01D42', color: 'white' } }),
+    menu: (base) => ({ ...base, zIndex: 9999 })
+  };
+  const blueSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      backgroundColor: '#F0F6FF',
+      borderColor: '#d1d5db',
+      color: '#1A495D',
+      minHeight: '48px',
+      borderRadius: '0.75rem',
+      borderWidth: '2px',
+      boxShadow: state.isFocused ? '0 0 0 0.5px #B3D8FF' : undefined,
+      '&:hover': { borderColor: '#1A495D' }
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? '#1A495D'
+        : state.isFocused
+        ? '#B3D8FF'
+        : '#F0F6FF',
+      color: state.isSelected
+        ? '#FFF'
+        : '#1A495D',
+      '&:hover': {
+        backgroundColor: '#B3D8FF',
+        color: '#1A495D',
+      },
+    }),
+    multiValue: (base) => ({ ...base, backgroundColor: '#B3D8FF', borderRadius: '0.5rem' }),
+    multiValueLabel: (base) => ({ ...base, color: '#1A495D', padding: '2px 8px' }),
+    multiValueRemove: (base) => ({ ...base, color: '#1A495D', ':hover': { backgroundColor: '#1A495D', color: 'white' } }),
+    menu: (base) => ({ ...base, zIndex: 9999 })
+  };
+  const genderSelectStyles = user?.gender?.toLowerCase() === 'female' ? pinkSelectStyles : blueSelectStyles;
+
   return (
     <div className="px-4 py-6 max-w-[1600px] mx-auto min-h-screen">
       {alert && <Alert />}
@@ -315,20 +382,23 @@ Would you like to continue?`;
           <div className="flex flex-col flex-1">
             <label className="text-sm mb-1">Ethnicity</label>
             <div className="relative">
-              <select
+              <Select
+                isMulti
                 name="ethnicity"
-                value={filters.ethnicity}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
-              >
-                <option value="">Select</option>
-                {ethnicityOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
+                value={filters.ethnicity ? filters.ethnicity.map(eth => ({ value: eth, label: eth })) : null}
+                onChange={(selectedOptions) => handleFilterChange({
+                  target: {
+                    name: 'ethnicity',
+                    value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                  }
+                })}
+                options={ethnicityOptions}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select ethnicities..."
+                isSearchable={true}
+                styles={genderSelectStyles}
+              />
             </div>
           </div>
 
@@ -540,20 +610,7 @@ Would you like to continue?`;
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="Connects Limit Reached"
-        text="You’ve used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
-        onConfirm={() => {
-          // send them to /subscribe
-          navigate('/subscribe');
-        }}
-        confirmText="View Pricing"
-      />
-
-      {/* Upgrade Prompt Modal */}
-      <MessageModal
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        title="Connects Limit Reached"
-        text="You’ve used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
+        text="You've used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
         onConfirm={() => {
           // send them to /subscribe
           navigate('/subscribe');

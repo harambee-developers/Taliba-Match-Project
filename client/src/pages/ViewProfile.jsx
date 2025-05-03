@@ -139,7 +139,9 @@ const ViewProfile = () => {
                 Ethnicity
               </label>
               <div className={viewClasses}>
-                {ethnicityOptions.find(opt => opt.value === profileData.ethnicity)?.label || "Not specified"}
+                {profileData.ethnicity && profileData.ethnicity.length > 0
+                  ? profileData.ethnicity.join(', ')
+                  : "Not specified"}
               </div>
             </div>
 

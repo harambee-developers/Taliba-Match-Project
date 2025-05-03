@@ -3,7 +3,7 @@ import Select from 'react-select';
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import occupationData from '../data/Occupations.json';
-import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions, openToHijrahOptions } from '../data/fieldData'
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions, openToHijrahOptions, languages } from '../data/fieldData'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -14,60 +14,61 @@ const usePageTitle = (title) => {
   }, [title]);
 };
 
-const customSelectStyles = {
-  control: (provided) => ({
+export const customSelectStyles = {
+  control: (provided, state) => ({
     ...provided,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#1A495D',
-    color: '#1A495D',
-    input: {
-      color: '#1A495D',
+    minHeight: '56px', // match your input/select height
+    borderRadius: '1rem', // match your rounded-xl
+    borderColor: state.isFocused ? '#E01D42' : '#FFE1F3', // match your border color
+    boxShadow: 'none',
+    paddingLeft: '1rem', // match your p-4
+    paddingRight: '1rem',
+    fontSize: '1.125rem', // match text-lg
+    backgroundColor: 'white',
+    '&:hover': {
+      borderColor: '#E01D42',
     },
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    padding: 0,
   }),
   input: (provided) => ({
     ...provided,
-    color: '#1A495D',
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: '#1A495D',
-  }),
-  menu: (provided) => ({
-    ...provided,
-    backgroundColor: '#FFFFFF',
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected ? '#1A495D' : '#FFFFFF',
-    color: state.isSelected ? '#FFFFFF' : '#1A495D',
-    '&:hover': {
-      backgroundColor: '#1A495D',
-      color: '#FFFFFF',
-    },
-  }),
-  noOptionsMessage: (provided) => ({
-    ...provided,
-    color: '#1A495D',
-  }),
-  multiValue: (provided) => ({
-    ...provided,
-    backgroundColor: '#1A495D',
-  }),
-  multiValueLabel: (provided) => ({
-    ...provided,
-    color: '#FFFFFF',
-  }),
-  multiValueRemove: (provided) => ({
-    ...provided,
-    color: '#FFFFFF',
-    ':hover': {
-      backgroundColor: '#1A495D',
-      color: '#FFFFFF',
-    },
+    margin: 0,
+    padding: 0,
   }),
   singleValue: (provided) => ({
     ...provided,
-    color: '#1A495D',
+    color: '#374151', // text-gray-700
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#a0aec0', // text-gray-400
+    fontSize: '1.125rem',
+  }),
+  multiValue: (provided) => ({
+    ...provided,
+    backgroundColor: '#FFE1F3',
+    borderRadius: '0.5rem',
+    padding: '2px 6px',
+  }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    color: '#4A0635',
+    fontWeight: 500,
+  }),
+  multiValueRemove: (provided) => ({
+    ...provided,
+    color: '#E01D42',
+    ':hover': {
+      backgroundColor: '#E01D42',
+      color: 'white',
+    },
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 20,
   }),
 };
 
@@ -108,12 +109,18 @@ const RegisterPage = () => {
     weight: '',
     avatar: '',
     customImage: null,
+    language: [],
   };
   const [formData, setFormData] = useState(() => {
     // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
     // accidental page refresh.
     const savedData = localStorage.getItem('formData');
-    return savedData ? JSON.parse(savedData) : defaultFormData
+    const parsed = savedData ? JSON.parse(savedData) : defaultFormData;
+    // Ensure ethnicity is always an array
+    return {
+      ...parsed,
+      ethnicity: Array.isArray(parsed.ethnicity) ? parsed.ethnicity : [],
+    };
   });
   const { alert, showAlert } = useAlert()
   const [currentSection, setCurrentSection] = useState(1);
@@ -495,6 +502,7 @@ const RegisterPage = () => {
     if (!formData.location) errors.location = "Location is required";
     if (!formData.ethnicity || formData.ethnicity.length === 0) errors.ethnicity = "Ethnicity is required";
     if (!formData.nationality) errors.nationality = "Nationality is required";
+    if (!formData.language || formData.language.length === 0) errors.language = "Language is required";
     
     // Check if avatar is selected
     if (!formData.avatar) {
@@ -787,28 +795,17 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Ethnicity?<span className="text-red-600 ml-1">*</span></label>
               <Select
+                isMulti
                 options={ethnicityOptions}
-                value={ethnicityOptions.find(option => option.value === formData.ethnicity) || null}
+                value={Array.isArray(formData.ethnicity) ? formData.ethnicity.map(eth => ({ value: eth, label: eth })) : []}
                 placeholder="Select ethnicity..."
-                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions.value || '')}
+                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions ? selectedOptions.map(option => option.value) : [])}
                 styles={customSelectStyles}
               />
               {errors.ethnicity && (
                 <p className="mt-2 text-sm text-red-600">{errors.ethnicity}</p>
               )}
             </div>
-            {formData.ethnicity === 'Other' && (
-              <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">Specify Ethnicity<span className="text-red-600 ml-1">*</span></label>
-                <input
-                  type="text"
-                  name="ethnicity"
-                  onChange={(e) => handleInputChange('ethnicity', e.target.value)}
-                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
-                  placeholder="Specify ethnicity...."
-                />
-              </div>
-            )}
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Nationality?<span className="text-red-600 ml-1">*</span></label>
               <Select
@@ -820,6 +817,24 @@ const RegisterPage = () => {
               />
               {errors.nationality && (
                 <p className="mt-2 text-sm text-red-600">{errors.nationality}</p>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Languages Spoken<span className="text-red-600 ml-1">*</span></label>
+              <Select
+                isMulti
+                name="language"
+                value={Array.isArray(formData.language) ? formData.language.map(lang => ({ value: lang, label: lang })) : []}
+                onChange={(selectedOptions) => handleInputChange('language', selectedOptions ? selectedOptions.map(option => option.value) : [])}
+                options={languages.map(lang => ({ value: lang, label: lang }))}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select languages..."
+                isSearchable={true}
+                styles={customSelectStyles}
+              />
+              {errors.language && (
+                <p className="mt-2 text-sm text-red-600">{errors.language}</p>
               )}
             </div>
             <div className="flex flex-col">

@@ -1,6 +1,7 @@
 // components/FilterModal.js
 import React from "react";
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, occupationOptions } from '../../data/fieldData'
+import Select from 'react-select'
 
 const FilterModal = ({ isOpen, onClose, filters, onChange, onApply, onClear }) => {
     const countryOptions = countries.map((country) => ({
@@ -53,19 +54,23 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply, onClear }) =
 
                     <div>
                         <label className="block text-sm font-medium mb-1">Ethnicity</label>
-                        <select
+                        <Select
+                            isMulti
                             name="ethnicity"
-                            value={filters.ethnicity || ""}
-                            onChange={onChange}
-                            className="w-full border-2 border-[#203449] rounded-md p-2"
-                        >
-                            <option value="">Select ethnicity</option>
-                            {ethnicityOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                            value={filters.ethnicity ? filters.ethnicity.map(eth => ({ value: eth, label: eth })) : null}
+                            onChange={(selectedOptions) => onChange({
+                                target: {
+                                    name: 'ethnicity',
+                                    value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                                }
+                            })}
+                            options={ethnicityOptions}
+                            className="react-select-container"
+                            classNamePrefix="react-select"
+                            placeholder="Select ethnicities..."
+                            isSearchable={true}
+                            styles={customSelectStyles}
+                        />
                     </div>
 
                     <div>

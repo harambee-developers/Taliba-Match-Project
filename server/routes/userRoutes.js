@@ -70,8 +70,8 @@ router.get("/search", authMiddleware, async (req, res) => {
       query.location = location;
     }
 
-    if (ethnicity) {
-      query.ethnicity = ethnicity;
+    if (ethnicity && ethnicity.length > 0) {
+      query.ethnicity = { $in: ethnicity };
     }
 
     // Add filters for profile fields
@@ -117,7 +117,7 @@ router.get("/search", authMiddleware, async (req, res) => {
       });
     }
 
-    // Optional: verify it’s a valid ObjectId format
+    // Optional: verify it's a valid ObjectId format
     if (!mongoose.Types.ObjectId.isValid(senderId)) {
       return res.status(400).json({ message: "Invalid senderId format" });
     }
@@ -423,7 +423,7 @@ router.put("/profile/:userId", async (req, res) => {
       dob,
       email,
       phone,
-      ethnicity,
+      ethnicity: ethnicity || [], // Ensure ethnicity is always an array
       nationality,
       occupation,
       location,
