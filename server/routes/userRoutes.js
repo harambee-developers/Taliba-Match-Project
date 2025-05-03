@@ -67,7 +67,15 @@ router.get("/search", authMiddleware, async (req, res) => {
     let query = { role: "user" };
 
     if (location) {
-      query.location = location;
+      if (typeof location === 'string') {
+        // Handle legacy format (just country)
+        query.location = { country: location };
+      } else if (location.country) {
+        query['location.country'] = location.country;
+        if (location.city) {
+          query['location.city'] = location.city;
+        }
+      }
     }
 
     if (ethnicity && ethnicity.length > 0) {
