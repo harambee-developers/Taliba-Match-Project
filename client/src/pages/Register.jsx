@@ -3,7 +3,7 @@ import Select from 'react-select';
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import occupationData from '../data/Occupations.json';
-import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions } from '../data/fieldData'
+import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, dressStyleOptions, polygamyOptions, madhabOptions, openToHijrahOptions, languages } from '../data/fieldData'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
@@ -14,60 +14,61 @@ const usePageTitle = (title) => {
   }, [title]);
 };
 
-const customSelectStyles = {
-  control: (provided) => ({
+export const customSelectStyles = {
+  control: (provided, state) => ({
     ...provided,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#1A495D',
-    color: '#1A495D',
-    input: {
-      color: '#1A495D',
+    minHeight: '56px', // match your input/select height
+    borderRadius: '1rem', // match your rounded-xl
+    borderColor: state.isFocused ? '#E01D42' : '#FFE1F3', // match your border color
+    boxShadow: 'none',
+    paddingLeft: '1rem', // match your p-4
+    paddingRight: '1rem',
+    fontSize: '1.125rem', // match text-lg
+    backgroundColor: 'white',
+    '&:hover': {
+      borderColor: '#E01D42',
     },
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    padding: 0,
   }),
   input: (provided) => ({
     ...provided,
-    color: '#1A495D',
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: '#1A495D',
-  }),
-  menu: (provided) => ({
-    ...provided,
-    backgroundColor: '#FFFFFF',
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected ? '#1A495D' : '#FFFFFF',
-    color: state.isSelected ? '#FFFFFF' : '#1A495D',
-    '&:hover': {
-      backgroundColor: '#1A495D',
-      color: '#FFFFFF',
-    },
-  }),
-  noOptionsMessage: (provided) => ({
-    ...provided,
-    color: '#1A495D',
-  }),
-  multiValue: (provided) => ({
-    ...provided,
-    backgroundColor: '#1A495D',
-  }),
-  multiValueLabel: (provided) => ({
-    ...provided,
-    color: '#FFFFFF',
-  }),
-  multiValueRemove: (provided) => ({
-    ...provided,
-    color: '#FFFFFF',
-    ':hover': {
-      backgroundColor: '#1A495D',
-      color: '#FFFFFF',
-    },
+    margin: 0,
+    padding: 0,
   }),
   singleValue: (provided) => ({
     ...provided,
-    color: '#1A495D',
+    color: '#374151', // text-gray-700
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#a0aec0', // text-gray-400
+    fontSize: '1.125rem',
+  }),
+  multiValue: (provided) => ({
+    ...provided,
+    backgroundColor: '#FFE1F3',
+    borderRadius: '0.5rem',
+    padding: '2px 6px',
+  }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    color: '#4A0635',
+    fontWeight: 500,
+  }),
+  multiValueRemove: (provided) => ({
+    ...provided,
+    color: '#E01D42',
+    ':hover': {
+      backgroundColor: '#E01D42',
+      color: 'white',
+    },
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 20,
   }),
 };
 
@@ -108,12 +109,18 @@ const RegisterPage = () => {
     weight: '',
     avatar: '',
     customImage: null,
+    language: [],
   };
   const [formData, setFormData] = useState(() => {
     // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
     // accidental page refresh.
     const savedData = localStorage.getItem('formData');
-    return savedData ? JSON.parse(savedData) : defaultFormData
+    const parsed = savedData ? JSON.parse(savedData) : defaultFormData;
+    // Ensure ethnicity is always an array
+    return {
+      ...parsed,
+      ethnicity: Array.isArray(parsed.ethnicity) ? parsed.ethnicity : [],
+    };
   });
   const { alert, showAlert } = useAlert()
   const [currentSection, setCurrentSection] = useState(1);
@@ -134,9 +141,8 @@ const RegisterPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   
-  // Add state for email and phone validation
+  // Add state for email validation
   const [emailValid, setEmailValid] = useState(null);
-  const [phoneValid, setPhoneValid] = useState(null);
   
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -322,11 +328,6 @@ const RegisterPage = () => {
         validateEmail(value);
       }
       
-      // Phone validation
-      if (field === 'phone') {
-        validatePhone(value);
-      }
-      
       return updatedData;
     });
   };
@@ -341,19 +342,6 @@ const RegisterPage = () => {
     // More comprehensive email regex
     const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     setEmailValid(emailRegex.test(email));
-  };
-  
-  // Phone validation function
-  const validatePhone = (phone) => {
-    if (!phone) {
-      setPhoneValid(null);
-      return;
-    }
-    
-    // Allow different international formats with optional country codes
-    // This accepts formats like: +1234567890, (123) 456-7890, 123-456-7890, 123.456.7890, etc.
-    const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-    setPhoneValid(phoneRegex.test(phone));
   };
 
   const nextSection = () => {
@@ -510,20 +498,11 @@ const RegisterPage = () => {
         errors.email = "Please enter a valid email address";
       }
     }
-    
-    if (!formData.phone) {
-      errors.phone = "Phone number is required";
-    } else {
-      // Phone validation
-      const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        errors.phone = "Please enter a valid phone number";
-      }
-    }
-    
+    if (!formData.phone) errors.phone = "Phone number is required";
     if (!formData.location) errors.location = "Location is required";
     if (!formData.ethnicity || formData.ethnicity.length === 0) errors.ethnicity = "Ethnicity is required";
     if (!formData.nationality) errors.nationality = "Nationality is required";
+    if (!formData.language || formData.language.length === 0) errors.language = "Language is required";
     
     // Check if avatar is selected
     if (!formData.avatar) {
@@ -762,33 +741,16 @@ const RegisterPage = () => {
             </div>
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Please enter your phone number<span className="text-red-600 ml-1">*</span></label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`p-3 border rounded-md focus:outline-none focus:ring-2 w-full ${
-                    phoneValid === true ? 'border-green-500 focus:ring-green-500' : 
-                    phoneValid === false ? 'border-red-500 focus:ring-red-500' : 
-                    'border-[#1A495D] focus:ring-[#1A495D]'
-                  } bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70`}
-                  placeholder="e.g., +1234567890 or (123) 456-7890"
-                />
-                {phoneValid === true && (
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                )}
-              </div>
-              {errors.phone ? (
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                placeholder="Enter your phone number..."
+              />
+              {errors.phone && (
                 <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
-              ) : phoneValid === false && formData.phone ? (
-                <p className="mt-2 text-sm text-red-600">Please enter a valid phone number</p>
-              ) : (
-                <p className="mt-2 text-xs text-gray-500">Include country code for international numbers (e.g., +44 for UK)</p>
               )}
             </div>
             <div className="flex flex-col">
@@ -807,8 +769,8 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
-                options={childrenOptions}
-                value={childrenOptions.find(option => option.value === formData.openToHijrah) || null}
+                options={openToHijrahOptions}
+                value={openToHijrahOptions.find(option => option.value === formData.openToHijrah) || null}
                 placeholder="Select an option..."
                 onChange={(option) => handleInputChange('openToHijrah', option ? option.value : '')}
                 styles={customSelectStyles}
@@ -833,28 +795,17 @@ const RegisterPage = () => {
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Ethnicity?<span className="text-red-600 ml-1">*</span></label>
               <Select
+                isMulti
                 options={ethnicityOptions}
-                value={ethnicityOptions.find(option => option.value === formData.ethnicity) || null}
+                value={Array.isArray(formData.ethnicity) ? formData.ethnicity.map(eth => ({ value: eth, label: eth })) : []}
                 placeholder="Select ethnicity..."
-                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions.value || '')}
+                onChange={(selectedOptions) => handleInputChange('ethnicity', selectedOptions ? selectedOptions.map(option => option.value) : [])}
                 styles={customSelectStyles}
               />
               {errors.ethnicity && (
                 <p className="mt-2 text-sm text-red-600">{errors.ethnicity}</p>
               )}
             </div>
-            {formData.ethnicity === 'Other' && (
-              <div className="flex flex-col">
-                <label className="text-gray-600 mb-2">Specify Ethnicity<span className="text-red-600 ml-1">*</span></label>
-                <input
-                  type="text"
-                  name="ethnicity"
-                  onChange={(e) => handleInputChange('ethnicity', e.target.value)}
-                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
-                  placeholder="Specify ethnicity...."
-                />
-              </div>
-            )}
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">What is your Nationality?<span className="text-red-600 ml-1">*</span></label>
               <Select
@@ -866,6 +817,24 @@ const RegisterPage = () => {
               />
               {errors.nationality && (
                 <p className="mt-2 text-sm text-red-600">{errors.nationality}</p>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Languages Spoken<span className="text-red-600 ml-1">*</span></label>
+              <Select
+                isMulti
+                name="language"
+                value={Array.isArray(formData.language) ? formData.language.map(lang => ({ value: lang, label: lang })) : []}
+                onChange={(selectedOptions) => handleInputChange('language', selectedOptions ? selectedOptions.map(option => option.value) : [])}
+                options={languages.map(lang => ({ value: lang, label: lang }))}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select languages..."
+                isSearchable={true}
+                styles={customSelectStyles}
+              />
+              {errors.language && (
+                <p className="mt-2 text-sm text-red-600">{errors.language}</p>
               )}
             </div>
             <div className="flex flex-col">

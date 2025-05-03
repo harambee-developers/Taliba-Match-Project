@@ -44,7 +44,7 @@ const Profile = () => {
     dob: "",
     email: "",
     phone: "",
-    ethnicity: "",
+    ethnicity: [],
     nationality: "",
     language: [],
 
@@ -90,7 +90,7 @@ const Profile = () => {
         dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : "",
         email: user.email || "",
         phone: user.phone || "",
-        ethnicity: user.ethnicity || "",
+        ethnicity: Array.isArray(user.ethnicity) ? user.ethnicity : [],
         nationality: user.nationality || "",
         language: user.profile?.language || [],
 
@@ -144,6 +144,13 @@ const Profile = () => {
     setProfileData(prev => ({
       ...prev,
       language: selectedOptions ? selectedOptions.map(option => option.value) : []
+    }));
+  };
+
+  const handleEthnicityChange = (selectedOptions) => {
+    setProfileData(prev => ({
+      ...prev,
+      ethnicity: selectedOptions ? selectedOptions.map(option => option.value) : []
     }));
   };
 
@@ -293,7 +300,7 @@ const Profile = () => {
                 <input
                   type="text"
                   name="firstName"
-                  value={profileData.firstName}
+                  value={profileData.firstName || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                   placeholder="Your first name..."
@@ -313,7 +320,7 @@ const Profile = () => {
                 <input
                   type="text"
                   name="lastName"
-                  value={profileData.lastName}
+                  value={profileData.lastName || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                   placeholder="Your surname..."
@@ -333,7 +340,7 @@ const Profile = () => {
                 <input
                   type="date"
                   name="dob"
-                  value={profileData.dob}
+                  value={profileData.dob || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 />
@@ -351,7 +358,7 @@ const Profile = () => {
                 <input
                   type="email"
                   name="email"
-                  value={profileData.email}
+                  value={profileData.email || ""}
                   onChange={handleInputChange}
                   className={`${commonClasses} break-words whitespace-normal`}
                   placeholder="Your email..."
@@ -373,7 +380,7 @@ const Profile = () => {
                 <input
                   type="tel"
                   name="phone"
-                  value={profileData.phone}
+                  value={profileData.phone || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                   placeholder="Your mobile number..."
@@ -390,22 +397,27 @@ const Profile = () => {
                 Ethnicity
               </label>
               {isEditing ? (
-                <select
+                <Select
+                  isMulti
                   name="ethnicity"
-                  value={profileData.ethnicity}
-                  onChange={handleInputChange}
-                  className={commonClasses}
-                >
-                  <option value="">Select Ethnicity</option>
-                  {ethnicityOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  value={ethnicityOptions.filter(option => 
+                    Array.isArray(profileData.ethnicity) && profileData.ethnicity.includes(option.value)
+                  )}
+                  onChange={handleEthnicityChange}
+                  options={ethnicityOptions}
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  placeholder="Select ethnicities..."
+                  isSearchable={true}
+                  styles={customSelectStyles}
+                />
               ) : (
                 <div className={viewClasses}>
-                  {ethnicityOptions.find(opt => opt.value === profileData.ethnicity)?.label || "Not specified"}
+                  {Array.isArray(profileData.ethnicity) && profileData.ethnicity.length > 0
+                    ? profileData.ethnicity.map(value => 
+                        ethnicityOptions.find(opt => opt.value === value)?.label
+                      ).filter(Boolean).join(', ')
+                    : "Not specified"}
                 </div>
               )}
             </div>
@@ -417,20 +429,20 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="nationality"
-                  value={profileData.nationality}
+                  value={profileData.nationality || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
                   <option value="">Select Nationality</option>
                   {countries.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
+                    <option key={country.code} value={country.code}>
+                      {country.label}
                     </option>
                   ))}
                 </select>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.nationality || "Not specified"}
+                  {countries.find(country => country.code === profileData.nationality)?.label || "Not specified"}
                 </div>
               )}
             </div>
@@ -444,7 +456,7 @@ const Profile = () => {
                   isMulti
                   name="language"
                   value={languages
-                    .filter(lang => profileData.language.includes(lang))
+                    .filter(lang => Array.isArray(profileData.language) && profileData.language.includes(lang))
                     .map(lang => ({ value: lang, label: lang }))}
                   onChange={handleLanguageChange}
                   options={languages.map(lang => ({ value: lang, label: lang }))}
@@ -456,7 +468,7 @@ const Profile = () => {
                 />
               ) : (
                 <div className={viewClasses}>
-                  {profileData.language && profileData.language.length > 0
+                  {Array.isArray(profileData.language) && profileData.language.length > 0
                     ? profileData.language.join(', ')
                     : "Not specified"}
                 </div>
@@ -540,7 +552,7 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="sect"
-                  value={profileData.sect}
+                  value={profileData.sect || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
@@ -565,7 +577,7 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="madhab"
-                  value={profileData.madhab}
+                  value={profileData.madhab || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
@@ -590,7 +602,7 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="salahPattern"
-                  value={profileData.salahPattern}
+                  value={profileData.salahPattern || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
@@ -615,7 +627,7 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="quranMemorization"
-                  value={profileData.quranMemorization}
+                  value={profileData.quranMemorization || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
@@ -642,7 +654,7 @@ const Profile = () => {
                   {isEditing ? (
                     <select
                       name="dressingStyle"
-                      value={profileData.dressingStyle}
+                      value={profileData.dressingStyle || ""}
                       onChange={handleInputChange}
                       className={commonClasses}
                     >
@@ -667,7 +679,7 @@ const Profile = () => {
                   {isEditing ? (
                     <select
                       name="openToPolygamy"
-                      value={profileData.openToPolygamy}
+                      value={profileData.openToPolygamy || ""}
                       onChange={handleInputChange}
                       className={commonClasses}
                     >
@@ -803,10 +815,11 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="openToHijrah"
-                  value={profileData.openToHijrah}
+                  value={profileData.openToHijrah || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
+                  <option value="">Select Option</option>
                   {yesNoOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -815,7 +828,7 @@ const Profile = () => {
                 </select>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.openToHijrah === "yes" ? "Yes" : profileData.openToHijrah === "no" ? "No" : "Not specified"}
+                  {yesNoOptions.find(opt => opt.value === profileData.openToHijrah)?.label || "Not specified"}
                 </div>
               )}
             </div>
@@ -849,10 +862,11 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="maritalStatus"
-                  value={profileData.maritalStatus}
+                  value={profileData.maritalStatus || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
+                  <option value="">Select Option</option>
                   {yesNoOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -861,7 +875,7 @@ const Profile = () => {
                 </select>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.maritalStatus === "yes" ? "Yes" : profileData.maritalStatus === "no" ? "No" : "Not specified"}
+                  {yesNoOptions.find(opt => opt.value === profileData.maritalStatus)?.label || "Not specified"}
                 </div>
               )}
             </div>
@@ -873,10 +887,11 @@ const Profile = () => {
               {isEditing ? (
                 <select
                   name="revert"
-                  value={profileData.revert}
+                  value={profileData.revert || ""}
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
+                  <option value="">Select Option</option>
                   {yesNoOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -885,7 +900,7 @@ const Profile = () => {
                 </select>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.revert === "yes" ? "Yes" : profileData.revert === "no" ? "No" : "Not specified"}
+                  {yesNoOptions.find(opt => opt.value === profileData.revert)?.label || "Not specified"}
                 </div>
               )}
             </div>

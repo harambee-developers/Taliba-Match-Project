@@ -24,7 +24,7 @@ const ProfileSchema = new Schema({
 
   // Life Situation
   children: { type: String, enum: ['yes', 'no', ''] },
-  openToHijrah: { type: String, enum: ['yes', 'no', ''] },
+  openToHijrah: { type: String, enum: ['yes', 'no', 'maybe', ''] },
   hijrahDestination: { type: String },
   revert: { type: String, enum: ['yes', 'no', ''] },
   yearsRevert: { type: Number },
@@ -70,11 +70,10 @@ const UserSchema = new Schema({
   gender: { type: String, enum: ['Male', 'Female'] },
   sect: { type: String, enum: ['sunni', 'salafi', 'shia', 'idontknow', 'other', ''] },
   occupation: { type: String },
-  ethnicity: { type: String },
   maritalStatus: { type: String, enum: ['yes', 'no', ''] },
   location: { type: String },
   nationality: { type: String },
-  ethnicity: { type: String },
+  ethnicity: { type: [String] },
   phone: { type: String },
   created_at: { type: Date, default: Date.now },
   profile: ProfileSchema,
