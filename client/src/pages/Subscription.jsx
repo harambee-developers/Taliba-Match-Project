@@ -81,7 +81,7 @@ const Subscription = () => {
             "Articles only",
             "Community Support",
         ],
-        "Pro": [
+        "Premium": [
             "Unlimited",
             "Unlimited",
             "Priority",
@@ -98,8 +98,8 @@ const Subscription = () => {
             answer: "Yes, you can upgrade or downgrade your plan at any time from your account settings.",
         },
         {
-            question: "What happens if I exceed my request limit?",
-            answer: "If you exceed your request limit, your access will be temporarily paused until the next billing cycle or until you upgrade your plan.",
+            question: "What happens if I reach my request limit?",
+            answer: "If you reach your request limit, your access will be temporarily paused until the next billing cycle or until you upgrade your plan.",
         },
         {
             question: "Are there any hidden fees?",
@@ -107,11 +107,11 @@ const Subscription = () => {
         },
         {
             question: "Do you offer refunds?",
-            answer: "We offer a 30-day money-back guarantee for first-time subscribers of the Pro and Premium plans.",
+            answer: "We offer a 30-day money-back guarantee for first-time subscribers.",
         },
         {
             question: "How is support provided?",
-            answer: "Support is provided based on your plan. Free users have access to community support, while Pro and Premium users have email support with faster response times.",
+            answer: "Support is provided based on your plan. Free users have access to community support, while Premium users have email support with faster response times.",
         },
     ];
 

@@ -5,6 +5,7 @@ const http = require('http')
 const path = require('path')
 const fs = require('fs')
 const logger = require('./logger')
+const cookieParser = require('cookie-parser')
 
 // Import and initialize the MongoDB connection
 require("./db")
@@ -34,6 +35,7 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions));
+app.use(cookieParser())
 app.use('/uploads', express.static('public/uploads'));
 
 

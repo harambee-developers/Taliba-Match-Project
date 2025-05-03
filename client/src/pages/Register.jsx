@@ -546,8 +546,8 @@ const RegisterPage = () => {
   };
 
   const countryOptions = countries.map((country) => ({
-    value: country,
-    label: country,
+    value: country.label,
+    label: country.label,
   }));
 
   // For the gender field

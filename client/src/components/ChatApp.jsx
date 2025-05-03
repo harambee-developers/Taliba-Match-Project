@@ -355,16 +355,16 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
     return (
         <div
-          className="flex flex-col min-h-screen w-full bg-repeat bg-center"
-          style={{
-            backgroundImage:
-              user?.gender === "Male"
-                ? "url('/wallpaper_man.svg')"
-                : "url('/wallpaper_woman.svg')",
-          }}
-          loading="lazy"
+            className="flex flex-col h-screen w-full bg-repeat bg-center"
+            style={{
+                backgroundImage:
+                    user?.gender === "Male"
+                        ? "url('/wallpaper_man.svg')"
+                        : "url('/wallpaper_woman.svg')",
+            }}
+            loading="lazy"
         >
-            {/* <InitialChatModal 
+          {/* <InitialChatModal 
                 isOpen={showInitialModal} 
                 onClose={handleNaseehaClose} 
             /> */}
@@ -496,8 +496,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
       
           {/* Input area */}
           <div className="md:p-10 flex items-center space-x-2 p-2">
-            {/* File Attachment */}
-            <div 
+             {/* File Attachment */}
+             <div 
                 htmlFor="file-attachment"
                 className="cursor-pointer mr-2 group"
                 onClick={handleAttachmentClick}
@@ -521,7 +521,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     />
                 </svg>
             </div>
-      
             {/* Text input */}
             <input
               type="text"
@@ -558,5 +557,5 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
             </button>
           </div>
         </div>
-      );
+    );
 }

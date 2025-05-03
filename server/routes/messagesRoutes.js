@@ -30,11 +30,54 @@ const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 }
 router.get("/user/:userId", async (req, res) => {
     try {
         const { userId } = req.params;
-        const userObjectId = new mongoose.Types.ObjectId(userId); // Convert to ObjectId
-        const conversations = await Conversation.find({ participants: userObjectId }).populate("participants", "userName email");
-        res.status(200).json(conversations);
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        // 1) Fetch all conversations for this user
+        const conversations = await Conversation
+            .find({ participants: userObjectId })
+            .populate("participants", "userName email")
+            .lean();
+
+        // 2) For each conversation:
+        //    a) count unread
+        //    b) fetch last message doc
+        const withExtras = await Promise.all(
+            conversations.map(async convo => {
+                // a) unreadCount
+                const unreadCount = await Message.countDocuments({
+                    conversation_id: convo._id,
+                    receiver_id: userObjectId,
+                    status: { $ne: 'Read' }
+                });
+
+                // b) most recent message
+                const lastMsg = await Message.findOne(
+                    { conversation_id: convo._id },
+                    { text: 1, type: 1, attachment: 1, sender_id: 1 }
+                )
+                    .sort({ createdAt: -1 })
+                    .lean();
+
+                return {
+                    ...convo,
+
+                    // unread badge
+                    unreadCount,
+
+                    // last‐message fields
+                    last_message: lastMsg?.text || "",
+                    last_message_type: lastMsg?.type || "text",
+                    last_message_attachment: lastMsg?.attachment || null,
+                    last_sender_id: lastMsg?.sender_id || convo.last_sender_id
+                };
+            })
+        );
+
+        // 3) return enriched array
+        res.status(200).json(withExtras);
+
     } catch (error) {
-        logger.error(error)
+        logger.error("Error fetching conversations:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -193,7 +236,5 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         res.status(500).json({ error: "Error uploading attachments" });
     }
 });
-
-
 
 module.exports = router;

@@ -112,7 +112,7 @@ const Match = () => {
   }, [selectedMatch, conversations, user]);
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8">
+    <div className="h-screen flex flex-col p-4 md:p-8">
       <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md">
         <div className="w-full md:w-1/3 theme-border min-h-screen">
           <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
@@ -121,60 +121,97 @@ const Match = () => {
           <div className="p-4">
             {matches.length ? (
               matches
-              .filter(m => m.sender && m.receiver)
-              .map((match, idx) => {
-                const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
-                const conversation = getConversationWithMatch(opponent);
-                const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';
-                const fallback = user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png';
-                const photo = opponent.photos?.[0]?.url || fallback;
+                .filter(m => m.sender && m.receiver)
+                .map((match, idx) => {
+                  const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
+                  const conversation = getConversationWithMatch(opponent);
+                  const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';
+                  const fallback = user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png';
+                  const photo = opponent.photos?.[0]?.url || fallback;
 
-                return (
-                  <div
-                    key={idx}
-                    className="flex items-center p-4 mb-2 cursor-pointer rounded-lg theme-border bg-white hover:bg-[#FFF1FE] transition duration-300"
-                    onClick={async () => {
-                      if (!conversation) {
-                        const newConv = await axios.post(
-                          `${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`,
-                          { user1: opponent._id, user2: user.userId }
-                        );
-                        setSelectedMatch(opponent);
-                        await fetchConversations();
-                        return;
-                      }
-                      if (window.innerWidth < 768) {
-                        navigate(`/chat/${conversation._id}`, { state: { photoUrl: photo } });
-                      } else {
-                        setSelectedMatch(opponent);
-                      }
-                    }}
-                  >
-                    <div className="w-20 h-20 rounded-full overflow-hidden border mr-4">
-                      <img src={photo} alt="avatar" className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center">
-                      <div className="flex justify-between mb-1">
-                        <h3 className="font-semibold truncate">
-                          {opponent.firstName} {opponent.lastName}
-                        </h3>
-                        <p className="text-xs text-gray-500">{lastTime}</p>
+                  function attachmentEmoji(conv) {
+                    if (!conv?.last_message_attachment) return null;
+                    if (conv?.last_message_type === 'image') return '🖼️';
+                    if (conv?.last_message_type === 'video') return '📹';
+                    return '📎';
+                  }
+
+                  return (
+                    <div
+                      key={idx}
+                      className="
+                          flex flex-wrap
+                          items-center
+                          p-4 mb-2
+                          cursor-pointer
+                          rounded-lg
+                          theme-border
+                          bg-white
+                          hover:bg-[#FFF1FE]
+                          transition
+                          duration-300
+                        "
+                      onClick={async () => {
+                        if (!conversation) {
+                          const newConv = await axios.post(
+                            `${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`,
+                            { user1: opponent._id, user2: user.userId }
+                          );
+                          setSelectedMatch(opponent);
+                          await fetchConversations();
+                          return;
+                        }
+                        if (window.innerWidth < 768) {
+                          navigate(`/chat/${conversation._id}`, { state: { photoUrl: photo } });
+                        } else {
+                          setSelectedMatch(opponent);
+                        }
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden border">
+                        <img src={photo} alt="avatar" className="w-full h-full object-cover" loading="lazy" />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-500 truncate">
-                          {conversation?.last_sender_id === user.userId ? 'You:' : opponent.firstName + ':'}{' '}
-                          {conversation?.last_message || 'No messages yet'}
-                        </p>
-                        {conversation && conversation.last_sender_id !== user.userId && (
-                          <span className="ml-2 bg-red-500 text-white text-[10px] font-semibold px-2 py-1 rounded-full">
-                            1
-                          </span>
-                        )}
+
+                      {/* Spacer & Text */}
+                      <div className="ml-4 flex-1 min-w-[120px]">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold truncate text-base">
+                            {opponent.firstName} {opponent.lastName}
+                          </h3>
+                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 ? "font-bold theme-btn-text" : ""}`}>{lastTime}</p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-500 truncate flex items-center">
+                            { /* "You:" or "Name:" label */}
+                            <span className="mr-1 font-semibold">
+                              {conversation?.last_sender_id === user?.userId
+                                ? 'You:'
+                                : opponent.firstName + ':'}
+                            </span>
+
+                            { /* attachment icon, if present */}
+                            {attachmentEmoji(conversation) && (
+                              <span className="mr-1" role="img" aria-label="attachment">
+                                {attachmentEmoji(conversation)}
+                              </span>
+                            )}
+
+                            { /* the text of the last message */}
+                            <span className={conversation?.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
+                              {conversation?.last_message || 'No messages yet'}
+                            </span>
+                          </p>
+                          {conversation?.unreadCount > 0 && conversation && conversation?.last_sender_id !== user?.userId && (
+                            <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                              {conversation.unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <p className="text-center text-gray-500">No matches found.</p>
             )}

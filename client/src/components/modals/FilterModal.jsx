@@ -4,8 +4,9 @@ import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOpti
 
 const FilterModal = ({ isOpen, onClose, filters, onChange, onApply, onClear }) => {
     const countryOptions = countries.map((country) => ({
-        value: country,
-        label: country,
+        value: country.label,
+        label: country.label,
+        code: country.code
     }));
 
     if (!isOpen) return null;
@@ -43,7 +44,7 @@ const FilterModal = ({ isOpen, onClose, filters, onChange, onApply, onClear }) =
                         >
                             <option value="">Select location</option>
                             {countryOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                <option key={option.code} value={option.value}>
                                     {option.label}
                                 </option>
                             ))}

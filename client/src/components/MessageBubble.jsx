@@ -10,8 +10,8 @@ export default function MessageBubble({
 
     // choose background color
     const bgColorClass = isMine
-    ? gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"
-    : gender === "Male" ? "bg-[#E01D42]" : "bg-[#203449]";
+        ? gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"
+        : gender === "Male" ? "bg-[#E01D42]" : "bg-[#203449]";
 
     return (
         <div
