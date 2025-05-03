@@ -10,9 +10,15 @@ import axios from "axios";
 import TypingIndicator from "./TypingIndicator";
 import MessageModal from "./modals/MessageModal";
 import MessageBubble from "./MessageBubble";
+import InitialChatModal from "./modals/InitialChatModal";
+import UploadGuidelinesModal from "./modals/UploadGuidelinesModal";
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
     const [input, setInput] = useState("");
+    const [showInitialModal, setShowInitialModal] = useState(false);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [pendingFile, setPendingFile] = useState(null);
+
 
     const navigate = useNavigate()
     const messagesEndRef = useRef(null);
@@ -113,6 +119,26 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
         fetchMessages();
     }, [currentConversationId]);
+
+    const handleAttachmentClick = (e) => {
+        e.preventDefault();
+        setShowUploadModal(true);
+    };
+
+    const handleUploadProceed = () => {
+        // Close the modal
+        setShowUploadModal(false);
+        // Directly trigger a click on the hidden file input
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*,.pdf,.doc,.docx,.txt';
+        fileInput.onchange = handleFileSelect;
+        fileInput.click();
+    };
+
+    const handleUploadCancel = () => {
+        setShowUploadModal(false);
+    };
 
     const handleFileSelect = async (e) => {
         const file = e.target.files[0];
@@ -338,6 +364,15 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
           }}
           loading="lazy"
         >
+            {/* <InitialChatModal 
+                isOpen={showInitialModal} 
+                onClose={handleNaseehaClose} 
+            /> */}
+            <UploadGuidelinesModal 
+                isOpen={showUploadModal}
+                onClose={() => setShowUploadModal(false)}
+                onProceed={handleUploadProceed}
+            />
           {/* Header */}
           <div
             className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static"
@@ -462,12 +497,30 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
           {/* Input area */}
           <div className="md:p-10 flex items-center space-x-2 p-2">
             {/* File Attachment */}
-            <label
-              htmlFor="file-attachment"
-              className="cursor-pointer mr-2 group"
+            <div 
+                htmlFor="file-attachment"
+                className="cursor-pointer mr-2 group"
+                onClick={handleAttachmentClick}
             >
-              {/* ... SVG, input, Modal ... */}
-            </label>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-6 w-6 ${
+                        user.gender === "Male"
+                            ? "text-[#203449] group-hover:text-blue-400"
+                            : "text-[#E01D42] group-hover:text-red-300"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
+                </svg>
+            </div>
       
             {/* Text input */}
             <input
