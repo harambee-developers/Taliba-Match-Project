@@ -214,19 +214,10 @@ export const languages = [
   "Afrikaans", "Albanian", "Amharic", "Arabic", "Armenian", "Assamese", "Aymara", "Azerbaijani", "Bambara", "Basque", "Belarusian", "Bengali", "Bhojpuri", "Bosnian", "Bulgarian", "Burmese", "Catalan", "Cebuano", "Chichewa", "Chinese (Cantonese)", "Chinese (Mandarin)", "Corsican", "Croatian", "Czech", "Danish", "Dhivehi", "Dogri", "Dutch", "Dzongkha", "English", "Esperanto", "Estonian", "Ewe", "Filipino", "Finnish", "French", "Frisian", "Galician", "Georgian", "German", "Greek", "Guarani", "Gujarati", "Haitian Creole", "Hausa", "Hawaiian", "Hebrew", "Hindi", "Hmong", "Hungarian", "Icelandic", "Igbo", "Ilocano", "Indonesian", "Irish", "Italian", "Japanese", "Javanese", "Kannada", "Kazakh", "Khmer", "Kinyarwanda", "Konkani", "Korean", "Kurdish (Kurmanji)", "Kurdish (Sorani)", "Kyrgyz", "Lao", "Latin", "Latvian", "Lingala", "Lithuanian", "Luxembourgish", "Macedonian", "Maithili", "Malagasy", "Malay", "Malayalam", "Maltese", "Maori", "Marathi", "Meitei (Manipuri)", "Mizo", "Mongolian", "Nepali", "Norwegian", "Nyanja", "Odia (Oriya)", "Oromo", "Pashto", "Persian (Farsi)", "Polish", "Portuguese", "Punjabi", "Quechua", "Romanian", "Russian", "Samoan", "Sanskrit", "Scots Gaelic", "Serbian", "Sesotho", "Shona", "Sindhi", "Sinhala", "Slovak", "Slovenian", "Somali", "Spanish", "Sundanese", "Swahili", "Swedish", "Tajik", "Tamil", "Tatar", "Telugu", "Thai", "Tigrinya", "Tsonga", "Turkish", "Turkmen", "Twi", "Ukrainian", "Urdu", "Uyghur", "Uzbek", "Vietnamese", "Welsh", "Wolof", "Xhosa", "Yiddish", "Yoruba", "Zulu"
 ];
 
-export const ethnicityOptions = [
-  { label: "Arab (e.g., Egyptian, Lebanese, Saudi, etc)", value: "Arab" },
-  { label: "South Asian (e.g., Indian, Pakistani, Bangladeshi, etc.)", value: "South Asian" },
-  { label: "African (e.g., Nigerian, Somali, Sudanese, etc.)", value: "African" },
-  { label: "Southeast Asian (e.g., Malaysian, Indonesian, Filipino, etc.)", value: "Southeast Asian" },
-  { label: "Middle Eastern (non-Arab, e.g., Iranian, Turkish, Kurdish, etc.)", value: "Middle Eastern" },
-  { label: "Central Asian (e.g., Uzbek, Kazakh, Tajik, etc.)", value: "Central Asian" },
-  { label: "Caucasian/White", value: "White" },
-  { label: "Black/African American", value: "Black" },
-  { label: "Latino/Latina/Latinx", value: "Latina" },
-  { label: "Mixed Ethnicity", value: "Mixed" },
-  { label: "Other (please specify)", value: "Other" },
-];
+export const ethnicityOptions = countries.map(country => ({
+  label: country.label,
+  value: country.label
+}));
 
 export const salahPatternOptions = [
   { value: 'prays_mosque', label: 'Prays in the masjid' },
