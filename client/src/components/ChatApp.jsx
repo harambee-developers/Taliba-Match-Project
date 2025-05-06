@@ -461,17 +461,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                           gender={user?.gender}
                         />
       
-                        {/* Timestamp & status */}
+                        {/* Status */}
                         <div className="ml-2 text-sm text-gray-600">
-                          <span>
-                            {new Date(msg.createdAt).toLocaleTimeString(
-                              "en-GB",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </span>
                           {index === msgs.length - 1 &&
                             isMine && (
                               <p className="text-xs text-[#203449]">

@@ -1,5 +1,4 @@
-// src/components/MessageBubble.jsx
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function MessageBubble({
     msg,
@@ -7,6 +6,16 @@ export default function MessageBubble({
     isFirstInRun,
     gender,
 }) {
+    // New state to track whether the text is a single line or multi-line
+    const [isSingleLine, setIsSingleLine] = useState(true);
+    const messageTextRef = useRef(null);
+
+    useEffect(() => {
+        if (messageTextRef.current) {
+            // Check if the text is overflowing (i.e., has multiple lines)
+            setIsSingleLine(messageTextRef.current.scrollHeight <= messageTextRef.current.clientHeight);
+        }
+    }, [msg.text]); // Re-run this effect when the text changes
 
     // choose background color
     const bgColorClass = isMine
@@ -19,8 +28,8 @@ export default function MessageBubble({
             className={`
                 relative
                 max-w-xs md:max-w-md
-                p-4
-                rounded-lg 
+                p-4 pb-6
+                rounded-md 
                 shadow-md
                 break-words
                 text-white
@@ -58,8 +67,23 @@ export default function MessageBubble({
                     )}
                 </div>
             ) : (
-                <p className="font-semibold">{msg.text}</p>
+                <p
+                    ref={messageTextRef}
+                    className={`
+                        font-semibold 
+                        ${isSingleLine ? 'text-right' : 'absolute bottom-1 right-2 text-right'}
+                    `}
+                >
+                    {msg.text}
+                </p>
             )}
+            {/* Time in bottom right */}
+            <span className="absolute bottom-1 right-2 text-xs text-white/70">
+                {new Date(msg.createdAt).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })}
+            </span>
         </div>
     );
 }

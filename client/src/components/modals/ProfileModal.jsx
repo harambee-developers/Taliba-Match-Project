@@ -16,7 +16,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
     // Card 1 - Personal Details
     firstName: "",
     lastName: "",
-    ethnicity: "",
+    ethnicity: [],
     nationality: "",
     language: [],
 
@@ -100,8 +100,6 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
     "Appearance"
   ];
 
-  console.log(profileData)
-
   const renderCardContent = () => {
     const viewClasses = "p-4 theme-bg rounded-xl";
 
@@ -127,9 +125,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Ethnicity
               </label>
               <div className={viewClasses}>
-                {profileData.ethnicity && profileData.ethnicity.length > 0
-                  ? profileData.ethnicity.join(', ')
-                  : "Not specified"}
+                {profileData.ethnicity || "Not specified"}
               </div>
             </div>
 
@@ -147,8 +143,8 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Languages
               </label>
               <div className={viewClasses}>
-                {profileData.profile?.language && profileData.profile.language.length > 0
-                  ? profileData.profile.language.join(', ')
+                {profileData.language && profileData.language.length > 0
+                  ? profileData.language.join(', ')
                   : "Not specified"}
               </div>
             </div>

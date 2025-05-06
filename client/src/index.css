@@ -17,8 +17,8 @@
 [data-theme="Male"] .theme-btn-text { @apply text-male-secondary hover:text-[#174b75]; }
 [data-theme="Female"] .theme-btn-text { @apply text-female-secondary hover:text-[#FF1F5A]; }
 
-.sender::before,
-.receiver::before {
+/* .sender::before, */
+/* .receiver::before {
   content: "";
   position: absolute;
   width: 14px;
@@ -28,20 +28,30 @@
   background-size: contain;
   pointer-events: none;
   z-index: 1;
+} */
+
+.sender:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-left: 10px solid #E01D42;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #E01D42;
+  border-bottom: 10px solid transparent;
+  right: -19px;
+  top: 6px;
 }
 
-.sender::before {
-  right: 8px;
-  background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'>\
-<path d='M0,10 C2,0 12,0 14,10 L14,0 L0,0 Z' fill='var(--bubble-color)'/>\
-</svg>");
-}
-
-.receiver::before {
-  left: 8px;
-  background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'>\
-<path d='M14,10 C12,0 2,0 0,10 L0,0 L14,0 Z' fill='var(--bubble-color)'/>\
-</svg>");
+.receiver:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-left: 10px solid transparent;
+  border-right: 10px solid #203449;
+  border-top: 10px solid #203449;
+  border-bottom: 10px solid transparent;
+  left: -19px;
+  top: 6px;
 }
