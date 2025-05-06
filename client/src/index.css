@@ -2,56 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-[data-theme="Male"] .theme-bg      { @apply bg-male-primary    text-black; }
-[data-theme="Female"] .theme-bg    { @apply bg-female-primary  text-black; }
+[data-theme="Male"] .theme-bg {
+  @apply bg-male-primary text-black;
+}
 
-[data-theme="Male"] .theme-sidebar { @apply bg-male-secondary; }
-[data-theme="Female"] .theme-sidebar { @apply bg-female-secondary; }
+[data-theme="Female"] .theme-bg {
+  @apply bg-female-primary text-black;
+}
 
-[data-theme="Male"] .theme-border  { @apply border-male-secondary border-2; }
-[data-theme="Female"] .theme-border { @apply border-female-secondary border-2; }
+[data-theme="Male"] .theme-sidebar {
+  @apply bg-male-secondary;
+}
 
-[data-theme="Male"] .theme-btn     { @apply bg-male-secondary hover:bg-[#174b75] text-white; }
-[data-theme="Female"] .theme-btn   { @apply bg-female-secondary hover:bg-[#FF1F5A] text-white; }
+[data-theme="Female"] .theme-sidebar {
+  @apply bg-female-secondary;
+}
 
-[data-theme="Male"] .theme-btn-text { @apply text-male-secondary hover:text-[#174b75]; }
-[data-theme="Female"] .theme-btn-text { @apply text-female-secondary hover:text-[#FF1F5A]; }
+[data-theme="Male"] .theme-border {
+  @apply border-male-secondary border-2;
+}
 
-/* .sender::before, */
-/* .receiver::before {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 10px;
-  top: -10px;
-  background-repeat: no-repeat;
-  background-size: contain;
-  pointer-events: none;
-  z-index: 1;
-} */
+[data-theme="Female"] .theme-border {
+  @apply border-female-secondary border-2;
+}
 
+[data-theme="Male"] .theme-btn {
+  @apply bg-male-secondary hover:bg-[#174b75] text-white;
+}
+
+[data-theme="Female"] .theme-btn {
+  @apply bg-female-secondary hover:bg-[#FF1F5A] text-white;
+}
+
+[data-theme="Male"] .theme-btn-text {
+  @apply text-male-secondary hover:text-[#174b75];
+}
+
+[data-theme="Female"] .theme-btn-text {
+  @apply text-female-secondary hover:text-[#FF1F5A];
+}
+
+/* Single .sender:before rule: */
 .sender:before {
   content: "";
-  width: 0px;
-  height: 0px;
   position: absolute;
-  border-left: 10px solid #E01D42;
+  width: 0;
+  height: 0;
+
+  /* Transparent sides */
   border-right: 10px solid transparent;
-  border-top: 10px solid #E01D42;
   border-bottom: 10px solid transparent;
+
+  /* Colored sides using CSS var you already set inline */
+  border-left: 10px solid var(--bubble);
+  border-top: 10px solid var(--bubble);
+
   right: -19px;
   top: 6px;
 }
 
+/* Single .receiver:before rule: */
 .receiver:before {
   content: "";
-  width: 0px;
-  height: 0px;
   position: absolute;
+  width: 0;
+  height: 0;
+
+  /* Transparent sides */
   border-left: 10px solid transparent;
-  border-right: 10px solid #203449;
-  border-top: 10px solid #203449;
   border-bottom: 10px solid transparent;
+
+  /* Colored sides */
+  border-right: 10px solid var(--bubble);
+  border-top: 10px solid var(--bubble);
+
   left: -19px;
   top: 6px;
 }
