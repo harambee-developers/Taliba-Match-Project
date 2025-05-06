@@ -148,13 +148,13 @@ const Search = () => {
         }
       )
       if (!response.ok) {
-        throw new Error("Failed to send match request");
+        throw new Error("Failed to send Connection request");
       }
 
       const data = await response.json();
 
       const requestObject = {
-        text: `${user.firstName} sent you a match request!`,
+        text: `${user.firstName} sent you a Connection request!`,
         type: "match",
         receiver_id: profileId,
         sender_id: user.userId
@@ -166,11 +166,11 @@ const Search = () => {
         console.warn("Socket is not connected, cannot send notification event.");
       }
 
-      showAlert("Match request sent", 'success')
-      console.log("Match request sent:", data);
+      showAlert("Connection request sent", 'success')
+      console.log("Connection request sent:", data);
     } catch (error) {
-      showAlert("Error sending match request", 'error')
-      console.error("Error sending match request:", error);
+      showAlert("Error sending Connection request", 'error')
+      console.error("Error sending Connection request:", error);
     }
 
   }
@@ -199,10 +199,10 @@ const Search = () => {
 
   // Build the modal text
   const modalText = isBasic
-    ? `You are about to submit a match request.  
+    ? `You are about to submit a Connection request.  
 Remaining connects: ${remainingConnects}.  
 Would you like to continue?`
-    : `You are about to submit a match request.  
+    : `You are about to submit a Connection request.  
 Would you like to continue?`;
 
   const countActiveFilters = () => {
@@ -569,7 +569,7 @@ Would you like to continue?`;
                       }
     `}
                   >
-                    {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
+                    {profile.hasPendingRequest ? 'Pending...' : 'Request Connection'}
                   </button>
                 </div>
               </div>
@@ -610,7 +610,7 @@ Would you like to continue?`;
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="Connects Limit Reached"
-        text="You've used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
+        text="You've used up all 3 of your free Connection requests. Upgrade to a premium plan for unlimited Connections."
         onConfirm={() => {
           // send them to /subscribe
           navigate('/subscribe');
@@ -622,7 +622,7 @@ Would you like to continue?`;
       <MessageModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        title="Match Request Confirmation"
+        title="Connection Request Confirmation"
         onConfirm={() => {
           handleMatchRequest(selectedProfile);
           setIsOpen(false);

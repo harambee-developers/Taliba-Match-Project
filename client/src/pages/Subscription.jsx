@@ -29,7 +29,7 @@ const Subscription = () => {
             price: 0,
             features: [
                 "Create a basic profile",
-                "Browse limited matches daily",
+                "Browse limited Connections daily",
                 "Send up to 4 connection requests/month",
                 "Access to Islamic guidance articles",
             ],

@@ -37,6 +37,7 @@ router.post("/register", async (req, res) => {
         dob,
         gender,
         email,
+        password,
         phone,
         location,
         openToHijrah,
@@ -60,7 +61,9 @@ router.post("/register", async (req, res) => {
         height,
         weight,
         photos,
-        appearancePreference
+        appearancePreference,
+        bio,
+        language
     } = req.body;
 
     try {
@@ -72,8 +75,16 @@ router.post("/register", async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
+        // Validate password requirements
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ 
+                message: "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character" 
+            });
+        }
+
         // Hash the password
-        const hashedPassword = await bcrypt.hash("defaultPassword123", 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const userPhotos = (photos || []).map(p => ({ url: p.url }))
 
@@ -94,7 +105,9 @@ router.post("/register", async (req, res) => {
                 dealBreakers,
                 height,
                 weight,
-                appearancePreference
+                appearancePreference,
+                bio,
+                language
             }
         }
 
@@ -115,7 +128,7 @@ router.post("/register", async (req, res) => {
             sect,
             occupation,
             profile: generateProfile(),
-            photos: userPhotos // 👈 insert here
+            photos: userPhotos
         });
         await user.save();
         res.status(201).json({ message: "User registered successfully" });
