@@ -58,7 +58,19 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
       ? 'icon_woman6.png'
       : 'icon_man5.png');
 
-  const photoUrl = raw.startsWith('/') ? raw : `/${raw}`;
+  const backend = import.meta.env.VITE_BACKEND_URL;
+
+  // If it already starts with the backend URL or “/”, leave it as-is.
+  // Otherwise, if it’s a bare filename, prepend a slash.
+  // (You could also choose to prepend the backend URL here instead of “/” if appropriate.)
+  let photoUrl;
+  if (raw.startsWith(backend)) {
+    photoUrl = raw;
+  } else if (raw.startsWith('/')) {
+    photoUrl = raw;
+  } else {
+    photoUrl = '/' + raw;
+  }
 
   // Fetch and set receiver details
   useEffect(() => {
