@@ -355,7 +355,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
   return (
     <div
-      className="flex flex-col h-screen w-full bg-repeat bg-center"
+      className="flex flex-col h-screen w-full bg-center bg-repeat bg-[length:100%] md:bg-[length:60%]"
       style={{
         backgroundImage:
           user?.gender === "Male"
@@ -385,10 +385,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
         </div>
         <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
           <img
-            src={photoUrl}
+            src={`/${photoUrl}`}
             alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
             className="w-full h-full object-cover"
-            loading="lazy"
+            loading="eager"
           />
         </div>
         <div className="flex flex-col items-start">
