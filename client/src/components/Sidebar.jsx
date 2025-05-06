@@ -30,14 +30,14 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
           onClick={toggleMenu}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 theme-sidebar text-white transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 h-full w-64 theme-sidebar text-white transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
         <nav className="flex flex-col h-full">
