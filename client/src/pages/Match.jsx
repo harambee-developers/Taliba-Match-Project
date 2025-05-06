@@ -218,7 +218,7 @@ const Match = () => {
                   );
                 })
             ) : (
-              <p className="text-center text-gray-500">No matches found.</p>
+              <p className="text-center text-gray-500">No Connections found.</p>
             )}
           </div>
         </div>

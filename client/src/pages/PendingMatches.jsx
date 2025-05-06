@@ -58,7 +58,7 @@ const PendingMatches = () => {
             }
 
             const requestObject = {
-                text: `${user.firstName} accepted your match request!`,
+                text: `${user.firstName} accepted your Connection request!`,
                 type: "match",
                 receiver_id: senderId,
                 sender_id: user.userId 
@@ -70,11 +70,11 @@ const PendingMatches = () => {
                 console.warn("Socket is not connected, cannot send notification event.");
               }
 
-            showAlert('Match accepted!', 'success')
-            console.log('Match accepted:', response.data);
+            showAlert('Connection accepted!', 'success')
+            console.log('Connection accepted:', response.data);
         } catch (error) {
-            console.error('Error accepting match:', error);
-            showAlert('Error accepting match', 'error')
+            console.error('Error accepting Connection:', error);
+            showAlert('Error accepting Connection', 'error')
         }
     };
 
@@ -86,11 +86,11 @@ const PendingMatches = () => {
             setPendingReceivedRequests((prevRequests) =>
                 prevRequests.filter(request => request._id !== matchId)
             );
-            showAlert('Match rejected!', 'success')
-            console.log('Match rejected:', response.data);
+            showAlert('Connection rejected!', 'success')
+            console.log('Connection rejected:', response.data);
         } catch (error) {
-            console.error('Error rejecting match:', error);
-            showAlert('Error rejecting match', 'error')
+            console.error('Error rejecting Connection:', error);
+            showAlert('Error rejecting Connection', 'error')
         }
     };
 
@@ -102,7 +102,7 @@ const PendingMatches = () => {
             <div className="flex flex-col md:flex-row space-y-8 md:space-y-0 md:space-x-8">
                 {/* Matches & Pending Requests in One Section */}
                 <div className="flex-1 theme-bg p-6 rounded-lg shadow-md theme-border min-h-[50vh]">
-                    <h2 className="text-2xl font-semibold mb-4">Your Matches</h2>
+                    <h2 className="text-2xl font-semibold mb-4">Your Connections</h2>
                     {/* Loop through Received Pending Requests */}
                     {pendingReceivedRequests.length > 0 && (
                         <div>
@@ -125,7 +125,7 @@ const PendingMatches = () => {
                     {/* Show message if no data */}
                     {pendingReceivedRequests.length === 0 && (
                         <div className='flex-1 flex items-center justify-center'>
-                            <p className="text-center text-gray-500 text-lg">No matches or pending requests found.</p>
+                            <p className="text-center text-gray-500 text-lg">No Connections or pending requests found.</p>
                         </div>
                     )}
                 </div>

@@ -28,7 +28,7 @@ const LandingPage = () => {
     }
   }, [navigate, user]);
 
-  usePageTitle("Welcome to Talibah Match!")
+  usePageTitle("Welcome to Talibah!")
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FFF1FE] to-white">
@@ -69,7 +69,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { icon: logo, title: "Create your profile", description: "Build your authentic profile highlighting your values and aspirations" },
-              { icon: puzzle, title: "Find your match", description: "Discover compatible partners who share your vision" },
+              { icon: puzzle, title: "Find your Companion", description: "Discover compatible partners who share your vision" },
               { icon: chat, title: "Halal Conversation", description: "Engage in meaningful, guided conversations" },
               { icon: heart, title: "Marriage", description: "Begin your blessed journey together" },
             ].map((step, index) => (
@@ -105,14 +105,14 @@ const LandingPage = () => {
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
                 <h3 className="text-2xl font-semibold mb-4">Who We Are</h3>
                 <p className="text-lg leading-relaxed">
-                  "Talibah" represents a seeker of knowledge, and at Talibah Match, we honor this identity by connecting individuals who prioritize the deen and the pursuit of sacred knowledge.
+                  "Talibah" represents a seeker of knowledge, and at Talibah, we honor this identity by connecting individuals who prioritize the deen and the pursuit of sacred knowledge.
                 </p>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
-                <h3 className="text-2xl font-semibold mb-4">Why Talibah Match?</h3>
+                <h3 className="text-2xl font-semibold mb-4">Why Talibah?</h3>
                 <p className="text-lg leading-relaxed">
-                  In a world filled with distractions, Talibah Match is a place for those who value purpose-driven connections. With Allah's permission, we strive to make the path of marriage easier.
+                  In a world filled with distractions, Talibah is a place for those who value purpose-driven connections. With Allah's permission, we strive to make the path of marriage easier.
                 </p>
               </div>
 
@@ -139,11 +139,11 @@ const LandingPage = () => {
               },
               {
                 question: "How does the process work?",
-                answer: "Simply sign up and create your profile. Once registered, you will gain early access to browse other profiles on the site. When the platform fully launches, you can begin your journey to finding the ideal match.",
+                answer: "Simply sign up and create your profile. Once registered, you will gain early access to browse other profiles on the site. When the platform fully launches, you can begin your journey to finding the ideal partner.",
               },
               {
                 question: "What are private profiles?",
-                answer: "Private profiles allow you to maintain complete control over your visibility. By locking your profile, you can safeguard your privacy and choose the right moment to reveal your information to a suitable match.",
+                answer: "Private profiles allow you to maintain complete control over your visibility. By locking your profile, you can safeguard your privacy and choose the right moment to reveal your information to a suitable partner.",
               },
               {
                 question: "Why do we use Kunya's?",
