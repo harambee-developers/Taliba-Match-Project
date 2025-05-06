@@ -51,10 +51,14 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
   const CACHE_STATUS = `chat_status_${currentConversationId}`
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
-  const photoUrl = propPhotoUrl || locationPhotoUrl ||
+  const raw =
+    propPhotoUrl ||
+    locationPhotoUrl ||
     (user?.gender === 'Male'
-      ? '/icon_woman6.png'
-      : '/icon_man5.png');
+      ? 'icon_woman6.png'
+      : 'icon_man5.png');
+
+  const photoUrl = raw.startsWith('/') ? raw : `/${raw}`;
 
   // Fetch and set receiver details
   useEffect(() => {
@@ -385,7 +389,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
         </div>
         <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
           <img
-            src={`/${photoUrl}`}
+            src={photoUrl}
             alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
             className="w-full h-full object-cover"
             loading="eager"
@@ -430,8 +434,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
               <div className="flex justify-center m-8">
                 <div
                   className={`text-white ${user?.gender === "Male"
-                      ? "bg-[#203449]"
-                      : "bg-[#E01D42]"
+                    ? "bg-[#203449]"
+                    : "bg-[#E01D42]"
                     } bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}
                 >
                   {date}
@@ -451,22 +455,22 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                     className={`flex w-full ${isMine ? "justify-end" : "justify-start"
                       } items-end mb-2`}
                   >
-                      {/* Bubble */}
-                      <MessageBubble
-                        msg={msg}
-                        isMine={isMine}
-                        isFirstInRun={isFirstInRun}
-                        gender={user?.gender}
-                      />
+                    {/* Bubble */}
+                    <MessageBubble
+                      msg={msg}
+                      isMine={isMine}
+                      isFirstInRun={isFirstInRun}
+                      gender={user?.gender}
+                    />
 
-                      {/* Status */}
-                      <div className="ml-2 text-sm text-gray-600">
-                        {index === msgs.length - 1 &&
-                          isMine && (
-                            <p className="text-xs text-[#203449]">
-                              {msg.status}
-                            </p>
-                          )}
+                    {/* Status */}
+                    <div className="ml-2 text-sm text-gray-600">
+                      {index === msgs.length - 1 &&
+                        isMine && (
+                          <p className="text-xs text-[#203449]">
+                            {msg.status}
+                          </p>
+                        )}
                     </div>
                   </div>
                 );
@@ -494,8 +498,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className={`h-6 w-6 ${user.gender === "Male"
-                ? "text-[#203449] group-hover:text-blue-400"
-                : "text-[#E01D42] group-hover:text-red-300"
+              ? "text-[#203449] group-hover:text-blue-400"
+              : "text-[#E01D42] group-hover:text-red-300"
               }`}
             fill="none"
             viewBox="0 0 24 24"
@@ -536,8 +540,8 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
           onClick={sendMessage}
           disabled={isUploading}
           className={`flex-shrink-0 w-10 h-10 rounded-lg ${user.gender === "Male"
-              ? "text-[#203449] hover:text-blue-400"
-              : "text-[#E01D42] hover:text-red-300"
+            ? "text-[#203449] hover:text-blue-400"
+            : "text-[#E01D42] hover:text-red-300"
             }`}
         >
           <Send className="w-full h-full" />
