@@ -183,24 +183,29 @@ const Match = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-gray-500 truncate flex items-center">
-                            { /* "You:" or "Name:" label */}
-                            <span className="mr-1 font-semibold">
-                              {conversation?.last_sender_id === user?.userId
-                                ? 'You:'
-                                : opponent.firstName + ':'}
-                            </span>
-
-                            { /* attachment icon, if present */}
-                            {attachmentEmoji(conversation) && (
-                              <span className="mr-1" role="img" aria-label="attachment">
-                                {attachmentEmoji(conversation)}
+                            {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
+                              <span className="text-gray-500 font-semibold">
+                                {opponent.firstName} is typing...
                               </span>
+                            ) : (
+                              <>
+                                {/* "You:" or "Name:" label */}
+                                <span className="mr-1 font-semibold">
+                                  {conversation?.last_sender_id === user?.userId
+                                    ? 'You:'
+                                    : opponent.firstName + ':'}
+                                </span>
+                                {/* attachment icon only if not typing */}
+                                {attachmentEmoji(conversation) && (
+                                  <span className="mr-1" role="img" aria-label="attachment">
+                                    {attachmentEmoji(conversation)}
+                                  </span>
+                                )}
+                                <span className={conversation?.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
+                                  {conversation?.last_message || 'No messages yet'}
+                                </span>
+                              </>
                             )}
-
-                            { /* the text of the last message */}
-                            <span className={conversation?.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
-                              {conversation?.last_message || 'No messages yet'}
-                            </span>
                           </p>
                           {conversation?.unreadCount > 0 && conversation && conversation?.last_sender_id !== user?.userId && (
                             <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
