@@ -11,6 +11,7 @@ import ChatApp from "./components/ChatApp";
 import Match from "./pages/Match";
 import PendingMatches from "./pages/PendingMatches";
 import Profile from "./pages/Profile";
+import ProfileUpdate from "./pages/ProfileUpdate";
 import ViewProfile from "./pages/ViewProfile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
@@ -52,6 +53,7 @@ function AppLayout() {
         <Route path="/register-success" element={<RegisterSuccess />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/forgotten-password" element={<ForgotPasswordPage />} />
+        <Route path="/profile-update/:resetToken" element={<ProfileUpdate />} />
         <Route path="/change-password/:resetToken" element={<ChangePasswordPage />} />
         <Route path="/payment-success" element={<PaymentConfirmation />} />
         {/* Protected Routes */}
