@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   onClick={() => setMatchesOpen(!matchesOpen)}
                   className="flex items-center justify-between w-full p-2 rounded theme-btn transition-colors"
                 >
-                  <span>Your Connections</span>
+                  <span>Your Matches</span>
                   <Icon28 width={24} height={24} color="#FFF" />
                 </button>
                 {matchesOpen && (
@@ -78,7 +78,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                         onClick={toggleMenu}
                         className="block p-2 rounded theme-btn transition-colors"
                       >
-                        Connections
+                        Matches
                       </Link>
                     </li>
                   </ul>

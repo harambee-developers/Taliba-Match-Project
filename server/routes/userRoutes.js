@@ -59,7 +59,8 @@ router.get("/search", authMiddleware, async (req, res) => {
       maritalStatus,
       sect,
       quranMemorization,
-      hasChildren
+      hasChildren,
+      locationProximity
     } = req.query;
     
     logger.info('Search params:', req.query);
@@ -67,7 +68,8 @@ router.get("/search", authMiddleware, async (req, res) => {
     let query = { role: "user" };
 
     if (location) {
-      query.location = location;
+      // Always treat location as country filter
+      query['location.country'] = location;
     }
 
     if (ethnicity && ethnicity.length > 0) {
@@ -142,10 +144,32 @@ router.get("/search", authMiddleware, async (req, res) => {
 
     const pendingReceiverIds = new Set(pendingRequests.map(m => m.receiver_id.toString()));
 
+    // Get the current user's location
+    const currentUser = await User.findById(senderId).select('location').lean();
+    const currentUserLocation = currentUser?.location;
+
     const profiles = users.map(user => {
       try {
         const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
         const hasPendingRequest = pendingReceiverIds.has(user._id.toString());
+
+        // Calculate distance if both users have location data
+        let distance = null;
+        if (currentUserLocation && user.location && 
+            currentUserLocation.country && user.location.country &&
+            currentUserLocation.city && user.location.city) {
+          // Simple distance calculation based on city match
+          if (currentUserLocation.country === user.location.country) {
+            if (currentUserLocation.city === user.location.city) {
+              distance = 0; // Same city
+            } else {
+              distance = 50; // Different city, same country
+            }
+          } else {
+            distance = 100; // Different country
+          }
+        }
+
         return {
           id: user._id,
           name: user.userName,
@@ -157,6 +181,7 @@ router.get("/search", authMiddleware, async (req, res) => {
           image: user.photos && user.photos.length > 0 ? user.photos[0].url : null,
           gender: user.gender,
           hasPendingRequest,
+          distance,
           // Add additional fields
           revert: user.profile?.revert || 'Not specified',
           salahPattern: user.profile?.salahPattern || 'Not specified',
@@ -183,8 +208,15 @@ router.get("/search", authMiddleware, async (req, res) => {
       );
     }
 
+    // Always sort by distance
+    filteredProfiles.sort((a, b) => {
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
+
     logger.info('Filtered profiles:', filteredProfiles.length);
-    res.json(filteredProfiles.slice(0, 20));
+    res.json(filteredProfiles.slice(0, 50));
 
   } catch (error) {
     logger.error('Search error details:', {
@@ -210,7 +242,7 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     }
 
     const user = await User.findById(id)
-      .select('-password -__v -email -phone -dob') // Exclude sensitive information
+      .select('-password -__v -email -phone -dob -refreshToken -resetToken -resetTokenExpiration -socketId -isOnline -lastSeen -created_at') // Exclude sensitive information
       .lean();
 
     if (!user) {
