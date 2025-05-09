@@ -218,7 +218,7 @@ router.get("/profile/:id", authMiddleware, async (req, res) => {
     }
 
     const user = await User.findById(id)
-      .select('-password -__v -email -phone -dob') // Exclude sensitive information
+      .select('-password -__v -email -phone -dob -refreshToken -resetToken -resetTokenExpiration -socketId -isOnline -lastSeen -created_at') // Exclude sensitive information
       .lean();
 
     if (!user) {

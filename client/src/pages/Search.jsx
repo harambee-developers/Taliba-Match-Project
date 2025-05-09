@@ -474,7 +474,11 @@ Would you like to continue?`;
                     ) : (
                       <span>🌍</span>
                     )}
-                      <span className="truncate">{profile.location || 'Location not specified'}</span>
+                      <span className="truncate">
+                        {typeof profile.location === 'object' 
+                          ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
+                          : profile.location || 'Location not specified'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 truncate">
                     {nationalityCountry?.code ? (
@@ -515,7 +519,11 @@ Would you like to continue?`;
                     ) : (
                       <span>🌍</span>
                     )}
-                    <span className="truncate">{profile.location || 'Location not specified'}</span>
+                    <span className="truncate">
+                      {typeof profile.location === 'object' 
+                        ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
+                        : profile.location || 'Location not specified'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm truncate">
                     {nationalityCountry?.code ? (

@@ -43,11 +43,10 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     dob: "",
-    email: "",
-    phone: "",
     ethnicity: [],
     nationality: "",
     language: [],
+    location: { country: "", city: "" },
 
     // Card 2 - About Yourself
     bio: "",
@@ -67,7 +66,6 @@ const Profile = () => {
     // Card 4 - Life Situation
     children: "",
     occupation: "",
-    location: { country: "", city: "" },
     openToHijrah: "",
     hijrahDestination: "",
     maritalStatus: "",
@@ -84,17 +82,17 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
+      console.log("User data:", user);
       setProfileData({
         // Card 1 - Personal Details
         userName: user.userName || "",
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : "",
-        email: user.email || "",
-        phone: user.phone || "",
         ethnicity: user.ethnicity || [],
         nationality: user.nationality || "",
         language: user.language || [],
+        location: { country: user.location?.country || "", city: user.location?.city || "" },
 
         // Card 2 - About Yourself
         bio: user.bio || "",
@@ -114,7 +112,6 @@ const Profile = () => {
         // Card 4 - Life Situation
         children: user.children || "",
         occupation: user.occupation || "",
-        location: { country: user.location?.country || "", city: user.location?.city || "" },
         openToHijrah: user.profile?.openToHijrah || "",
         hijrahDestination: user.profile?.hijrahDestination || "",
         maritalStatus: user.maritalStatus || "",
@@ -129,10 +126,17 @@ const Profile = () => {
       if (user.photos && user.photos.length > 0) {
         setProfilePhoto(user.photos[0].url);
       }
+      console.log("Profile data after setting:", profileData);
+      console.log("Nationality value:", user.nationality);
 
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    console.log("Profile data updated:", profileData);
+    console.log("Nationality in profileData:", profileData.nationality);
+  }, [profileData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -367,47 +371,6 @@ const Profile = () => {
                 </div>
               )}
             </div>
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  name="email"
-                  value={profileData.email || ""}
-                  onChange={handleInputChange}
-                  className={`${commonClasses} break-words whitespace-normal`}
-                  placeholder="Your email..."
-                />
-              ) : (
-                <div
-                  className={`${viewClasses} break-words whitespace-normal`}
-                >
-                  {profileData.email || "Not specified"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
-                Mobile Number
-              </label>
-              {isEditing ? (
-                <input
-                  type="tel"
-                  name="phone"
-                  value={profileData.phone || ""}
-                  onChange={handleInputChange}
-                  className={commonClasses}
-                  placeholder="Your mobile number..."
-                />
-              ) : (
-                <div className={viewClasses}>
-                  {profileData.phone || "Not specified"}
-                </div>
-              )}
-            </div>
 
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -452,14 +415,14 @@ const Profile = () => {
                 >
                   <option value="">Select Nationality</option>
                   {countries.map((country) => (
-                    <option key={country.code} value={country.code}>
+                    <option key={country.code} value={country.label}>
                       {country.label}
                     </option>
                   ))}
                 </select>
               ) : (
                 <div className={viewClasses}>
-                  {countries.find(country => country.code === profileData.nationality)?.label || "Not specified"}
+                  {profileData.nationality || "Not specified"}
                 </div>
               )}
             </div>
@@ -487,6 +450,61 @@ const Profile = () => {
                 <div className={viewClasses}>
                   {Array.isArray(profileData.language) && profileData.language.length > 0
                     ? profileData.language.join(', ')
+                    : "Not specified"}
+                </div>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-lg font-medium text-gray-700 mb-2">
+                Location
+              </label>
+              {isEditing ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <select
+                      name="location.country"
+                      value={profileData.location?.country || ""}
+                      onChange={handleCountryChange}
+                      className={commonClasses}
+                    >
+                      <option value="">Select Country</option>
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.label}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <select
+                      name="location.city"
+                      value={profileData.location?.city || ""}
+                      onChange={(e) => handleInputChange({
+                        target: {
+                          name: 'location',
+                          value: { 
+                            ...profileData.location,
+                            city: e.target.value
+                          }
+                        }
+                      })}
+                      className={commonClasses}
+                      disabled={!profileData.location?.country}
+                    >
+                      <option value="">Select City</option>
+                      {availableCities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className={viewClasses}>
+                  {profileData.location?.city && profileData.location?.country 
+                    ? `${profileData.location.city}, ${profileData.location.country}`
                     : "Not specified"}
                 </div>
               )}
@@ -801,64 +819,6 @@ const Profile = () => {
               ) : (
                 <div className={viewClasses}>
                   {profileData.occupation || "Not specified"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Country</label>
-                    <select
-                      name="location.country"
-                      value={profileData.location?.country || ""}
-                      onChange={handleCountryChange}
-                      className={commonClasses}
-                    >
-                      <option value="">Select Country</option>
-                      {countries.map((country) => (
-                        <option key={country.code} value={country.label}>
-                          {country.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {availableCities.length > 0 && (
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-1">City</label>
-                      <select
-                        name="location.city"
-                        value={profileData.location?.city || ""}
-                        onChange={(e) => handleInputChange({
-                          target: {
-                            name: 'location',
-                            value: { 
-                              ...profileData.location,
-                              city: e.target.value
-                            }
-                          }
-                        })}
-                        className={commonClasses}
-                      >
-                        <option value="">Select City</option>
-                        {availableCities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className={viewClasses}>
-                  {profileData.location?.city && profileData.location?.country 
-                    ? `${profileData.location.city}, ${profileData.location.country}`
-                    : "Not specified"}
                 </div>
               )}
             </div>

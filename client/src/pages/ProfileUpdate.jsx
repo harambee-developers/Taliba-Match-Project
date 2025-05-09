@@ -19,6 +19,7 @@ import {
   countries,
   dressStyleOptions
 } from "../data/fieldData";
+import citiesByCountry from '../data/citiesByCountry';
 
 // Gender-based custom select styles
 const getCustomSelectStyles = (gender) => ({
@@ -29,7 +30,7 @@ const getCustomSelectStyles = (gender) => ({
     borderColor: gender === 'Female' ? '#FFE6FB' : '#B6D4F5',
     borderWidth: '2px',
     boxShadow: 'none',
-    backgroundColor: 'white',
+    backgroundColor: 'white',   
     '&:hover': {
       borderColor: gender === 'Female' ? '#FFE6FB' : '#B6D4F5',
     },
@@ -102,6 +103,7 @@ const ProfileUpdate = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [availableCities, setAvailableCities] = useState([]);
   
   const [profileData, setProfileData] = useState({
     // Section 1 - Basic Information
@@ -113,6 +115,7 @@ const ProfileUpdate = () => {
     nationality: "",
     ethnicity: [],
     language: [],
+    location: { country: "", city: "" },
 
     // Section 2 - Personal Details
     bio: "",
@@ -245,7 +248,15 @@ const ProfileUpdate = () => {
         nationality: user.nationality || "",
         ethnicity: user.ethnicity || [],
         language: user.language || [],
+        location: { country: user.location?.country || "", city: user.location?.city || "" },
       }));
+
+      // Initialize available cities if user has a country selected
+      if (user.location?.country) {
+        const cities = citiesByCountry[user.location.country] || [];
+        setAvailableCities(cities);
+      }
+
       setLoading(false);
     }
   }, [user]);
@@ -399,6 +410,56 @@ const ProfileUpdate = () => {
             placeholder="Select languages..."
             styles={getCustomSelectStyles(profileData.gender)}
           />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-lg font-medium text-gray-700 mb-2">
+            Location
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <select
+                name="location.country"
+                value={profileData.location?.country || ""}
+                onChange={(e) => {
+                  const selectedCountry = e.target.value;
+                  const cities = selectedCountry ? citiesByCountry[selectedCountry] || [] : [];
+                  setAvailableCities(cities);
+                  handleInputChange('location', { 
+                    country: selectedCountry,
+                    city: '' // Reset city when country changes
+                  });
+                }}
+                className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
+              >
+                <option value="">Select Country</option>
+                {countries.map((country) => (
+                  <option key={country.code} value={country.label}>
+                    {country.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <select
+                name="location.city"
+                value={profileData.location?.city || ""}
+                onChange={(e) => handleInputChange('location', { 
+                  ...profileData.location,
+                  city: e.target.value
+                })}
+                className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
+                disabled={!profileData.location?.country}
+              >
+                <option value="">Select City</option>
+                {availableCities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -897,7 +958,7 @@ const ProfileUpdate = () => {
       );
       if (response.status === 200) {
         // Handle successful update
-        window.location.href = '/dashboard'; // Redirect to dashboard after successful update
+        window.location.href = '/search'; // Redirect to dashboard after successful update
       }
     } catch (err) {
       setError("Failed to update profile. Please try again.");
