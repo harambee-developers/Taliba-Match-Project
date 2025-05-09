@@ -7,6 +7,7 @@ import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOpti
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
+import citiesByCountry from '../data/citiesByCountry';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -181,6 +182,9 @@ const RegisterPage = () => {
     if (passwordStrength === 3) return { label: 'Fair', color: 'orange' };
     return { label: 'Strong', color: 'green' };
   };
+  
+  // Add state for city selection
+  const [availableCities, setAvailableCities] = useState([]);
 
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -610,6 +614,17 @@ const RegisterPage = () => {
     { value: 'Female', label: 'Female' },
   ];
 
+  // Add this function to handle country selection
+  const handleCountryChange = (option) => {
+    const selectedCountry = option ? option.value : '';
+    const cities = selectedCountry ? citiesByCountry[selectedCountry] || [] : [];
+    setAvailableCities(cities);
+    handleInputChange('location', { 
+      country: selectedCountry,
+      city: '' // Reset city when country changes
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
       {/* Modal for image cropping */}
@@ -897,15 +912,34 @@ const RegisterPage = () => {
               <label className="text-gray-600 mb-2">Which Country Do You Currently Live In?<span className="text-red-600 ml-1">*</span></label>
               <Select
                 options={countryOptions}
-                value={countryOptions.find(option => option.value === formData.location) || null}
-                placeholder="Select location..."
-                onChange={(option) => handleInputChange('location', option ? option.value : '')}
+                value={countryOptions.find(option => option.value === formData.location?.country) || null}
+                placeholder="Select country..."
+                onChange={handleCountryChange}
                 styles={customSelectStyles}
               />
-              {errors.location && (
-                <p className="mt-2 text-sm text-red-600">{errors.location}</p>
+              {errors.location?.country && (
+                <p className="mt-2 text-sm text-red-600">{errors.location.country}</p>
               )}
             </div>
+            {availableCities.length > 0 && (
+              <div className="flex flex-col">
+                <label className="text-gray-600 mb-2">Which City Do You Currently Live In?<span className="text-red-600 ml-1">*</span></label>
+                <Select
+                  options={availableCities.map(city => ({ value: city, label: city }))}
+                  value={availableCities.find(city => city === formData.location?.city) ? 
+                    { value: formData.location.city, label: formData.location.city } : null}
+                  placeholder="Select city..."
+                  onChange={(option) => handleInputChange('location', { 
+                    ...formData.location, 
+                    city: option ? option.value : '' 
+                  })}
+                  styles={customSelectStyles}
+                />
+                {errors.location?.city && (
+                  <p className="mt-2 text-sm text-red-600">{errors.location.city}</p>
+                )}
+              </div>
+            )}
             <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Are You Open to Making Hijrah?</label>
               <Select
@@ -1324,7 +1358,6 @@ const RegisterPage = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                  {/* First 4 female icons in a 2x2 or 4x1 grid */}
                   {[1, 2, 3, 4, 5, 6].map((num) => (
                     <div 
                       key={`woman${num}`}
@@ -1346,28 +1379,6 @@ const RegisterPage = () => {
                       </div>
                     </div>
                   ))}
-                  
-                  {/* 5th female icon centered */}
-                  <div className="col-span-2 md:col-span-4 flex justify-center mt-4">
-                    <div 
-                      className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === 'icon_woman5.png' ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'} w-1/2 md:w-1/4`}
-                      onClick={() => handleInputChange('avatar', 'icon_woman5.png')}
-                    >
-                      <img 
-                        src="/icon_woman5.png" 
-                        alt="Female Avatar 5"
-                        className="w-full h-auto"
-                      />
-                      <div className="mt-2 text-center">
-                        <button
-                          type="button"
-                          className={`px-4 py-1 rounded-full text-sm ${formData.avatar === 'icon_woman5.png' ? 'bg-[#1A495D] text-white' : 'bg-gray-200 text-[#1A495D]'}`}
-                        >
-                          Option 5
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
               
