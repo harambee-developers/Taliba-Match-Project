@@ -92,38 +92,38 @@ const Profile = () => {
         dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : "",
         email: user.email || "",
         phone: user.phone || "",
-        ethnicity: Array.isArray(user.ethnicity) ? user.ethnicity : [],
+        ethnicity: user.ethnicity || [],
         nationality: user.nationality || "",
-        language: user.profile?.language || [],
+        language: user.language || [],
 
         // Card 2 - About Yourself
-        bio: user.profile?.bio || "",
-        personality: user.profile?.personality || "",
-        dealBreakers: user.profile?.dealBreakers || "",
+        bio: user.bio || "",
+        personality: user.personality || "",
+        dealBreakers: user.dealBreakers || "",
 
         // Card 3 - Your Faith
         sect: user.sect || "",
-        madhab: user.profile?.madhab || "",
-        salahPattern: user.profile?.salahPattern || "",
-        quranMemorization: user.profile?.quranMemorization || "",
-        dressingStyle: user.profile?.dressingStyle || "",
-        openToPolygamy: user.profile?.openToPolygamy || "",
-        islamicAmbitions: user.profile?.islamicAmbitions || "",
-        islamicBooks: user.profile?.islamicBooks || "",
+        madhab: user.madhab || "",
+        salahPattern: user.salahPattern || "",
+        quranMemorization: user.quranMemorization || "",
+        dressingStyle: user.dressingStyle || "",
+        openToPolygamy: user.openToPolygamy || "",
+        islamicAmbitions: user.islamicAmbitions || "",
+        islamicBooks: user.islamicBooks || "",
 
         // Card 4 - Life Situation
-        children: user.profile?.children || "",
+        children: user.children || "",
         occupation: user.occupation || "",
         location: { country: user.location?.country || "", city: user.location?.city || "" },
         openToHijrah: user.profile?.openToHijrah || "",
         hijrahDestination: user.profile?.hijrahDestination || "",
         maritalStatus: user.maritalStatus || "",
-        revert: user.profile?.revert || "",
+        revert: user.revert || "",
 
         // Card 5 - Appearance
         weight: user.weight || "",
         height: user.height || "",
-        appearancePreference: user.profile?.appearancePreference || "",
+        appearancePreference: user.appearancePreference || "",
       });
 
       if (user.photos && user.photos.length > 0) {

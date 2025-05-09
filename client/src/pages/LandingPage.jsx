@@ -5,6 +5,7 @@ import heart from '../assets/heart.png';
 import puzzle from '../assets/puzzle.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -30,44 +31,61 @@ const LandingPage = () => {
   usePageTitle("Welcome to Talibah!")
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#FFF1FE] min-h-screen relative">
-      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row w-full min-h-screen z-20">
-        {/* Left Section (Pink) */}
-        <div className="lg:w-1/2 bg-[#FFF1FE] flex flex-col items-center justify-center p-6">
-          <h1 className="text-5xl lg:text-6xl font-semibold font-[Montserrat] text-[#E01D42] text-center mb-4">
-            Where Marriage Meets Knowledge
-          </h1>
-          {/* Get Started Button */}
-          <button className="bg-[#E01D42] text-white text-lg font-semibold py-4 px-6 mt-4 hover:bg-[#A52A2A] transition duration-300 rounded-lg"
-            onClick={() => {navigate("/register") }}>
-            Get Started Now
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF1FE] to-white">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#FFF1FE] opacity-90"></div>
+        <div className="absolute inset-0 bg-[url('/path-to-pattern.png')] opacity-5"></div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <h1 className="text-6xl md:text-7xl font-bold text-[#E01D42] mb-6 font-[Montserrat] leading-tight">
+              Where Marriage Meets Knowledge
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 mb-8">
+              Connect with like-minded individuals on a journey of faith and companionship
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-[#E01D42] text-white text-xl font-semibold py-4 px-8 rounded-full shadow-lg hover:bg-[#A52A2A] transition-all duration-300"
+              onClick={() => navigate("/register")}
+            >
+              Begin Your Journey
+            </motion.button>
+          </motion.div>
         </div>
+      </div>
 
-
-        {/* Right Section (Blue) */}
-        <div className="w-[85%] lg:w-[50%] bg-[#14485A] flex flex-col justify-center px-10 py-8 text-white relative mx-auto rounded-2xl lg:rounded-none mb-4 lg:mb-0 ">
-          <div className="relative max-w-md mx-auto space-y-8">
+      {/* Process Steps Section */}
+      <div className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center text-[#14485A] mb-16">Your Path to Marriage</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { icon: logo, title: "Create your profile", description: "Build your authentic profile highlighting your values and aspirations" },
               { icon: puzzle, title: "Find your Partner", description: "Discover compatible partners who share your vision" },
               { icon: chat, title: "Halal Conversation", description: "Engage in meaningful, guided conversations" },
               { icon: heart, title: "Marriage", description: "Begin your blessed journey together" },
             ].map((step, index) => (
-              <div key={index} className="flex items-center space-x-6 relative">
-                <div className="bg-white rounded-full flex items-center justify-center w-20 h-20">
-                  <img
-                    src={step.icon}
-                    alt={step.title}
-                    className="w-12 h-12 object-contain"
-                    loading='lazy'
-                  />
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="bg-[#FFF1FE] rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                  <img src={step.icon} alt={step.title} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-xl lg:text-2xl font-semibold font-[Montserrat]">
-                  {step.title}
-                </h3>
-              </div>
+                <h3 className="text-xl font-semibold text-center text-[#14485A] mb-2">{step.title}</h3>
+                <p className="text-gray-600 text-center">{step.description}</p>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -98,19 +116,14 @@ const LandingPage = () => {
                 </p>
               </div>
 
-            {/* A Journey Built on Faith */}
-            <div>
-              <h2 className="text-3xl font-semibold mb-3">
-                A Journey Built on Faith
-              </h2>
-              <p className="text-lg lg:text-xl leading-relaxed mb-6">
-                Marriage is described in the Qur’an as a source of peace, love, and mercy, and we hold these values at the core of our service:
-              </p>
-              <blockquote className="bg-white/10 rounded-lg p-6 italic text-lg lg:text-xl">
-                “And of His signs is that He created for you from yourselves mates that you may find tranquility in them; and He placed between you affection and mercy. Indeed, in that are signs for a people who give thought.” — <span className="font-semibold">Surah Ar-Rum (30:21)</span>
-              </blockquote>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+                <h3 className="text-2xl font-semibold mb-4">A Journey Built on Faith</h3>
+                <blockquote className="italic text-lg border-l-4 border-white pl-4">
+                  "And of His signs is that He created for you from yourselves mates that you may find tranquility in them; and He placed between you affection and mercy. Indeed, in that are signs for a people who give thought." — <span className="font-semibold">Surah Ar-Rum (30:21)</span>
+                </blockquote>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 

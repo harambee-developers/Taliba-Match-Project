@@ -237,4 +237,42 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     }
 });
 
+// Get modal status for a conversation
+router.get('/:conversationId/modal-status', async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) {
+            return res.status(404).json({ message: 'Conversation not found' });
+        }
+        
+        res.json({
+            initial_modal_shown: conversation.initial_modal_shown || []
+        });
+    } catch (error) {
+        logger.error('Error fetching modal status:', error);
+        res.status(500).json({ message: 'Error fetching modal status' });
+    }
+});
+
+// Mark modal as shown for a user in a conversation
+router.post('/:conversationId/mark-modal-shown', async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) {
+            return res.status(404).json({ message: 'Conversation not found' });
+        }
+
+        // Add user to initial_modal_shown if not already present
+        if (!conversation.initial_modal_shown.includes(req.body.userId)) {
+            conversation.initial_modal_shown.push(req.body.userId);
+            await conversation.save();
+        }
+
+        res.json({ message: 'Modal marked as shown' });
+    } catch (error) {
+        logger.error('Error marking modal as shown:', error);
+        res.status(500).json({ message: 'Error marking modal as shown' });
+    }
+});
+
 module.exports = router;

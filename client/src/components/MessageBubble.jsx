@@ -1,4 +1,3 @@
-// src/components/MessageBubble.jsx
 import React from 'react';
 
 export default function MessageBubble({
@@ -7,22 +6,25 @@ export default function MessageBubble({
     isFirstInRun,
     gender,
 }) {
-
     // choose background color
     const bgColorClass = isMine
         ? gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"
         : gender === "Male" ? "bg-[#E01D42]" : "bg-[#203449]";
+
+    const timestamp = new Date(msg.createdAt).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 
     return (
         <div
             style={{ "--bubble": bgColorClass.replace("bg-[", "").replace("]", "") }}
             className={`
                 relative
+                p-2
                 max-w-xs md:max-w-md
-                p-4
-                rounded-lg 
-                shadow-md
-                break-words
+                rounded-md shadow-md
+                break-words 
                 text-white
                 ${bgColorClass}
                 ${isFirstInRun ? (isMine ? "sender" : "receiver") : ""}
@@ -58,7 +60,13 @@ export default function MessageBubble({
                     )}
                 </div>
             ) : (
-                <p className="font-semibold">{msg.text}</p>
+                <>
+                    <p className="font-semibold break-words pr-14">{msg.text}</p>
+                    <span className="absolute bottom-1 right-2 text-xs text-white/70">
+                        {timestamp}
+                    </span>
+
+                </>
             )}
         </div>
     );

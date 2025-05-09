@@ -14,360 +14,409 @@ import InitialChatModal from "./modals/InitialChatModal";
 import UploadGuidelinesModal from "./modals/UploadGuidelinesModal";
 
 export default function ChatApp({ conversation, user_id, onLastMessageUpdate, photoUrl: propPhotoUrl }) {
-    const [input, setInput] = useState("");
-    const [showInitialModal, setShowInitialModal] = useState(false);
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const [pendingFile, setPendingFile] = useState(null);
+  const [input, setInput] = useState("");
+  const [showInitialModal, setShowInitialModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
 
 
-    const navigate = useNavigate()
-    const messagesEndRef = useRef(null);
-    const typingTimeoutRef = useRef(null);
-    const fileInputRef = useRef();
+  const navigate = useNavigate()
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef();
 
-    // Get user from AuthContext, socket from SocketContext and chat events context
-    const { user } = useAuth();
-    const { socket } = useSocket();
-    const { isTyping } = useChatEvents()
+  // Get user from AuthContext, socket from SocketContext and chat events context
+  const { user } = useAuth();
+  const { socket } = useSocket();
+  const { isTyping } = useChatEvents()
 
-    const [receiverId, setReceiverId] = useState(null)
-    const [receiverName, setReceiverName] = useState(null)
-    const [messages, setMessages] = useState([]);
-    const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
+  const [receiverId, setReceiverId] = useState(null)
+  const [receiverName, setReceiverName] = useState(null)
+  const [messages, setMessages] = useState([]);
+  const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-    // Use URL params as a fallback if props are null
-    const { conversationId: conversationIdFromParams } = useParams();
-    const currentConversationId = conversation || conversationIdFromParams;
-    const currentUserId = user_id || user?.userId;
+  // Use URL params as a fallback if props are null
+  const { conversationId: conversationIdFromParams } = useParams();
+  const currentConversationId = conversation || conversationIdFromParams;
+  const currentUserId = user_id || user?.userId;
 
-    const { state } = useLocation();
-    const locationPhotoUrl = state?.photoUrl;
+  const { state } = useLocation();
+  const locationPhotoUrl = state?.photoUrl;
 
-    const chatCache = "chat-cache";
-    const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
-    const CACHE_DETAILS = `chat_details_${currentConversationId}`;
-    const CACHE_STATUS = `chat_status_${currentConversationId}`
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
+  const chatCache = "chat-cache";
+  const CACHE_MESSAGES = `chat_messages_${currentConversationId}`;
+  const CACHE_DETAILS = `chat_details_${currentConversationId}`;
+  const CACHE_STATUS = `chat_status_${currentConversationId}`
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB limit
 
-    const photoUrl = propPhotoUrl || locationPhotoUrl ||
-        (user?.gender === 'Male'
-            ? '/icon_woman6.png'
-            : '/icon_man5.png');
+  const raw =
+    propPhotoUrl ||
+    locationPhotoUrl ||
+    (user?.gender === 'Male'
+      ? 'icon_woman6.png'
+      : 'icon_man5.png');
 
-    // Fetch and set receiver details
-    useEffect(() => {
-        const fetchReceiverDetails = async () => {
-            const cached = await getCachedData(CACHE_DETAILS, chatCache);
-            if (cached) {
-                setReceiverId(cached._id);
-                setReceiverName([cached.userName, cached.firstName, cached.lastName]);
-            }
-            try {
-                const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`);
-                const receiver = data?.participants?.find(p => p._id !== currentUserId);
-                if (receiver) {
-                    setReceiverId(receiver._id);
-                    setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
-                    cacheData(CACHE_DETAILS, receiver, chatCache);
-                }
-            } catch (err) {
-                console.error("Error fetching receiver details", err);
-            }
-        };
-        if (currentConversationId && currentUserId) {
-            fetchReceiverDetails();
+  const backend = import.meta.env.VITE_BACKEND_URL;
+
+  // If it already starts with the backend URL or “/”, leave it as-is.
+  // Otherwise, if it’s a bare filename, prepend a slash.
+  // (You could also choose to prepend the backend URL here instead of “/” if appropriate.)
+  let photoUrl;
+  if (raw.startsWith(backend)) {
+    photoUrl = raw;
+  } else if (raw.startsWith('/')) {
+    photoUrl = raw;
+  } else {
+    photoUrl = '/' + raw;
+  }
+
+  // Fetch and set receiver details
+  useEffect(() => {
+    const fetchReceiverDetails = async () => {
+      const cached = await getCachedData(CACHE_DETAILS, chatCache);
+      if (cached) {
+        setReceiverId(cached._id);
+        setReceiverName([cached.userName, cached.firstName, cached.lastName]);
+      }
+      try {
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/details`);
+        const receiver = data?.participants?.find(p => p._id !== currentUserId);
+        if (receiver) {
+          setReceiverId(receiver._id);
+          setReceiverName([receiver.userName, receiver.firstName, receiver.lastName]);
+          cacheData(CACHE_DETAILS, receiver, chatCache);
         }
-    }, [currentConversationId, currentUserId]);
+      } catch (err) {
+        console.error("Error fetching receiver details", err);
+      }
+    };
+    if (currentConversationId && currentUserId) {
+      fetchReceiverDetails();
+    }
+  }, [currentConversationId, currentUserId]);
 
-    useEffect(() => {
-        if (!receiverId) return;
-        const fetchStatus = async () => {
-            const cachedStatus = await getCachedData(CACHE_STATUS, chatCache);
-            if (cachedStatus) {
-                console.info("✅ Loaded status from cache");
-                setLocalReceiverStatus(cachedStatus.data);
-            }
-            try {
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
-                cacheData(CACHE_STATUS, response, chatCache)
-                setLocalReceiverStatus(response.data);
-            } catch (error) {
-                console.error("Error fetching messages", error.message);
-            }
-        }
-        fetchStatus();
-    }, [receiverId])
+  useEffect(() => {
+    if (!receiverId) return;
+    const fetchStatus = async () => {
+      const cachedStatus = await getCachedData(CACHE_STATUS, chatCache);
+      if (cachedStatus) {
+        console.info("✅ Loaded status from cache");
+        setLocalReceiverStatus(cachedStatus.data);
+      }
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/fetch-status/${receiverId}`)
+        cacheData(CACHE_STATUS, response, chatCache)
+        setLocalReceiverStatus(response.data);
+      } catch (error) {
+        console.error("Error fetching messages", error.message);
+      }
+    }
+    fetchStatus();
+  }, [receiverId])
 
-    // Fetch messages (once) for display if context hasn't populated yet
-    useEffect(() => {
-        if (!currentConversationId) return;
-        const fetchMessages = async () => {
-            const cached = await getCachedData(CACHE_MESSAGES, chatCache);
-            if (cached) {
-                setMessages(cached)
-            }
-            try {
-                const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/messages`);
-                setMessages(data.messages)
-                cacheData(CACHE_MESSAGES, data.messages, chatCache);
-            } catch (err) {
-                console.error("Error fetching messages", err);
-            }
-        };
-
-        fetchMessages();
-    }, [currentConversationId]);
-
-    const handleAttachmentClick = (e) => {
-        e.preventDefault();
-        setShowUploadModal(true);
+  // Fetch messages (once) for display if context hasn't populated yet
+  useEffect(() => {
+    if (!currentConversationId) return;
+    const fetchMessages = async () => {
+      const cached = await getCachedData(CACHE_MESSAGES, chatCache);
+      if (cached) {
+        setMessages(cached)
+      }
+      try {
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/messages`);
+        setMessages(data.messages)
+        cacheData(CACHE_MESSAGES, data.messages, chatCache);
+      } catch (err) {
+        console.error("Error fetching messages", err);
+      }
     };
 
-    const handleUploadProceed = () => {
-        // Close the modal
-        setShowUploadModal(false);
-        // Directly trigger a click on the hidden file input
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*,.pdf,.doc,.docx,.txt';
-        fileInput.onchange = handleFileSelect;
-        fileInput.click();
+    fetchMessages();
+  }, [currentConversationId]);
+
+  const handleAttachmentClick = (e) => {
+    e.preventDefault();
+    setShowUploadModal(true);
+  };
+
+  const handleUploadProceed = () => {
+    // Close the modal
+    setShowUploadModal(false);
+    // Directly trigger a click on the hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,.pdf,.doc,.docx,.txt';
+    fileInput.onchange = handleFileSelect;
+    fileInput.click();
+  };
+
+  const handleUploadCancel = () => {
+    setShowUploadModal(false);
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File size exceeds the limit of 5 MB.");
+      return;
+    }
+
+    setIsUploading(true); // Disable input/button
+    // Optionally, preview the file if desired (for images)
+    if (file.type.startsWith("image/")) {
+      const previewURL = URL.createObjectURL(file);
+      // You can set state to show the preview somewhere in your UI if needed
+      console.info("Image preview URL: ", previewURL);
+    }
+
+    // Prepare the payload using FormData
+    const formData = new FormData();
+
+    // Append other necessary info
+    formData.append("file", file);
+    formData.append("conversationId", currentConversationId);
+    formData.append("senderId", currentUserId);
+    formData.append("receiverId", receiverId);
+
+    // Upload the file using axios
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/message/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // You might expect the server to respond with the file URL or a message payload.
+      const attachmentMessage = response.data.message;
+      // Emit the message event via socket (if needed) or update the UI directly
+      socket.emit("send_message", attachmentMessage);
+      // Optionally update the cache if you're using it
+      cacheData(CACHE_MESSAGES, [...messages, attachmentMessage], chatCache);
+      // Clear the text input once the file upload is complete
+      setInput("");
+      // Clear file input so it doesn't trigger again with the same file.
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      console.error("Error uploading file:", err);
+    } finally {
+      setIsUploading(false); // Re-enable input/button
+    }
+  };
+
+  // Send a message
+  const sendMessage = () => {
+    if (!input.trim()) return; // Prevent sending empty messages
+    if (!receiverId) {
+      console.error("Receiver ID is missing!");
+      return;
+    }
+
+    const messageData = {
+      text: input,
+      sender_id: currentUserId,
+      receiver_id: receiverId,
+      conversation_id: currentConversationId,
+      createdAt: new Date().toISOString(),
     };
 
-    const handleUploadCancel = () => {
-        setShowUploadModal(false);
+
+    const notificationObject = {
+      text: `${user.firstName} sent you a message!`,
+      conversationId: currentConversationId,
+      receiver_id: receiverId,
+      sender_id: currentUserId,
+    }
+
+    console.info("Sending message: ", messageData);
+
+    socket.emit("send_message", messageData);
+    socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
+    socket.emit("notification", notificationObject)
+
+    // Notify the parent component about the new message
+    if (onLastMessageUpdate) {
+      onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
+    }
+
+    setInput(""); // Clear input after sending
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, 100); // Delay slightly to allow rendering
+  };
+
+  // Format the last seen text
+  const formattedLastSeen = localReceiverStatus?.lastSeen
+    ? isToday(new Date(localReceiverStatus?.lastSeen))
+      ? `Last seen today at ${new Date(localReceiverStatus?.lastSeen).toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`
+      : `Last seen ${format(new Date(localReceiverStatus?.lastSeen), "MMM d, yyyy")}`
+    : null;
+
+  const groupMessagesByDate = (messages = []) => {
+    if (!Array.isArray(messages)) return {}; // Ensure messages is an array
+
+    return messages
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Sort by date
+      .reduce((acc, message) => {
+        if (!message?.createdAt) return acc; // Skip messages with no timestamp
+
+        const messageDate = new Date(message.createdAt);
+        let formattedDate;
+
+        if (isToday(messageDate)) {
+          formattedDate = "Today";
+        } else if (isYesterday(messageDate)) {
+          formattedDate = "Yesterday";
+        } else {
+          formattedDate = format(messageDate, "EEEE, MMMM d");
+        }
+
+        acc[formattedDate] = acc[formattedDate] || [];
+        acc[formattedDate].push(message);
+
+        return acc;
+      }, {});
+  };
+
+  // Typing indicator events
+  const handleTyping = () => {
+    socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
+    }, 2000);
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "instant" });
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if (!socket) {
+      console.warn("Socket not connected yet.");
+      return;
+    }
+    if (!currentConversationId || !currentUserId) return; // Ensure required data is available
+    socket.emit("join_chat", { userId: currentUserId, conversationId: currentConversationId });
+    const handleMessagesRead = ({ conversationId: cId, receiverId: rId }) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.conversation_id === cId && msg.receiver_id === rId
+            ? { ...msg, status: "Read" }
+            : msg
+        )
+      );
     };
-
-    const handleFileSelect = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Check file size
-        if (file.size > MAX_FILE_SIZE) {
-            alert("File size exceeds the limit of 5 MB.");
-            return;
+    const handleNewMessages = ({ message }) => {
+      if (message.conversation_id !== currentConversationId) return;
+      setMessages((prev) => {
+        const updatedMessage = [...prev, message]
+        cacheData(CACHE_MESSAGES, updatedMessage, chatCache)
+        return updatedMessage
+      })
+      // Only play the notification sound if the message is not from the current user.
+      if (message.sender_id !== currentUserId) {
+        const pingSound = new Audio("/sounds/ping.mp3");
+        // Play sound; if already playing, restart it.
+        if (pingSound.paused) {
+          pingSound.play();
+        } else {
+          pingSound.currentTime = 0;
+          pingSound.play();
         }
+      }
+      if (onLastMessageUpdate) {
+        onLastMessageUpdate(currentConversationId, message.text, currentUserId);
+      }
+    }
 
-        setIsUploading(true); // Disable input/button
-        // Optionally, preview the file if desired (for images)
-        if (file.type.startsWith("image/")) {
-            const previewURL = URL.createObjectURL(file);
-            // You can set state to show the preview somewhere in your UI if needed
-            console.info("Image preview URL: ", previewURL);
-        }
+    const handleUserOnline = () => setLocalReceiverStatus({ isOnline: true, lastSeen: null });
+    const handleUserOffline = ({ lastSeen }) => setLocalReceiverStatus({ isOnline: false, lastSeen });
 
-        // Prepare the payload using FormData
-        const formData = new FormData();
+    socket.on('messages_read', handleMessagesRead)
+    socket.on('message', handleNewMessages)
+    socket.on("user_online", handleUserOnline);
+    socket.on("user_offline", handleUserOffline);
 
-        // Append other necessary info
-        formData.append("file", file);
-        formData.append("conversationId", currentConversationId);
-        formData.append("senderId", currentUserId);
-        formData.append("receiverId", receiverId);
-
-        // Upload the file using axios
-        try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/api/message/upload`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
-
-            // You might expect the server to respond with the file URL or a message payload.
-            const attachmentMessage = response.data.message;
-            // Emit the message event via socket (if needed) or update the UI directly
-            socket.emit("send_message", attachmentMessage);
-            // Optionally update the cache if you're using it
-            cacheData(CACHE_MESSAGES, [...messages, attachmentMessage], chatCache);
-            // Clear the text input once the file upload is complete
-            setInput("");
-            // Clear file input so it doesn't trigger again with the same file.
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-        } catch (err) {
-            console.error("Error uploading file:", err);
-        } finally {
-            setIsUploading(false); // Re-enable input/button
-        }
+    return () => {
+      socket.off('message', handleNewMessages)
+      socket.off('messages_read', handleMessagesRead)
+      socket.off("user_online", handleUserOnline);
+      socket.off("user_offline", handleUserOffline);
     };
-
-    // Send a message
-    const sendMessage = () => {
-        if (!input.trim()) return; // Prevent sending empty messages
-        if (!receiverId) {
-            console.error("Receiver ID is missing!");
-            return;
-        }
-
-        const messageData = {
-            text: input,
-            sender_id: currentUserId,
-            receiver_id: receiverId,
-            conversation_id: currentConversationId,
-            createdAt: new Date().toISOString(),
-        };
-
-
-        const notificationObject = {
-            text: `${user.firstName} sent you a message!`,
-            conversationId: currentConversationId,
-            receiver_id: receiverId,
-            sender_id: currentUserId,
-        }
-
-        console.info("Sending message: ", messageData);
-
-        socket.emit("send_message", messageData);
-        socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
-        socket.emit("notification", notificationObject)
-
-        // Notify the parent component about the new message
-        if (onLastMessageUpdate) {
-            onLastMessageUpdate(currentConversationId, messageData.text, currentUserId);
-        }
-
-        setInput(""); // Clear input after sending
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-        }, 100); // Delay slightly to allow rendering
-    };
-
-    // Format the last seen text
-    const formattedLastSeen = localReceiverStatus?.lastSeen
-        ? isToday(new Date(localReceiverStatus?.lastSeen))
-            ? `Last seen today at ${new Date(localReceiverStatus?.lastSeen).toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-            })}`
-            : `Last seen ${format(new Date(localReceiverStatus?.lastSeen), "MMM d, yyyy")}`
-        : null;
-
-    const groupMessagesByDate = (messages = []) => {
-        if (!Array.isArray(messages)) return {}; // Ensure messages is an array
-
-        return messages
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Sort by date
-            .reduce((acc, message) => {
-                if (!message?.createdAt) return acc; // Skip messages with no timestamp
-
-                const messageDate = new Date(message.createdAt);
-                let formattedDate;
-
-                if (isToday(messageDate)) {
-                    formattedDate = "Today";
-                } else if (isYesterday(messageDate)) {
-                    formattedDate = "Yesterday";
-                } else {
-                    formattedDate = format(messageDate, "EEEE, MMMM d");
-                }
-
-                acc[formattedDate] = acc[formattedDate] || [];
-                acc[formattedDate].push(message);
-
-                return acc;
-            }, {});
-    };
-
-    // Typing indicator events
-    const handleTyping = () => {
-        socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-            socket.emit("stop_typing", { conversationId: currentConversationId, senderId: currentUserId });
-        }, 2000);
-    };
-
-    useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "instant" });
-        }
-    }, [messages])
-
-    useEffect(() => {
-        if (!socket) {
-            console.warn("Socket not connected yet.");
-            return;
-        }
-        if (!currentConversationId || !currentUserId) return; // Ensure required data is available
-        socket.emit("join_chat", { userId: currentUserId, conversationId: currentConversationId });
-        const handleMessagesRead = ({ conversationId: cId, receiverId: rId }) => {
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg.conversation_id === cId && msg.receiver_id === rId
-                        ? { ...msg, status: "Read" }
-                        : msg
-                )
-            );
-        };
-        const handleNewMessages = ({ message }) => {
-            if (message.conversation_id !== currentConversationId) return;
-            setMessages((prev) => {
-                const updatedMessage = [...prev, message]
-                cacheData(CACHE_MESSAGES, updatedMessage, chatCache)
-                return updatedMessage
-            })
-            // Only play the notification sound if the message is not from the current user.
-            if (message.sender_id !== currentUserId) {
-                const pingSound = new Audio("/sounds/ping.mp3");
-                // Play sound; if already playing, restart it.
-                if (pingSound.paused) {
-                    pingSound.play();
-                } else {
-                    pingSound.currentTime = 0;
-                    pingSound.play();
-                }
-            }
-            if (onLastMessageUpdate) {
-                onLastMessageUpdate(currentConversationId, message.text, currentUserId);
-            }
-        }
-
-        const handleUserOnline = () => setLocalReceiverStatus({ isOnline: true, lastSeen: null });
-        const handleUserOffline = ({ lastSeen }) => setLocalReceiverStatus({ isOnline: false, lastSeen });
-
-        socket.on('messages_read', handleMessagesRead)
-        socket.on('message', handleNewMessages)
-        socket.on("user_online", handleUserOnline);
-        socket.on("user_offline", handleUserOffline);
-
-        return () => {
-            socket.off('message', handleNewMessages)
-            socket.off('messages_read', handleMessagesRead)
-            socket.off("user_online", handleUserOnline);
-            socket.off("user_offline", handleUserOffline);
-        };
-    }, [currentConversationId, currentUserId, socket, onLastMessageUpdate]);
+  }, [currentConversationId, currentUserId, socket, onLastMessageUpdate]);
 
     // Memoize grouped messages
     const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages])
 
-    // Show loading state if the current user is not yet available or receiverId is not set
-    if (!currentUserId || !receiverId || !user) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-    }
+    // Add this useEffect after the other useEffects
+    useEffect(() => {
+        const checkModalStatus = async () => {
+            if (!currentConversationId || !currentUserId) return;
+            
+            try {
+                const { data } = await axios.get(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/modal-status`
+                );
+                
+                if (!data.initial_modal_shown.includes(currentUserId)) {
+                    setShowInitialModal(true);
+                }
+            } catch (err) {
+                console.error("Error checking modal status:", err);
+            }
+        };
+        
+        checkModalStatus();
+    }, [currentConversationId, currentUserId]);
 
-    return (
-        <div
-            className="flex flex-col h-screen w-full bg-repeat bg-center"
-            style={{
-                backgroundImage:
-                    user?.gender === "Male"
-                        ? "url('/wallpaper_man.svg')"
-                        : "url('/wallpaper_woman.svg')",
-            }}
-            loading="lazy"
-        >
-          {/* <InitialChatModal 
+    const handleNaseehaClose = async () => {
+        try {
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/mark-modal-shown`,
+                { userId: currentUserId }
+            );
+            setShowInitialModal(false);
+        } catch (err) {
+            console.error("Error marking modal as shown:", err);
+        }
+    };
+
+  // Show loading state if the current user is not yet available or receiverId is not set
+  if (!currentUserId || !receiverId || !user) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  return (
+    <div
+      className="flex flex-col h-screen w-full bg-center bg-repeat bg-[length:100%] md:bg-[length:60%]"
+      style={{
+        backgroundImage:
+          user?.gender === "Male"
+            ? "url('/wallpaper_man.svg')"
+            : "url('/wallpaper_woman.svg')",
+      }}
+      loading="lazy"
+    >
+      <InitialChatModal 
                 isOpen={showInitialModal} 
                 onClose={handleNaseehaClose} 
-            /> */}
+            />
             <UploadGuidelinesModal 
                 isOpen={showUploadModal}
                 onClose={() => setShowUploadModal(false)}
