@@ -61,7 +61,7 @@ export default function MessageBubble({
                 </div>
             ) : (
                 <>
-                    <p className="font-semibold break-words pr-14">{msg.text}</p>
+                    <p className="text-sm font-semibold break-words pr-14">{msg.text}</p>
                     <span className="absolute bottom-1 right-2 text-xs text-white/70">
                         {timestamp}
                     </span>

@@ -424,7 +424,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
             />
           {/* Header */}
           <div
-            className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center space-x-4 fixed top-0 left-0 right-0 sm:static"
+            className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center z-40 space-x-4 fixed top-0 left-0 right-0 sm:static"
           >
             <div
               className="md:hidden cursor-pointer theme-bg"
@@ -500,7 +500,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                         key={msg.id ?? index}
                         className={`flex w-full ${
                           isMine ? "justify-end" : "justify-start"
-                        } mb-2`}
+                        } items-end mb-2`}
                       >
                         {/* Bubble */}
                         <MessageBubble
@@ -512,15 +512,6 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
       
                         {/* Timestamp & status */}
                         <div className="ml-2 text-sm text-gray-600">
-                          <span>
-                            {new Date(msg.createdAt).toLocaleTimeString(
-                              "en-GB",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </span>
                           {index === msgs.length - 1 &&
                             isMine && (
                               <p className="text-xs text-[#203449]">
