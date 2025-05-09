@@ -1138,7 +1138,7 @@ const RegisterPage = () => {
                 styles={customSelectStyles}
               />
             </div>
-            {formData.gender === 'female' && (
+            {formData.gender === 'Female' && (
               <>
                 <div className="flex flex-col">
                   <label className="text-gray-600 mb-2">Dressing Style (Hijab, Niqab, Modesty Level)</label>
