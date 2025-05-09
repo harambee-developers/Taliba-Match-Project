@@ -216,7 +216,7 @@ router.get("/search", authMiddleware, async (req, res) => {
     });
 
     logger.info('Filtered profiles:', filteredProfiles.length);
-    res.json(filteredProfiles.slice(0, 20));
+    res.json(filteredProfiles.slice(0, 50));
 
   } catch (error) {
     logger.error('Search error details:', {
