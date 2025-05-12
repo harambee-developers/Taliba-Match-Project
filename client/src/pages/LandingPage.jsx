@@ -69,7 +69,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { icon: logo, title: "Create your profile", description: "Build your authentic profile highlighting your values and aspirations" },
-              { icon: puzzle, title: "Find your Companion", description: "Discover compatible partners who share your vision" },
+              { icon: puzzle, title: "Find your Partner", description: "Discover compatible partners who share your vision" },
               { icon: chat, title: "Halal Conversation", description: "Engage in meaningful, guided conversations" },
               { icon: heart, title: "Marriage", description: "Begin your blessed journey together" },
             ].map((step, index) => (

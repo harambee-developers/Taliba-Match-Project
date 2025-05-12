@@ -71,7 +71,10 @@ const UserSchema = new Schema({
   sect: { type: String, enum: ['sunni', 'salafi', 'shia', 'idontknow', 'other', ''] },
   occupation: { type: String },
   maritalStatus: { type: String, enum: ['yes', 'no', ''] },
-  location: { type: String },
+  location: { 
+    country: { type: String },
+    city: { type: String }
+  },
   nationality: { type: String },
   ethnicity: { type: [String] },
   phone: { type: String },

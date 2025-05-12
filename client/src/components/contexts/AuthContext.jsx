@@ -130,9 +130,9 @@ const login = async (email, password) => {
     if (response.status === 200) {
       const { isDefaultPassword, redirect, resetToken} = response.data;
 
-      // If user logged in with default password, force password change
+      // If user logged in with default password, redirect to profile update with resetToken
       if (isDefaultPassword) {
-        window.location.href = `/change-password/${resetToken}`;
+        window.location.href = `/profile-update/${resetToken}`;
         return; // Stop further execution
       }
 
