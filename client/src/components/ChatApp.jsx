@@ -17,13 +17,12 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
   const [input, setInput] = useState("");
   const [showInitialModal, setShowInitialModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null);
-
 
   const navigate = useNavigate()
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef();
+  const dropdownRef = useRef(null);
 
   // Get user from AuthContext, socket from SocketContext and chat events context
   const { user } = useAuth();
@@ -35,7 +34,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
   const [messages, setMessages] = useState([]);
   const [localReceiverStatus, setLocalReceiverStatus] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Use URL params as a fallback if props are null
   const { conversationId: conversationIdFromParams } = useParams();
@@ -71,6 +70,20 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
   } else {
     photoUrl = '/' + raw;
   }
+
+  // Dropdown for when picture profile is selected
+  const toggleDropdown = () => setShowDropdown(prev => !prev);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+      const handler = (e) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+          setShowDropdown(false);
+        }
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
   // Fetch and set receiver details
   useEffect(() => {
@@ -361,41 +374,41 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     };
   }, [currentConversationId, currentUserId, socket, onLastMessageUpdate]);
 
-    // Memoize grouped messages
-    const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages])
+  // Memoize grouped messages
+  const groupedMessages = useMemo(() => groupMessagesByDate(messages), [messages])
 
-    // Add this useEffect after the other useEffects
-    useEffect(() => {
-        const checkModalStatus = async () => {
-            if (!currentConversationId || !currentUserId) return;
-            
-            try {
-                const { data } = await axios.get(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/modal-status`
-                );
-                
-                if (!data.initial_modal_shown.includes(currentUserId)) {
-                    setShowInitialModal(true);
-                }
-            } catch (err) {
-                console.error("Error checking modal status:", err);
-            }
-        };
-        
-        checkModalStatus();
-    }, [currentConversationId, currentUserId]);
+  // Add this useEffect after the other useEffects
+  useEffect(() => {
+    const checkModalStatus = async () => {
+      if (!currentConversationId || !currentUserId) return;
 
-    const handleNaseehaClose = async () => {
-        try {
-            await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/mark-modal-shown`,
-                { userId: currentUserId }
-            );
-            setShowInitialModal(false);
-        } catch (err) {
-            console.error("Error marking modal as shown:", err);
+      try {
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/modal-status`
+        );
+
+        if (!data.initial_modal_shown.includes(currentUserId)) {
+          setShowInitialModal(true);
         }
+      } catch (err) {
+        console.error("Error checking modal status:", err);
+      }
     };
+
+    checkModalStatus();
+  }, [currentConversationId, currentUserId]);
+
+  const handleNaseehaClose = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/message/${currentConversationId}/mark-modal-shown`,
+        { userId: currentUserId }
+      );
+      setShowInitialModal(false);
+    } catch (err) {
+      console.error("Error marking modal as shown:", err);
+    }
+  };
 
   // Show loading state if the current user is not yet available or receiverId is not set
   if (!currentUserId || !receiverId || !user) {
@@ -413,189 +426,230 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
       }}
       loading="lazy"
     >
-      <InitialChatModal 
-                isOpen={showInitialModal} 
-                onClose={handleNaseehaClose} 
-            />
-            <UploadGuidelinesModal 
-                isOpen={showUploadModal}
-                onClose={() => setShowUploadModal(false)}
-                onProceed={handleUploadProceed}
-            />
-          {/* Header */}
+      <InitialChatModal
+        isOpen={showInitialModal}
+        onClose={handleNaseehaClose}
+      />
+      <UploadGuidelinesModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onProceed={handleUploadProceed}
+      />
+      {/* Header */}
+      <div
+        className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center z-40 space-x-4 fixed top-0 left-0 right-0 sm:static"
+      >
+        <div
+          className="md:hidden cursor-pointer theme-bg"
+          onClick={() => navigate("/matches")}
+        >
+          <ChevronLeft className="w-10-h-10" />
+        </div>
+        <div className="relative" ref={dropdownRef}>
           <div
-            className="p-[0.65rem] text-xl font-bold theme-border theme-bg text-black inline-flex items-center z-40 space-x-4 fixed top-0 left-0 right-0 sm:static"
+            className="rounded-full bg-white theme-border overflow-hidden w-16 h-16 cursor-pointer"
+            onClick={toggleDropdown}
           >
-            <div
-              className="md:hidden cursor-pointer theme-bg"
-              onClick={() => navigate("/matches")}
-            >
-              <ChevronLeft className="w-10-h-10" />
-            </div>
-            <div className="rounded-full bg-white theme-border overflow-hidden w-16 h-16">
-              <img
-                src={photoUrl}
-                alt={`${user?.gender === "Male" ? "icon_woman" : "icon_man"}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-lg font-semibold theme-bg">
-                {currentUserId
-                  ? `${receiverName[1]} ${receiverName[2]}`
-                  : "Loading..."}
-              </span>
-              {localReceiverStatus &&
-                !localReceiverStatus.isOnline &&
-                localReceiverStatus.lastSeen && (
-                  <span className="text-sm theme-bg">
-                    {formattedLastSeen}
-                  </span>
-                )}
-            </div>
-            <div className="ml-2">
-              {localReceiverStatus?.isOnline === true ? (
-                <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
-              ) : localReceiverStatus?.isOnline === false &&
-                localReceiverStatus?.lastSeen === null ? (
-                <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
-              ) : null}
-            </div>
+            <img
+              src={photoUrl}
+              alt="User Icon"
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
           </div>
-      
-          {/* Messages list */}
-          <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
-            {Object.keys(groupedMessages).length === 0 ? (
-              <div className="flex justify-center items-center h-full">
-                <p className="text-gray-400 text-center">
-                  Why not introduce yourself?
-                </p>
+
+          {showDropdown && (
+            <div className="absolute z-50 mt-2 w-48 right-0 bg-white border rounded-lg shadow-md text-sm">
+              <div className="flex items-center px-4 py-2 space-x-2">
+                <img
+                  src={photoUrl}
+                  alt="User"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="flex flex-col">
+                  <span className="font-semibold">{`${receiverName[1]} ${receiverName[2]}`}</span>
+                  <span className={`text-xs ${localReceiverStatus?.isOnline ? 'text-green-500' : 'text-gray-400'}`}>
+                    {localReceiverStatus?.isOnline ? "Online" : "Offline"}
+                  </span>
+                </div>
               </div>
-            ) : (
-              Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
-                <div key={dateIndex}>
-                  {/* Date Header */}
-                  <div className="flex justify-center m-8">
-                    <div
-                      className={`text-white ${
-                        user?.gender === "Male"
-                          ? "bg-[#203449]"
-                          : "bg-[#E01D42]"
-                      } bg-opacity-40 font-semibold px-4 py-2 rounded-lg text-sm`}
-                    >
-                      {date}
+              <button
+                onClick={async () => {
+                  await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/user/block/${receiverId}`);
+                  alert("User has been blocked");
+                  setShowDropdown(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                Block User
+              </button>
+              <button
+                onClick={async () => {
+                  const reason = window.prompt("Why are you reporting this user?");
+                  if (!reason) return;
+                  await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/user/report/${receiverId}`, { reason });
+                  alert("Thank you. The user has been reported.");
+                  setShowDropdown(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+              >
+                Report User
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col items-start">
+          <span className="text-lg font-semibold theme-bg">
+            {currentUserId
+              ? `${receiverName[1]} ${receiverName[2]}`
+              : "Loading..."}
+          </span>
+          {localReceiverStatus &&
+            !localReceiverStatus.isOnline &&
+            localReceiverStatus.lastSeen && (
+              <span className="text-sm theme-bg">
+                {formattedLastSeen}
+              </span>
+            )}
+        </div>
+        <div className="ml-2">
+          {localReceiverStatus?.isOnline === true ? (
+            <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+          ) : localReceiverStatus?.isOnline === false &&
+            localReceiverStatus?.lastSeen === null ? (
+            <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
+          ) : null}
+        </div>
+      </div>
+
+      {/* Messages list */}
+      <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto">
+        {Object.keys(groupedMessages).length === 0 ? (
+          <div className="flex justify-center items-center h-full">
+            <p className="text-gray-400 text-center">
+              Why not introduce yourself?
+            </p>
+          </div>
+        ) : (
+          Object.entries(groupedMessages).map(([date, msgs], dateIndex) => (
+            <div key={dateIndex}>
+              {/* Date Header */}
+              <div className="flex justify-center m-8">
+                <div
+                  className={`text-white ${user?.gender === "Male"
+                      ? "bg-[#203449]"
+                      : "bg-[#E01D42]"
+                    } bg-opacity-40 font-semibold px-4 py-2 rounded-lg text-sm`}
+                >
+                  {date}
+                </div>
+              </div>
+
+              {/* Loop through each message */}
+              {msgs.map((msg, index) => {
+                const isMine = msg.sender_id === currentUserId;
+                const prev = msgs[index - 1];
+                const isFirstInRun =
+                  !prev || prev.sender_id !== msg.sender_id;
+
+                return (
+                  <div
+                    key={msg.id ?? index}
+                    className={`flex w-full ${isMine ? "justify-end" : "justify-start"
+                      } items-end mb-2`}
+                  >
+                    {/* Bubble */}
+                    <MessageBubble
+                      msg={msg}
+                      isMine={isMine}
+                      isFirstInRun={isFirstInRun}
+                      gender={user?.gender}
+                    />
+
+                    {/* Timestamp & status */}
+                    <div className="ml-2 text-sm text-gray-600">
+                      {index === msgs.length - 1 &&
+                        isMine && (
+                          <p className="text-xs text-[#203449]">
+                            {msg.status}
+                          </p>
+                        )}
                     </div>
                   </div>
-      
-                  {/* Loop through each message */}
-                  {msgs.map((msg, index) => {
-                    const isMine = msg.sender_id === currentUserId;
-                    const prev = msgs[index - 1];
-                    const isFirstInRun =
-                      !prev || prev.sender_id !== msg.sender_id;
-      
-                    return (
-                      <div
-                        key={msg.id ?? index}
-                        className={`flex w-full ${
-                          isMine ? "justify-end" : "justify-start"
-                        } items-end mb-2`}
-                      >
-                        {/* Bubble */}
-                        <MessageBubble
-                          msg={msg}
-                          isMine={isMine}
-                          isFirstInRun={isFirstInRun}
-                          gender={user?.gender}
-                        />
-      
-                        {/* Timestamp & status */}
-                        <div className="ml-2 text-sm text-gray-600">
-                          {index === msgs.length - 1 &&
-                            isMine && (
-                              <p className="text-xs text-[#203449]">
-                                {msg.status}
-                              </p>
-                            )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))
-            )}
-            {isTyping.isTyping && (
-              <TypingIndicator
-                isTyping
-                gender={user?.gender}
-              />
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-      
-          {/* Input area */}
-          <div className="md:p-10 flex items-center space-x-2 p-2">
-             {/* File Attachment */}
-             <div 
-                htmlFor="file-attachment"
-                className="cursor-pointer mr-2 group"
-                onClick={handleAttachmentClick}
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-6 w-6 ${
-                        user.gender === "Male"
-                            ? "text-[#203449] group-hover:text-blue-400"
-                            : "text-[#E01D42] group-hover:text-red-300"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                    />
-                </svg>
+                );
+              })}
             </div>
-            {/* Text input */}
-            <input
-              type="text"
-              name="chatbox"
-              id="chatbox"
-              disabled={isUploading}
-              className="flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300"
-              placeholder={
-                isUploading
-                  ? "Uploading..."
-                  : "Type a message..."
-              }
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                handleTyping();
-              }}
-              onKeyDown={(e) =>
-                e.key === "Enter" && sendMessage()
-              }
-            />
-      
-            {/* Send button */}
-            <button
-              onClick={sendMessage}
-              disabled={isUploading}
-              className={`flex-shrink-0 w-10 h-10 rounded-lg ${
-                user.gender === "Male"
-                  ? "text-[#203449] hover:text-blue-400"
-                  : "text-[#E01D42] hover:text-red-300"
+          ))
+        )}
+        {isTyping.isTyping && (
+          <TypingIndicator
+            isTyping
+            gender={user?.gender}
+          />
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input area */}
+      <div className="md:p-10 flex items-center space-x-2 p-2">
+        {/* File Attachment */}
+        <div
+          htmlFor="file-attachment"
+          className="cursor-pointer mr-2 group"
+          onClick={handleAttachmentClick}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`h-6 w-6 ${user.gender === "Male"
+                ? "text-[#203449] group-hover:text-blue-400"
+                : "text-[#E01D42] group-hover:text-red-300"
               }`}
-            >
-              <Send className="w-full h-full" />
-            </button>
-          </div>
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+            />
+          </svg>
         </div>
-    );
+        {/* Text input */}
+        <input
+          type="text"
+          name="chatbox"
+          id="chatbox"
+          disabled={isUploading}
+          className="flex-1 p-3 md:p-4 bg-[#fef2f2] text-black rounded-lg focus:outline-none theme-border hover:bg-white transition-all duration-300"
+          placeholder={
+            isUploading
+              ? "Uploading..."
+              : "Type a message..."
+          }
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            handleTyping();
+          }}
+          onKeyDown={(e) =>
+            e.key === "Enter" && sendMessage()
+          }
+        />
+
+        {/* Send button */}
+        <button
+          onClick={sendMessage}
+          disabled={isUploading}
+          className={`flex-shrink-0 w-10 h-10 rounded-lg ${user.gender === "Male"
+              ? "text-[#203449] hover:text-blue-400"
+              : "text-[#E01D42] hover:text-red-300"
+            }`}
+        >
+          <Send className="w-full h-full" />
+        </button>
+      </div>
+    </div>
+  );
 }

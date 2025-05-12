@@ -111,6 +111,8 @@ const Match = () => {
     );
   }, [selectedMatch, conversations, user]);
 
+  console.log(matches)
+
   return (
     <div className="h-screen flex flex-col p-4 md:p-8">
       <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md">

@@ -60,7 +60,7 @@ router.get('/matches/:userId', async (req, res) => {
     try {
         const matches = await Match.find({
             $or: [{ sender_id: userId }, { receiver_id: userId }],
-            match_status: 'Interested',
+            match_status: { $in: ['Interested','Blocked'] },
         }, {
             sender_id: 1,
             receiver_id: 1,

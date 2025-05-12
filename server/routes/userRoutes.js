@@ -3,6 +3,7 @@ const User = require("../model/User");
 const Match = require("../model/Match");
 const Subscription = require("../model/Subscription");
 const Message = require("../model/Message");
+const Report = require("../model/Report")
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware')
@@ -49,9 +50,9 @@ router.use(cookieParser())
 // Public routes
 router.get("/search", authMiddleware, async (req, res) => {
   try {
-    const { 
-      ageRange, 
-      location, 
+    const {
+      ageRange,
+      location,
       ethnicity,
       revert,
       salahPattern,
@@ -62,9 +63,9 @@ router.get("/search", authMiddleware, async (req, res) => {
       hasChildren,
       locationProximity
     } = req.query;
-    
+
     logger.info('Search params:', req.query);
-    
+
     let query = { role: "user" };
 
     if (location) {
@@ -155,9 +156,9 @@ router.get("/search", authMiddleware, async (req, res) => {
 
         // Calculate distance if both users have location data
         let distance = null;
-        if (currentUserLocation && user.location && 
-            currentUserLocation.country && user.location.country &&
-            currentUserLocation.city && user.location.city) {
+        if (currentUserLocation && user.location &&
+          currentUserLocation.country && user.location.country &&
+          currentUserLocation.city && user.location.city) {
           // Simple distance calculation based on city match
           if (currentUserLocation.country === user.location.country) {
             if (currentUserLocation.city === user.location.city) {
@@ -581,6 +582,71 @@ router.post("/profile/upload/:userId", authMiddleware, upload.single('profileIma
   } catch (error) {
     logger.error("Error uploading profile image:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// BLOCK USER
+// POST /user/block/:targetId
+router.post('/block/:targetId', authMiddleware, async (req, res) => {
+  const blockerId = req.user.id;
+  const { targetId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
+  try {
+    // find an existing match where current user is the sender
+    const match = await Match.findOne({
+      sender_id: blockerId,
+      receiver_id: targetId
+    });
+
+    if (!match) {
+      return res.status(404).json({
+        message: "No existing match found to block. You must have an active match first."
+      });
+    }
+
+    // update status & timestamp
+    match.match_status = 'Blocked';
+    match.matched_at = Date.now();
+    await match.save();
+
+    return res.json({
+      message: "User has been blocked",
+      match
+    });
+  } catch (err) {
+    console.error("Block error:", err);
+    return res.status(500).json({ message: "Could not block user" });
+  }
+});
+
+// REPORT USER
+// POST /user/report/:targetId
+// accepts { reason: string } in body
+router.post('/report/:targetId', authMiddleware, async (req, res) => {
+  const reporterId = req.user.id;
+  const { targetId } = req.params;
+  const { reason } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
+  try {
+    // create a new report
+    const report = new Report({
+      reporter_id: reporterId,
+      reported_id: targetId,
+      reason: reason || ''
+    });
+    await report.save();
+    return res.json({ message: "User reported", report });
+  } catch (err) {
+    console.error("Report error:", err);
+    return res.status(500).json({ message: "Could not report user" });
   }
 });
 
