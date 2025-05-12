@@ -75,7 +75,7 @@ const LandingPage = () => {
               About Us
             </h1>
             <p className="text-lg lg:text-xl font-medium leading-relaxed">
-              At Talibah Match, we believe marriage is more than a milestone—it’s a partnership designed to bring you closer to Allah and complete half your deen. Our mission is simple: to unite individuals striving for the same goal—seeking Allah’s pleasure through love, knowledge, and mutual support on the journey to Jannah.
+              At Talibah, we believe marriage is more than a milestone—it’s a partnership designed to bring you closer to Allah and complete half your deen. Our mission is simple: to unite individuals striving for the same goal—seeking Allah’s pleasure through love, knowledge, and mutual support on the journey to Jannah.
             </p>
           </header>
 
@@ -86,17 +86,17 @@ const LandingPage = () => {
                 Who We Are
               </h2>
               <p className="text-lg lg:text-xl leading-relaxed">
-                “Talibah” represents a seeker of knowledge, and at Talibah Match, we honor this identity by connecting individuals who prioritize the deen and the pursuit of sacred knowledge. Regardless of where you stand on your journey, whether you’re just beginning or are well-versed, this platform is for anyone with the shared ambition of striving towards faith, growth, and a fulfilling marriage.
+                “Talibah” represents a seeker of knowledge, and at Talibah, we honor this identity by connecting individuals who prioritize the deen and the pursuit of sacred knowledge. Regardless of where you stand on your journey, whether you’re just beginning or are well-versed, this platform is for anyone with the shared ambition of striving towards faith, growth, and a fulfilling marriage.
               </p>
             </div>
 
             {/* Why Talibah Match */}
             <div>
               <h2 className="text-3xl font-semibold mb-3">
-                Why Talibah Match?
+                Why Talibah?
               </h2>
               <p className="text-lg lg:text-xl leading-relaxed">
-                In a world filled with distractions, Talibah Match is a place for those who value purpose-driven connections. With Allah’s permission, we strive to make the path of marriage easier for those who wish to find tranquility in a spouse who will not only share in their joy but also in their aspirations for the Hereafter. Our platform is rooted in sincerity, trust, and the belief that every believer deserves a partner who nurtures their iman, strengthens their character, and walks with them towards Jannah.
+                In a world filled with distractions, Talibah is a place for those who value purpose-driven connections. With Allah’s permission, we strive to make the path of marriage easier for those who wish to find tranquility in a spouse who will not only share in their joy but also in their aspirations for the Hereafter. Our platform is rooted in sincerity, trust, and the belief that every believer deserves a partner who nurtures their iman, strengthens their character, and walks with them towards Jannah.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ const LandingPage = () => {
             {
               question: "How do we ensure halal conversation?",
               answer:
-                "To maintain halal interactions, all conversations are monitored by both advanced AI technology and the Taalibah team. This ensures the prevention of khalwa (the seclusion of a man and woman) and safeguards Islamic guidelines.",
+                "To maintain halal interactions, all conversations are monitored by both advanced AI technology and the Talibah team. This ensures the prevention of khalwa (the seclusion of a man and woman) and safeguards Islamic guidelines.",
             },
             {
               question: "How does the process work?",
