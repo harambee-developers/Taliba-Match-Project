@@ -72,7 +72,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Greeting Text */}
             <div className="hidden lg:block text-right">
-              <span className="block text-sm text-gray-600">Asalamu aleykum,</span>
+              <span className="block text-sm text-gray-600">As-salāmu ʿalaykum,</span>
               <span className="block text-base font-semibold text-gray-800">
                 Welcome {user.firstName}!
               </span>
