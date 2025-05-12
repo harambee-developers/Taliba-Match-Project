@@ -31,7 +31,7 @@ const Subscription = () => {
                 "Create a basic profile",
                 "Browse limited Connections daily",
                 "Send up to 4 connection requests/month",
-                "Access to Islamic guidance articles",
+                "Access to Library",
             ],
             bgColor: "bg-gray-800",
             hoverColor: "hover:bg-gray-700",
@@ -41,23 +41,41 @@ const Subscription = () => {
             subscriptionType: "free",
         },
         {
-            name: "Premium",
+            name: "Gold",
             description: "Ideal for serious individuals ready for a halal, intentional marriage journey.",
-            price: 19.99,
+            price: 9.99,
+            features: [,
+                "Unlimited match browsing",
+                "Send unlimited connection requests",
+                "In-app chat",
+                "Can access full profiles",
+                "Detailed compatibility filters",
+            ],
+            bgColor: "bg-[#D4AF37]",
+            hoverColor: "hover:bg-[#B8962E]",
+            textColor: "text-white",
+            border: "border-2 border-[#D4AF37]",
+            actionText: "Go Gold",
+            subscriptionType: "gold",
+        },
+        {
+            name: "Platinum",
+            description: "Ideal for serious individuals ready for a halal, intentional marriage journey.",
+            price: 14.99,
             features: [
                 "Priority profile visibility",
                 "Unlimited match browsing",
                 "Send unlimited connection requests",
-                "In-app chat with chaperone option",
-                "Access to Islamic premarital counseling content",
+                "In-app chat",
+                "Can access full profiles",
                 "Detailed compatibility filters",
             ],
-            bgColor: "bg-[#E01D42]",
-            hoverColor: "hover:bg-[#4A0635]",
+            bgColor: "bg-[#E5E4E2]",
+            hoverColor: "hover:bg-[#D1D0CE]",
             textColor: "text-white",
-            border: "border-2 border-[#E01D42]",
-            actionText: "Go Premium",
-            subscriptionType: "premium",
+            border: "border-2 border-[#E5E4E2]",
+            actionText: "Go Platinum",
+            subscriptionType: "platinum",
         },
     ];
 
@@ -80,6 +98,15 @@ const Subscription = () => {
             "No",
             "Articles only",
             "Community Support",
+        ],
+        "Gold": [
+            "Unlimited",
+            "Unlimited",
+            "Priority",
+            "Yes",
+            "Yes",
+            "Full Access",
+            "Email Support",
         ],
         "Premium": [
             "Unlimited",
@@ -125,7 +152,7 @@ const Subscription = () => {
         <>
             <div className="min-h-screen flex flex-col items-center justify-center p-6 theme-bg">
                 {/* Plans */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-7xl mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mb-10">
                     {plans.map((plan, index) => (
                         <div
                             key={index}
