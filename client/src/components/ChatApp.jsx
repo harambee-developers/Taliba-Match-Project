@@ -482,7 +482,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
                         user?.gender === "Male"
                           ? "bg-[#203449]"
                           : "bg-[#E01D42]"
-                      } bg-opacity-40 font-semibold px-4 py-2 rounded-lg`}
+                      } bg-opacity-40 font-semibold px-4 py-2 rounded-lg text-sm`}
                     >
                       {date}
                     </div>
