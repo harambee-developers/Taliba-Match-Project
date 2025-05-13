@@ -481,7 +481,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
 
   return (
     <div
-      className="flex flex-col h-screen w-full bg-center bg-repeat bg-[length:100%] md:bg-[length:60%]"
+      className="flex flex-col h-full w-full bg-center bg-repeat bg-[length:100%] md:bg-[length:60%]"
       style={{
         backgroundImage:
           user?.gender === "Male"

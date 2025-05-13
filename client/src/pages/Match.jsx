@@ -113,7 +113,7 @@ const Match = () => {
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8">
-      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md min-h-[100vh]">
+      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md h-[85vh]">
         <div className="w-full md:w-1/3 theme-border">
           <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
             Marriage Meeting
