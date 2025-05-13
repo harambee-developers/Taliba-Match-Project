@@ -111,12 +111,10 @@ const Match = () => {
     );
   }, [selectedMatch, conversations, user]);
 
-  console.log(matches)
-
   return (
-    <div className="h-screen flex flex-col p-4 md:p-8">
-      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md">
-        <div className="w-full md:w-1/3 theme-border min-h-screen">
+    <div className="min-h-screen flex flex-col p-4 md:p-8">
+      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md min-h-[100vh]">
+        <div className="w-full md:w-1/3 theme-border">
           <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
             Marriage Meeting
           </h1>

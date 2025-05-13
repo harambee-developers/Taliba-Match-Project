@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const Message = require('./model/Message');
 const User = require('./model/User');
+const Match = require('./model/Match');
 const Notifications = require('./model/Notifications');
 const Conversation = require('./model/Conversation');
 const logger = require('./logger');
@@ -101,23 +102,34 @@ function initializeSocket(server, corsOptions) {
 
     socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text, attachment, type }) => {
       try {
-        const message = await Message.create({
-          conversation_id,
-          sender_id,
-          receiver_id,
-          text,
-          attachment,
-          type
+
+        // 👇 Check if sender or receiver has blocked the other
+        const blockExists = await Match.exists({
+          $or: [
+            { sender_id: sender_id, receiver_id: receiver_id, match_status: 'Blocked' },
+            { sender_id: receiver_id, receiver_id: sender_id, match_status: 'Blocked' }
+          ]
         });
 
-        const senderUser = await User.findById(sender_id);
-        const username = senderUser?.firstName || "Unknown";
+        // 2️⃣ always persist so sender sees it
+        const message = await Message.create({ conversation_id, sender_id, receiver_id, text, attachment, type });
 
         await Conversation.findByIdAndUpdate(conversation_id, {
           last_message: text,
           last_sender_id: sender_id,
           updatedAt: new Date(),
         });
+
+        const senderUser = await User.findById(sender_id);
+        const username = senderUser?.firstName || "Unknown";
+
+
+        if (blockExists) {
+          // ─── only echo back to the sender ───
+          socket.emit("message", { message, username });
+          // (no io.to(...) and no notifications or delivered/read updates)
+          return;
+        }
 
         socket.emit("notification", {
           text: `${username} sent you a message!`,

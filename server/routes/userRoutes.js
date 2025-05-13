@@ -585,6 +585,32 @@ router.post("/profile/upload/:userId", authMiddleware, upload.single('profileIma
   }
 });
 
+// /unblock/:targetId
+router.post('/unblock/:targetId', authMiddleware, async (req, res) => {
+  const unblockerId = req.user.id;
+  const { targetId } = req.params;
+
+  try {
+    const match = await Match.findOne({
+      sender_id: unblockerId,
+      receiver_id: targetId,
+      match_status: 'Blocked'
+    });
+
+    if (!match) {
+      return res.status(404).json({ message: "No blocked relationship found." });
+    }
+
+    match.match_status = 'Interested'; // or 'pending', up to your logic
+    match.matched_at = Date.now();
+    await match.save();
+
+    return res.json({ message: "User has been unblocked", match });
+  } catch (err) {
+    return res.status(500).json({ message: "Could not unblock user" });
+  }
+});
+
 // BLOCK USER
 // POST /user/block/:targetId
 router.post('/block/:targetId', authMiddleware, async (req, res) => {

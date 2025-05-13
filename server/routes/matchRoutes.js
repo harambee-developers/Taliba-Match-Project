@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Match = require('../model/Match')
 const User = require('../model/User')
+const mongoose = require('mongoose')
 const logger = require('../logger');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -196,5 +197,35 @@ router.put('/reject/:matchId', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// GET match status between logged-in user and a target user
+router.get('/status/:targetId', authMiddleware, async (req, res) => {
+    const currentUserId = req.user.id;
+    const { targetId } = req.params;
+  
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({ message: "Invalid target user ID" });
+    }
+  
+    try {
+      // Check both directions of the match
+      const match = await Match.findOne({
+        $or: [
+          { sender_id: currentUserId, receiver_id: targetId },
+          { sender_id: targetId, receiver_id: currentUserId }
+        ]
+      });
+  
+      if (!match) {
+        return res.status(200).json({ match_status: 'none' });
+      }
+  
+      return res.status(200).json({ match_status: match.match_status });
+    } catch (error) {
+      console.error('Error fetching match status:', error);
+      return res.status(500).json({ message: 'Failed to fetch match status' });
+    }
+  });
+  
 
 module.exports = router;

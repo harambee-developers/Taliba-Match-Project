@@ -151,7 +151,7 @@ export default function Settings() {
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden mt-6">
           <div className="p-8">
             <h2 className="text-xl font-semibold text-[#4A0635] mb-4">
-              Danger Zone
+              Delete your Account
             </h2>
             <p className="text-gray-700 mb-4">
               Deleting your account will permanently remove all your data,
