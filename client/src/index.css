@@ -11,11 +11,11 @@
 }
 
 [data-theme="Male"] .theme-sidebar {
-  @apply bg-male-secondary;
+  @apply bg-male-secondary text-male-secondary; 
 }
 
 [data-theme="Female"] .theme-sidebar {
-  @apply bg-female-secondary;
+  @apply bg-female-secondary text-female-secondary;
 }
 
 [data-theme="Male"] .theme-border {
@@ -40,6 +40,15 @@
 
 [data-theme="Female"] .theme-btn-text {
   @apply text-female-secondary hover:text-[#FF1F5A];
+}
+
+[data-theme="Male"] {
+  --icon-fill: theme(colors.male.secondary);      /* e.g. #1E90FF */
+  --bg-fill:   theme(colors.male.primary);    /* e.g. #D0E8FF */
+}
+[data-theme="Female"] {
+  --icon-fill: theme(colors.female.secondary);    /* e.g. #FF1493 */
+  --bg-fill:   theme(colors.female.primary);  /* e.g. #FFD0E8 */
 }
 
 /* Single .sender:before rule: */

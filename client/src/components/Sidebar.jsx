@@ -1,29 +1,15 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from './contexts/AuthContext';
-import Icon26 from './icons/Icon26';
+import React from "react";
+import { Link } from "react-router-dom";
 import Icon27 from './icons/Icon27';
-import Icon28 from './icons/Icon28';
+import Icon52 from './icons/Icon52';
+import Icon51 from './icons/Icon51';
 import Icon29 from './icons/Icon29';
 import Icon30 from './icons/Icon30';
-
-// For debugging purposes
-console.log('Icon30 loaded:', Icon30);
+import { useAuth } from "./contexts/AuthContext";
 
 const Sidebar = ({ isOpen, toggleMenu }) => {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const [matchesOpen, setMatchesOpen] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toggleMenu();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
+  const { user } = useAuth()
 
   return (
     <>
@@ -50,39 +36,28 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Your Profile</span>
-                  <Icon27 width={24} height={24} color="#FFF" />
+                  <Icon27 width={24} height={24} gender={user?.gender} />
                 </Link>
               </li>
               <li>
-                <button
-                  onClick={() => setMatchesOpen(!matchesOpen)}
-                  className="flex items-center justify-between w-full p-2 rounded theme-btn transition-colors"
+                <Link
+                  to="/matches"
+                  onClick={toggleMenu}
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
-                  <span>Your Matches</span>
-                  <Icon28 width={24} height={24} color="#FFF" />
-                </button>
-                {matchesOpen && (
-                  <ul className="ml-6 mt-2 space-y-2 text-sm text-white">
-                    <li>
-                      <Link
-                        to="/pending-matches"
-                        onClick={toggleMenu}
-                        className="block p-2 rounded theme-btn transition-colors"
-                      >
-                        Pending
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/matches"
-                        onClick={toggleMenu}
-                        className="block p-2 rounded theme-btn transition-colors"
-                      >
-                        Matches
-                      </Link>
-                    </li>
-                  </ul>
-                )}
+                  <span>Speak to your Match</span>
+                  <Icon52 width={24} height={24} gender={user?.gender} />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/pending-matches"
+                  onClick={toggleMenu}
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
+                >
+                  <span>Matches & Requests</span>
+                  <Icon51 width={24} height={24} gender={user?.gender} />
+                </Link>
               </li>
               <li>
                 <Link
@@ -101,7 +76,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Library</span>
-                  <Icon30 width={24} height={24} color="#FFF" />
+                  <Icon30 width={24} height={24} gender={user?.gender} />
                 </Link>
               </li>
             </ul>

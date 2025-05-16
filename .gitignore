@@ -403,22 +403,11 @@ FodyWeavers.xsd
 # mongo_data file
 mongo_data
 
-
 # docker ignore
 .dockerignore
 
 # ignore seed file
 seed*
 
-# Ignore virtual environment folders
-venv/
-.env/
-.venv/
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
 # ignore public uploaded files
-**/*public*
+**/*upload*

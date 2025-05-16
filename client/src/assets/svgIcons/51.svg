@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1366" height="768" viewBox="0 0 1024.5 576" preserveAspectRatio="xMidYMid meet" version="1.0">
+  <defs>
+    <clipPath id="clip1">
+      <path d="M0 0h1024v576H0z" />
+    </clipPath>
+    <clipPath id="clip2">
+      <path d="M437 213h150v150H437z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clip1)">
+    <path fill="#ffffff" d="M0 0h1024v576H0z"/>
+  </g>
+  <g clip-path="url(#clip2)">
+    <!-- Chat bubble icon -->
+    <path fill="#1a495d" d="M512 213c-41.24 0-74.8 33.56-74.8 75.8 0 15.76 5.06 30.4 13.64 42.5L437.2 363l40.88-13.88c9.4 4.36 19.9 6.79 30.92 6.79 41.24 0 74.8-33.56 74.8-75.8S553.24 213 512 213z"/>
+  </g>
