@@ -89,6 +89,7 @@ const RegisterPage = () => {
     ethnicity: [],
     nationality: '',
     maritalStatus: '',
+    divorced: '',
     revert: '',
     yearsRevert: '',
     salahPattern: '',
@@ -101,6 +102,7 @@ const RegisterPage = () => {
     openToPolygamy: '',
     islamicAmbitions: '',
     children: '',
+    numberOfChildren: '',
     occupation: '',
     personality: '',
     hobbies: '',
@@ -624,6 +626,14 @@ const RegisterPage = () => {
       city: '' // Reset city when country changes
     });
   };
+
+  // Add new options for number of children
+  const numberOfChildrenOptions = [
+    { value: '1', label: '1' },
+    { value: '2', label: '2' },
+    { value: '3', label: '3' },
+    { value: '4+', label: '4+' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
@@ -1163,6 +1173,16 @@ const RegisterPage = () => {
               </>
             )}
             <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Have you been divorced?</label>
+              <Select
+                options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.divorced) || null}
+                placeholder="Select an option..."
+                onChange={(option) => handleInputChange('divorced', option ? option.value : '')}
+                styles={customSelectStyles}
+              />
+            </div>
+            <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Islamic Ambitions</label>
               <input
                 type="text"
@@ -1264,6 +1284,31 @@ const RegisterPage = () => {
               </div>
             </div>
             <div className="flex flex-col">
+              <label className="text-gray-600 mb-2">Do you have children?</label>
+              <Select
+                options={childrenOptions}
+                value={childrenOptions.find(option => option.value === formData.children) || null}
+                placeholder="Select an option"
+                onChange={(option) => handleInputChange('children', option ? option.value : '')}
+                styles={customSelectStyles}
+              />
+            </div>
+            {formData.children === 'yes' && (
+              <div className="flex flex-col">
+                <label className="text-gray-600 mb-2">How many children do you have?</label>
+                <input
+                  type="number"
+                  name="numberOfChildren"
+                  value={formData.numberOfChildren}
+                  onChange={(e) => handleInputChange('numberOfChildren', e.target.value)}
+                  min="1"
+                  max="20"
+                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                  placeholder="Enter number of children..."
+                />
+              </div>
+            )}
+            <div className="flex flex-col">
               <label className="text-gray-600 mb-2">Appearance Preferences</label>
               <textarea
                 name="appearancePreference"
@@ -1277,14 +1322,42 @@ const RegisterPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Height</label>
-                <input
-                  type="number"
-                  name="height"
-                  value={formData.height}
-                  onChange={(e) => handleInputChange('height', e.target.value)}
-                  className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
-                  placeholder="Enter your height in cm (e.g., 178cm)"
-                />
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <select
+                      name="heightFeet"
+                      value={Math.floor(parseInt(formData.height || 0) / 12)}
+                      onChange={(e) => {
+                        const feet = parseInt(e.target.value);
+                        const inches = parseInt(formData.height || 0) % 12;
+                        handleInputChange('height', (feet * 12 + inches).toString());
+                      }}
+                      className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                    >
+                      <option value="">Feet</option>
+                      {[3, 4, 5, 6, 7, 8].map(feet => (
+                        <option key={feet} value={feet}>{feet}'</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      name="heightInches"
+                      value={parseInt(formData.height || 0) % 12}
+                      onChange={(e) => {
+                        const inches = parseInt(e.target.value);
+                        const feet = Math.floor(parseInt(formData.height || 0) / 12);
+                        handleInputChange('height', (feet * 12 + inches).toString());
+                      }}
+                      className="p-3 border border-[#1A495D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1A495D] bg-white text-[#1A495D] placeholder-[#1A495D] placeholder-opacity-70"
+                    >
+                      <option value="">Inches</option>
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(inches => (
+                        <option key={inches} value={inches}>{inches}"</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
               <div className="flex flex-col">
                 <label className="text-gray-600 mb-2">Weight</label>
@@ -1297,16 +1370,6 @@ const RegisterPage = () => {
                   placeholder="Enter your weight in kg (e.g., 73kg)"
                 />
               </div>
-            </div>
-            <div className="flex flex-col">
-              <label className="text-gray-600 mb-2">Do you have children?</label>
-              <Select
-                options={childrenOptions}
-                value={childrenOptions.find(option => option.value === formData.children) || null}
-                placeholder="Select an option"
-                onChange={(option) => handleInputChange('children', option ? option.value : '')}
-                styles={customSelectStyles}
-              />
             </div>
             <div className="flex justify-between space-x-4 mt-4">
               <button

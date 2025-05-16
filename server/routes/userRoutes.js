@@ -439,6 +439,8 @@ router.put("/profile/:userId", async (req, res) => {
       hijrahDestination,
       maritalStatus,
       revert,
+      divorced,
+      numberOfChildren,
 
       // Appearance
       weight,
@@ -478,6 +480,8 @@ router.put("/profile/:userId", async (req, res) => {
       'profile.openToHijrah': openToHijrah,
       'profile.hijrahDestination': hijrahDestination,
       'profile.revert': revert,
+      'profile.divorced': divorced,
+      'profile.numberOfChildren': numberOfChildren,
       'profile.weight': weight,
       'profile.height': height,
       'profile.appearancePreference': appearancePreference

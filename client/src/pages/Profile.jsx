@@ -70,6 +70,8 @@ const Profile = () => {
     hijrahDestination: "",
     maritalStatus: "",
     revert: "",
+    numberOfChildren: "",
+    divorced: "",
 
     // Card 5 - Appearance
     weight: "",
@@ -116,6 +118,8 @@ const Profile = () => {
         hijrahDestination: user.profile?.hijrahDestination || "",
         maritalStatus: user.maritalStatus || "",
         revert: user.revert || "",
+        numberOfChildren: user.numberOfChildren || "",
+        divorced: user.divorced || "",
 
         // Card 5 - Appearance
         weight: user.weight || "",
@@ -790,6 +794,7 @@ const Profile = () => {
                   onChange={handleInputChange}
                   className={commonClasses}
                 >
+                  <option value="">Do you have children?</option>
                   {yesNoOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -799,6 +804,55 @@ const Profile = () => {
               ) : (
                 <div className={viewClasses}>
                   {profileData.children === "yes" ? "Yes" : profileData.children === "no" ? "No" : "Not specified"}
+                </div>
+              )}
+            </div>
+
+            {profileData.children === "yes" && (
+              <div>
+                <label className="block text-lg font-medium text-gray-700 mb-2">
+                  How many children do you have?
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    name="numberOfChildren"
+                    value={profileData.numberOfChildren}
+                    onChange={handleInputChange}
+                    className={commonClasses}
+                    min="1"
+                    max="20"
+                    placeholder="Enter number of children..."
+                  />
+                ) : (
+                  <div className={viewClasses}>
+                    {profileData.numberOfChildren || "Not specified"}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-lg font-medium text-gray-700 mb-2">
+                Have you been divorced?
+              </label>
+              {isEditing ? (
+                <select
+                  name="divorced"
+                  value={profileData.divorced}
+                  onChange={handleInputChange}
+                  className={commonClasses}
+                >
+                  <option value="">Select an option</option>
+                  {yesNoOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className={viewClasses}>
+                  {profileData.divorced === "yes" ? "Yes" : profileData.divorced === "no" ? "No" : "Not specified"}
                 </div>
               )}
             </div>
@@ -927,28 +981,6 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
-                Height (cm)
-              </label>
-              {isEditing ? (
-                <input
-                  type="number"
-                  name="height"
-                  value={profileData.height}
-                  onChange={handleInputChange}
-                  className={commonClasses}
-                  placeholder="Your height in centimeters..."
-                  min="100"
-                  max="250"
-                />
-              ) : (
-                <div className={viewClasses}>
-                  {profileData.height ? `${profileData.height} cm` : "Not specified"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">
                 Weight (kg)
               </label>
               {isEditing ? (
@@ -965,6 +997,69 @@ const Profile = () => {
               ) : (
                 <div className={viewClasses}>
                   {profileData.weight ? `${profileData.weight} kg` : "Not specified"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-lg font-medium text-gray-700 mb-2">
+                Height
+              </label>
+              {isEditing ? (
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <select
+                      name="heightFeet"
+                      value={Math.floor(parseInt(profileData.height || 0) / 12)}
+                      onChange={(e) => {
+                        const feet = parseInt(e.target.value);
+                        const inches = parseInt(profileData.height || 0) % 12;
+                        handleInputChange({
+                          target: {
+                            name: 'height',
+                            value: (feet * 12 + inches).toString()
+                          }
+                        });
+                      }}
+                      className={commonClasses}
+                    >
+                      <option value="">Feet</option>
+                      {[3, 4, 5, 6, 7, 8].map(feet => (
+                        <option key={feet} value={feet}>{feet}'</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      name="heightInches"
+                      value={parseInt(profileData.height || 0) % 12}
+                      onChange={(e) => {
+                        const inches = parseInt(e.target.value);
+                        const feet = Math.floor(parseInt(profileData.height || 0) / 12);
+                        handleInputChange({
+                          target: {
+                            name: 'height',
+                            value: (feet * 12 + inches).toString()
+                          }
+                        });
+                      }}
+                      className={commonClasses}
+                    >
+                      <option value="">Inches</option>
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(inches => (
+                        <option key={inches} value={inches}>{inches}"</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className={viewClasses}>
+                  {profileData.height ? (() => {
+                    const totalInches = parseInt(profileData.height);
+                    const feet = Math.floor(totalInches / 12);
+                    const inches = totalInches % 12;
+                    return `${feet}'${inches}"`;
+                  })() : "Not specified"}
                 </div>
               )}
             </div>
