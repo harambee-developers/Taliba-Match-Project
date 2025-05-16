@@ -520,20 +520,83 @@ const ProfileUpdate = () => {
           </select>
         </div>
 
+        {profileData.children === 'yes' && (
+          <div>
+            <label className="block text-lg font-medium text-gray-700 mb-2">
+              How many children do you have?
+            </label>
+            <input
+              type="number"
+              name="numberOfChildren"
+              value={profileData.numberOfChildren}
+              onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              min="1"
+              max="20"
+              className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
+              placeholder="Enter number of children..."
+            />
+          </div>
+        )}
+
         <div>
           <label className="block text-lg font-medium text-gray-700 mb-2">
-            Height (cm)
+            Have you been divorced?
           </label>
-          <input
-            type="number"
-            name="height"
-            value={profileData.height}
+          <select
+            name="divorced"
+            value={profileData.divorced}
             onChange={(e) => handleInputChange(e.target.name, e.target.value)}
             className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
-            placeholder="Your height in centimeters..."
-            min="100"
-            max="250"
-          />
+          >
+            <option value="">Select an option</option>
+            {yesNoOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-lg font-medium text-gray-700 mb-2">
+            Height
+          </label>
+          <div className="flex gap-4">
+            <select
+              name="heightFeet"
+              value={Math.floor(profileData.height / 12) || ''}
+              onChange={(e) => {
+                const feet = parseInt(e.target.value) || 0;
+                const inches = profileData.height % 12 || 0;
+                handleInputChange('height', feet * 12 + inches);
+              }}
+              className={`w-1/2 p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
+            >
+              <option value="">Feet</option>
+              {[3, 4, 5, 6, 7, 8].map((feet) => (
+                <option key={feet} value={feet}>
+                  {feet}'
+                </option>
+              ))}
+            </select>
+            <select
+              name="heightInches"
+              value={profileData.height % 12 || ''}
+              onChange={(e) => {
+                const feet = Math.floor(profileData.height / 12) || 0;
+                const inches = parseInt(e.target.value) || 0;
+                handleInputChange('height', feet * 12 + inches);
+              }}
+              className={`w-1/2 p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'}`}
+            >
+              <option value="">Inches</option>
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((inches) => (
+                <option key={inches} value={inches}>
+                  {inches}"
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="md:col-span-2">

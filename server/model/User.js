@@ -24,6 +24,8 @@ const ProfileSchema = new Schema({
 
   // Life Situation
   children: { type: String, enum: ['yes', 'no', ''] },
+  numberOfChildren: { type: Number, min: 1, max: 20 }, // Added field for number of children
+  divorced: { type: String, enum: ['yes', 'no', ''] }, // Added field for divorce status
   openToHijrah: { type: String, enum: ['yes', 'no', 'maybe', ''] },
   hijrahDestination: { type: String },
   revert: { type: String, enum: ['yes', 'no', ''] },
