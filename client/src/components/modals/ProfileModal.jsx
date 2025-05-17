@@ -94,8 +94,8 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
 
   const cardTitles = [
     "Personal Details",
-    "About Yourself",
-    "Your Faith",
+    "About",
+    "Religious Information",
     "Life Situation",
     "Appearance"
   ];
@@ -287,6 +287,26 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
               </div>
             </div>
 
+            {profileData.profile?.children === "yes" && (
+              <div>
+                <label className="block text-lg font-medium text-gray-700 mb-2">
+                  Number of Children
+                </label>
+                <div className={viewClasses}>
+                  {profileData.profile?.numberOfChildren || "Not specified"}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-lg font-medium text-gray-700 mb-2">
+                Have you been divorced?
+              </label>
+              <div className={viewClasses}>
+                {profileData.profile?.divorced === "yes" ? "Yes" : profileData.profile?.divorced === "no" ? "No" : "Not specified"}
+              </div>
+            </div>
+
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
                 Occupation
@@ -341,19 +361,25 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
-                Height (cm)
+                Weight (kg)
               </label>
               <div className={viewClasses}>
-                {profileData.profile?.height ? `${profileData.profile?.height} cm` : "Not specified"}
+                {profileData.profile?.weight ? `${profileData.profile?.weight} kg` : "Not specified"}
               </div>
             </div>
 
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">
-                Weight (kg)
+                Height
               </label>
               <div className={viewClasses}>
-                {profileData.profile?.weight ? `${profileData.profile?.weight} kg` : "Not specified"}
+                {profileData.profile?.height ? (() => {
+                  const totalInches = parseInt(profileData.profile.height);
+                  const feet = Math.floor(totalInches / 12);
+                  const inches = totalInches % 12;
+                  // Only display if within valid range (3'0" to 8'0")
+                  return (feet >= 3 && feet <= 8) ? `${feet}'${inches}"` : "Not specified";
+                })() : "Not specified"}
               </div>
             </div>
 

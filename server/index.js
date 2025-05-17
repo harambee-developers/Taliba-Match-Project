@@ -15,7 +15,7 @@ const envFile = process.env.NODE_ENV === "UAT" ? ".env.UAT" : ".env.development"
 dotenv.config({ path: envFile });
 logger.info(`Environment: ${envFile}`)
 
-const paymentRoutes = require("./routes/paymentRoutes");
+// const paymentRoutes = require("./routes/paymentRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messagesRoutes");
@@ -40,7 +40,7 @@ app.use('/uploads', express.static('public/uploads'));
 
 
 // Modularized routes
-app.use("/api/payments", paymentRoutes);
+// app.use("/api/payments", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);
