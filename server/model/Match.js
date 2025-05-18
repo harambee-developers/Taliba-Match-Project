@@ -9,7 +9,8 @@ const MatchSchema = new Schema({
     enum: ['Interested', 'Rejected', 'Blocked', 'pending'],
     default: 'pending'
   },
-  matched_at: { type: Date, default: Date.now },
+  blocked_by: { type: Schema.Types.ObjectId, ref: 'User' },
+  matched_at: { type: Date, default: Date.now, index: true },
 });
 
 MatchSchema.virtual("sender", {

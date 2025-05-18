@@ -208,7 +208,6 @@ router.get('/status/:targetId', authMiddleware, async (req, res) => {
     }
   
     try {
-      // Check both directions of the match
       const match = await Match.findOne({
         $or: [
           { sender_id: currentUserId, receiver_id: targetId },
@@ -220,7 +219,25 @@ router.get('/status/:targetId', authMiddleware, async (req, res) => {
         return res.status(200).json({ match_status: 'none' });
       }
   
-      return res.status(200).json({ match_status: match.match_status });
+      let status = match.match_status;
+      let blocked_by = null;
+  
+      if (status === 'Blocked') {
+        blocked_by = match.blocked_by?.toString();
+  
+        // Determine if current user is blocked
+        if (blocked_by && blocked_by !== currentUserId) {
+          status = 'YouAreBlocked';
+        } else if (blocked_by && blocked_by === currentUserId) {
+          status = 'Blocked';
+        }
+      }
+  
+      return res.status(200).json({
+        match_status: status,
+        blocked_by
+      });
+  
     } catch (error) {
       console.error('Error fetching match status:', error);
       return res.status(500).json({ message: 'Failed to fetch match status' });

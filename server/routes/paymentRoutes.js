@@ -9,7 +9,8 @@ const cookieParser = require('cookie-parser')
 
 const {
   STRIPE_PRIVATE_KEY,
-  STRIPE_PRICE_PREMIUM_ID,
+  STRIPE_PRICE_PLATINUM_ID,
+  STRIPE_PRICE_GOLD_ID,
   FRONTEND_URL,
   BACKEND_URL,
   STRIPE_WEBHOOK_SECRET_KEY,
@@ -76,7 +77,7 @@ router.post("/webhook", express.raw({
         // Create new subscription record
         const startDate = new Date();
         let endDate = null;
-        if (["premium"].includes(subscriptionType)) {
+        if (["platinum"].includes(subscriptionType)) {
           endDate = new Date(startDate);
           endDate.setFullYear(endDate.getFullYear() + 1);
         }
@@ -225,7 +226,8 @@ router.post("/webhook", express.raw({
 
 // Price ID map based on subscription type
 const priceIdMap = {
-  premium: STRIPE_PRICE_PREMIUM_ID,
+  platinum: STRIPE_PRICE_PLATINUM_ID,
+  gold: STRIPE_PRICE_GOLD_ID
 };
 
 /**

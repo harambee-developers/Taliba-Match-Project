@@ -4,6 +4,7 @@ import { useAuth } from '../components/contexts/AuthContext'
 import { useAlert } from '../components/contexts/AlertContext'
 import Alert from '../components/Alert'
 import MessageModal from '../components/modals/MessageModal'
+import { useNavigate } from 'react-router-dom'
 
 export default function Settings() {
   const { user, token, logout } = useAuth()
@@ -12,6 +13,7 @@ export default function Settings() {
   const [error, setError] = useState('')
   const { showAlert, alert } = useAlert()
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate()
 
   const subscriptions = user?.subscription || [];
 
@@ -32,25 +34,6 @@ export default function Settings() {
     }
     fetchStatus()
   }, [token])
-
-  const handleUpgrade = async (subscriptionType) => {
-    try {
-      // Create a Stripe Checkout session on the backend
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/payments/create-checkout-session`,
-        { userId: user.userId, subscriptionType }
-      )
-      console.log("Response data:", data);
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.log("No URL returned from server");
-      }
-    } catch (err) {
-      console.error(err)
-      setError('Unable to start the checkout process. Please try again.')
-    }
-  }
 
   const handleManageSubscription = async () => {
     if (!subscriptions?.customerId) {
@@ -137,10 +120,10 @@ export default function Settings() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleUpgrade("premium")}
+                      onClick={() => navigate("/subscribe")}
                       className="theme-btn px-6 py-3 rounded-full text-base font-semibold"
                     >
-                      Upgrade to Premium
+                      Upgrade Membership
                     </button>
                   )}
                 </div>

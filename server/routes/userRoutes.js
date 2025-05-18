@@ -14,6 +14,7 @@ const logger = require('../logger')
 const mongoose = require('mongoose')
 
 router.use(express.json())
+router.use(cookieParser())
 
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
@@ -44,8 +45,6 @@ const upload = multer({
     }
   }
 });
-
-router.use(cookieParser())
 
 // Public routes
 router.get("/search", authMiddleware, async (req, res) => {
@@ -594,18 +593,26 @@ router.post('/unblock/:targetId', authMiddleware, async (req, res) => {
   const unblockerId = req.user.id;
   const { targetId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
   try {
     const match = await Match.findOne({
-      sender_id: unblockerId,
-      receiver_id: targetId,
-      match_status: 'Blocked'
+      $or: [
+        { sender_id: unblockerId, receiver_id: targetId },
+        { sender_id: targetId, receiver_id: unblockerId }
+      ],
+      match_status: 'Blocked',
+      blocked_by: unblockerId // <-- ✅ Ensures only the blocker can unblock
     });
 
     if (!match) {
-      return res.status(404).json({ message: "No blocked relationship found." });
+      return res.status(404).json({ message: "No blocked relationship found, or you're not the blocker." });
     }
 
-    match.match_status = 'Interested'; // or 'pending', up to your logic
+    match.match_status = 'Interested'; // or 'pending' if that's more appropriate
+    match.blocked_by = null; // <-- ✅ Clear blocked_by on unblock
     match.matched_at = Date.now();
     await match.save();
 
@@ -628,8 +635,12 @@ router.post('/block/:targetId', authMiddleware, async (req, res) => {
   try {
     // find an existing match where current user is the sender
     const match = await Match.findOne({
-      sender_id: blockerId,
-      receiver_id: targetId
+      $or: [
+        { sender_id: blockerId, receiver_id: targetId },
+        { sender_id: targetId, receiver_id: blockerId }
+      ],
+      match_status: 'Interested',
+      blocked_by: null
     });
 
     if (!match) {
@@ -640,6 +651,7 @@ router.post('/block/:targetId', authMiddleware, async (req, res) => {
 
     // update status & timestamp
     match.match_status = 'Blocked';
+    match.blocked_by = blockerId; // <-- ✅ Add this line
     match.matched_at = Date.now();
     await match.save();
 
