@@ -541,7 +541,10 @@ const Search = () => {
                   {/* View Bio + Icon */}
                   <div className="flex items-center w-full sm:w-auto gap-2">
                     <button
-                      onClick={() => handleViewBio(profile)}
+                      onClick={() => {
+                        if (!isBasic) handleViewBio(profile)
+                        else setIsUpgradeModalOpen(true)
+                      }}
                       className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
                     >
                       View Bio
