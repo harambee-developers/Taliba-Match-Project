@@ -39,16 +39,18 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   <Icon27 width={24} height={24} gender={user?.gender} />
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/matches"
-                  onClick={toggleMenu}
-                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
-                >
-                  <span>Speak to your Match</span>
-                  <Icon52 width={24} height={24} gender={user?.gender} />
-                </Link>
-              </li>
+              {(user?.subscription?.type === "gold" || user?.subscription?.type === "platinum") && (
+                <li>
+                  <Link
+                    to="/matches"
+                    onClick={toggleMenu}
+                    className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
+                  >
+                    <span>Speak to your Match</span>
+                    <Icon52 width={24} height={24} gender={user?.gender} />
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   to="/pending-matches"

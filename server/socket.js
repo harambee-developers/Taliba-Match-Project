@@ -110,7 +110,7 @@ function initializeSocket(server, corsOptions) {
         // Update the message to indicate deletion
         message.text = "Message has been deleted";
         message.attachment = null;
-        message.type = "deleted";
+        message.status = "Deleted";
         await message.save();
 
         // Broadcast update to everyone in the conversation

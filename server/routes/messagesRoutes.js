@@ -132,6 +132,7 @@ router.get('/:conversationId/messages', async (req, res) => {
 
         // Fetch messages: newest first, limited, lean + projection
         let messages = await Message.find(filter, {
+            conversation_id: 1,
             sender_id: 1,
             receiver_id: 1,
             text: 1,

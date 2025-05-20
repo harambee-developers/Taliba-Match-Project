@@ -297,7 +297,6 @@ router.get('/user/:id', async (req, res) => {
         sect: 1,
         maritalStatus: 1,
         photos: 1,
-        // entire profile object—but we'll project only the needed subfields
         profile: 1,
       })
       .lean()
@@ -307,7 +306,7 @@ router.get('/user/:id', async (req, res) => {
           sort: { current_period_end: -1, updatedAt: -1 },
           limit: 1,                // if you only want the latest subscription
         },
-        select: 'status_type current_period_start current_period_end customer_id',
+        select: 'status_type current_period_start current_period_end customer_id subscription_type',
         // pick only the fields frontend needs
       });
 
@@ -361,7 +360,8 @@ router.get('/user/:id', async (req, res) => {
         status: sub.status_type,
         currentPeriodStart: sub.current_period_start,
         currentPeriodEnd: sub.current_period_end,
-        customerId: sub.customer_id
+        customerId: sub.customer_id,
+        type: sub.subscription_type
       }
         : null
     };

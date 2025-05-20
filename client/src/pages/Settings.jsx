@@ -101,7 +101,7 @@ export default function Settings() {
                   </h2>
                   <p className="text-lg">
                     {status === 'active'
-                      ? '✅ Premium — Active'
+                      ? `✅ ${user?.subscription.type} — Active`
                       : status === 'past_due'
                         ? '⚠️ Payment Past Due'
                         : status === 'canceled'

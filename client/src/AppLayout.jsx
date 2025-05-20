@@ -20,6 +20,7 @@ import MessageNotification from "./components/MessageNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
 import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SubscriptionProtectedRoute from "./components/SubscriptionProtectedRoute";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
@@ -61,8 +62,15 @@ function AppLayout() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/pending-matches" element={<PendingMatches />} />
           <Route element={<ChatLayout />}>
+            <Route
+              path="/matches"
+              element={
+                <SubscriptionProtectedRoute>
+                  <Match />
+                </SubscriptionProtectedRoute>
+              }
+            />
             <Route path="/chat/:conversationId" element={<ChatApp />} />
-            <Route path="/matches" element={<Match />} />
           </Route>
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />

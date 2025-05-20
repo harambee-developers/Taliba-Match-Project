@@ -397,6 +397,7 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
     };
 
     const handleMessageDeleted = ({ messageId, updatedMessage }) => {
+      console.info(messageId, updatedMessage)
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id === messageId ? { ...msg, ...updatedMessage } : msg
@@ -509,7 +510,7 @@ const handleNaseehaClose = async () => {
 if (!currentUserId || !receiverId || !user) {
   return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 }
-
+console.info(messages)
 return (
   <div
     className="flex flex-col h-full w-full bg-center bg-repeat bg-[length:100%] md:bg-[length:60%]"
@@ -646,14 +647,6 @@ return (
 
     {/* Messages list */}
     <div className="flex-1 pt-[4rem] p-10 md:ml-10 overflow-y-auto relative">
-      {isBlocked && (
-        <div className="absolute inset-0 bg-white bg-opacity-80 z-30 flex justify-center items-center pointer-events-none">
-          <div className="text-center text-gray-500 pointer-events-auto">
-            <p className="text-lg font-semibold">You've blocked this user.</p>
-            <p className="text-sm">Unblock them to resume messaging.</p>
-          </div>
-        </div>
-      )}
       {Object.keys(groupedMessages).length === 0 ? (
         <div className="flex justify-center items-center h-full">
           <p className="text-gray-400 text-center">

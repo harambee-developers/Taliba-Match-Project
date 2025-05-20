@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSocket } from './contexts/SocketContext';
 
 export default function MessageBubble({
     msg,
@@ -8,6 +9,7 @@ export default function MessageBubble({
 }) {
 
     const [showOptions, setShowOptions] = useState(false);
+    const { socket } = useSocket()
     const bubbleRef = useRef(null); // <- Step 1
 
     const handleDelete = () => {
@@ -16,6 +18,7 @@ export default function MessageBubble({
             conversationId: msg.conversation_id,
             senderId: msg.sender_id,
         });
+
         setShowOptions(false);
     };
 
@@ -86,8 +89,20 @@ export default function MessageBubble({
                 </div>
             ) : (
                 <>
-                    {msg.type === "deleted" ? (
-                        <em className="text-gray-500">Message has been deleted</em>
+                    {msg.status === "Deleted" ? (
+                        <div className='flex gap-2'>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-5 h-5 text-gray-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <circle cx="12" cy="12" r="9" strokeWidth="2" />
+                                <line x1="6" y1="6" x2="18" y2="18" strokeWidth="2" />
+                            </svg>
+                            <em className="text-gray-500 italic">Message has been deleted</em>
+                        </div>
                     ) : (
                         <>
                             <p className="text-sm font-semibold break-words pr-14">{msg.text}</p>

@@ -74,12 +74,70 @@ router.post("/webhook", express.raw({
           await existing.save();
         }
 
+        if (existing) {
+          if (existing.subscription_type === "platinum") {
+            logger.warn("❌ User already has platinum. No changes made.");
+            return res.status(400).json({ message: "You already have a platinum subscription." });
+          }
+
+          if (existing.subscription_type === "gold" && subscriptionType === "platinum") {
+            // ✅ Upgrade from gold to platinum
+            existing.status_type = "inactive"; // Mark old gold subscription as inactive
+            existing.ended_at = new Date(); // Save the end date
+            await existing.save();
+
+            // Create a new platinum subscription entry
+            const newSubscription = new Subscription({
+              user_id: userId,
+              customer_id: session.customer,
+              subscription_type: subscriptionType,
+              start_date: new Date(),
+              status_type: "active",
+              stripeSubscriptionId: stripeSubscriptionId,
+              lastPayment: new Date(),
+            });
+
+            await newSubscription.save();
+
+            logger.info("✅ Subscription upgraded from gold to platinum.");
+            return res.status(200).json({ message: "Subscription upgraded successfully." });
+          }
+
+          if (existing.subscription_type === "free") {
+            // ✅ Upgrade from Free to gold or platinum
+            existing.status_type = "inactive"; // Mark old subscription as inactive
+            existing.ended_at = new Date(); // Save the end date
+            await existing.save();
+
+            // Create a new platinum subscription entry
+            const newSubscription = new Subscription({
+              user_id: userId,
+              customer_id: session.customer,
+              subscription_type: subscriptionType,
+              start_date: new Date(),
+              status_type: "active",
+              stripeSubscriptionId: stripeSubscriptionId,
+              lastPayment: new Date(),
+            });
+
+            await newSubscription.save();
+            logger.info(`✅ Free user upgraded to ${subscriptionType}.`);
+            return res.status(200).json({ message: `Subscription upgraded to ${subscriptionType} successfully.` });
+          }
+
+          if (existing && existing.subscription_type !== "free") {
+            logger.warn("❌ User already has an active non-free subscription. No new subscription created.");
+            return res.status(400).json({ message: "You already have a paid subscription." });
+          }
+        }
+
         // Create new subscription record
         const startDate = new Date();
         let endDate = null;
-        if (["platinum"].includes(subscriptionType)) {
+
+        if (subscriptionType === "gold" || subscriptionType === "platinum") {
           endDate = new Date(startDate);
-          endDate.setFullYear(endDate.getFullYear() + 1);
+          endDate.setFullYear(startDate.getFullYear() + 1);
         }
 
         const newSub = new Subscription({
@@ -287,7 +345,7 @@ router.get("/payment-success", async (req, res) => {
       logger.info("✅ Payment successful:", session.id);
       return res.redirect(`${FRONTEND_URL}/payment-success`);
     } else {
-      logger.info("❌ Payment not successful");
+      logger.warn("❌ Payment not successful");
       return res.redirect(`${FRONTEND_URL}/payment-failed`);
     }
   } catch (error) {
@@ -331,7 +389,7 @@ router.get(
 
       return res.json({ status: sub.status_type });
     } catch (err) {
-      console.error('Error fetching subscription status:', err);
+      logger.error('Error fetching subscription status:', err);
       return res.status(500).json({
         error: 'Could not fetch subscription status.',
       });
