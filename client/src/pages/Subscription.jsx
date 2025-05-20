@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../components/contexts/AuthContext";
+import { useAlert } from "../components/contexts/AlertContext";
 
 const Subscription = () => {
 
     const navigate = useNavigate()
     const { user } = useAuth()
+    const { showAlert } = useAlert()
 
     const handlePayment = async (subscriptionType) => {
         try {
@@ -19,11 +21,11 @@ const Subscription = () => {
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                console.log("No URL returned from server");
+                showAlert("No URL returned from server");
             }
         } catch (err) {
             console.error(err)
-            setError('Unable to start the checkout process. Please try again.')
+            showAlert('Unable to start the checkout process. Please try again.')
         }
     }
 
@@ -49,10 +51,10 @@ const Subscription = () => {
             name: "Gold",
             description: "Ideal for serious individuals ready for a halal, intentional marriage journey.",
             price: 9.99,
-            features: [,,
+            features: [, ,
                 "Send unlimited connection requests",
                 "In-app chat with approvied matches",
-                "Can access full match profiles",,
+                "Can access full match profiles", ,
             ],
             bgColor: "bg-[#D4AF37]",
             hoverColor: "hover:bg-[#B8962E]",

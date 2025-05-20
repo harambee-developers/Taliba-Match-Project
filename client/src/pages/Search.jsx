@@ -198,12 +198,7 @@ const Search = () => {
   const isBasic = user?.subscription?.status !== 'active';
 
   // Build the modal text
-  const modalText = isBasic
-    ? `You are about to submit a match request.  
-Remaining connects: ${remainingConnects}.  
-Would you like to continue?`
-    : `You are about to submit a match request.  
-Would you like to continue?`;
+  const modalText = `You are about to submit a match request. Would you like to continue?`
 
   const countActiveFilters = () => {
     // Skip system-managed fields like senderId and alreadyMatched
@@ -408,8 +403,8 @@ Would you like to continue?`;
               className="relative flex items-center gap-2 text-base px-3 py-2"
               onClick={() => {
                 setPendingFilters({...filters}); // Reset pending filters to current filters
-                if (!isBasic) setIsFilterModalOpen(true);
-                else showAlert('Upgrade to a paid plan to use advanced filters', 'error')
+                if (!isBasic && user?.subscription.type === "platinum") setIsFilterModalOpen(true);
+                else setIsUpgradeModalOpen(true)
               }
               }
             >
@@ -558,15 +553,7 @@ Would you like to continue?`;
                   <button
                     onClick={async () => {
                       setSelectedProfile(profile.id);
-
-                      // grab the up-to-date count
-                      const remaining = await fetchRemaining();
-                      // Basic user with no connects left?
-                      if (isBasic && remaining === 0) {
-                        setIsUpgradeModalOpen(true);
-                      } else {
-                        setIsOpen(true);
-                      }
+                      setIsOpen(true);
                     }}
                     disabled={profile.hasPendingRequest}
                     className={`
@@ -617,8 +604,8 @@ Would you like to continue?`;
       <MessageModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
-        title="Connects Limit Reached"
-        text="You've used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
+        title="Restricted Feature!"
+        text="Upgrade to a Gold or Platinum plan to use this feature."
         onConfirm={() => {
           // send them to /subscribe
           navigate('/subscribe');

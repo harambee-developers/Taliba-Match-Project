@@ -179,21 +179,39 @@ router.post("/webhook", express.raw({
       break;
 
     case "customer.subscription.updated":
-      logger.info("🔔 Customer.subscription.updated:", event.data.object.id);
+      logger.info("🔔 customer.subscription.updated:", event.data.object.id);
+      const subscription = event.data.object;
 
-      await Subscription.findOneAndUpdate(
-        { stripeSubscriptionId: eventData.id },
+      // Map price IDs to subscription types
+      const priceIdMap = {
+        [STRIPE_PRICE_PLATINUM_ID]: "platinum",
+        [STRIPE_PRICE_GOLD_ID]: "gold",
+      };
+
+      const priceId = subscription.items.data[0].price.id;
+      const subscriptionType = priceIdMap[priceId] || "unknown";
+
+      if (subscriptionType === "unknown") {
+        logger.warn("❗ Unknown subscription type for price ID:", priceId);
+      }
+
+      const updated = await Subscription.findOneAndUpdate(
+        { stripeSubscriptionId: subscription.id },
         {
-          status_type: eventData.status,
-          end_date: new Date(eventData.current_period_end) * 1000,
-          cancelAtPeriodEnd: eventData.cancel_at_period_end,
-          current_period_start: new Date(eventData.current_period_start) * 1000,
-          current_period_end: new Date(eventData.current_period_end) * 1000,
-        }
+          status_type: subscription.status === "active" ? "active" : "inactive",
+          subscription_type: subscriptionType,
+          end_date: new Date(subscription.current_period_end * 1000),
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          current_period_start: new Date(subscription.current_period_start * 1000),
+          current_period_end: new Date(subscription.current_period_end * 1000),
+        },
+        { new: true }
       );
 
-      if (!eventData.cancel_at_period_end) {
-        logger.info("✅ User reactivated subscription.");
+      if (!updated) {
+        logger.error("❌ No matching subscription found for ID:", subscription.id);
+      } else if (!subscription.cancel_at_period_end) {
+        logger.info(`✅ Subscription updated to ${subscriptionType}`);
       }
 
       break;
@@ -215,8 +233,8 @@ router.post("/webhook", express.raw({
         customer_id: eventData.customer,
         subscription_type: eventData.metadata.subscriptionType,
         status_type: "active",
-        current_period_start: new Date(eventData.current_period_start* 1000), 
-        current_period_end: new Date(eventData.current_period_end* 1000) ,
+        current_period_start: new Date(eventData.current_period_start * 1000),
+        current_period_end: new Date(eventData.current_period_end * 1000),
         stripeSubscriptionId: eventData.id,
         start_date: new Date(),
         end_date: new Date(eventData.current_period_end * 1000),

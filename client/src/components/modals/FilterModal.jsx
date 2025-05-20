@@ -1,6 +1,7 @@
 // components/FilterModal.js
 import React from "react";
 import { countries, ethnicityOptions, salahPatternOptions, quranMemorizationOptions, childrenOptions, sectOptions, occupationOptions } from '../../data/fieldData'
+import { customSelectStyles } from "../../styles/selectStyles";
 import Select from 'react-select'
 
 const FilterModal = ({ isOpen, onClose, filters, onChange, onApply, onClear }) => {
