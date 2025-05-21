@@ -107,16 +107,6 @@ router.post('/send-request', authMiddleware, async (req, res) => {
             return res.status(409).json({ message: 'Match request already sent' });
         }
 
-        // If the sender is NOT subscribed, enforce a 4-request cap
-        if (sender.subscription?.status !== 'active') {
-            const sentCount = await Match.countDocuments({ sender_id });
-            if (sentCount >= 3) {
-                return res.status(403).json({
-                    message: 'You have reached the 3-request limit for Basic users. Upgrade to get unlimited requests.'
-                });
-            }
-        }
-
         const match = await Match.create({
             sender_id,
             receiver_id,
@@ -131,26 +121,6 @@ router.post('/send-request', authMiddleware, async (req, res) => {
     }
 })
 
-router.get('/remaining-requests/:userId', async (req, res) => {
-    try {
-        const sender = await User.findById(req.params.userId);
-        if (!sender) return res.status(404).json({ message: 'User not found' });
-
-        // If subscribed, unlimited
-        if (sender.subscription?.status === 'active') {
-            return res.json({ remaining: Infinity });
-        }
-
-        // Basic: cap 4
-        const sentCount = await Match.countDocuments({ sender_id: sender.id });
-        const remaining = Math.max(0, 3 - sentCount);
-        return res.json({ remaining });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
 
 // Accept match
 router.put('/accept/:matchId', async (req, res) => {
