@@ -16,7 +16,6 @@ import ViewProfile from "./pages/ViewProfile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import OnlineUserNotification from "./components/OnlineUserNotification";
-import MessageNotification from "./components/MessageNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
 import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -45,7 +44,6 @@ function AppLayout() {
     <>
       {!hideNavbar && <Navbar />} {/* Conditionally render Navbar */}
       <OnlineUserNotification />
-      <MessageNotification />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { Send, ChevronLeft } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useAuth } from "./contexts/AuthContext";
@@ -362,6 +362,10 @@ export default function ChatApp({ conversation, user_id, onLastMessageUpdate, ph
       }, {});
   };
 
+  const canSendMessages =
+  user?.subscription?.status === "active" &&
+  (user?.subscription?.type === "gold" || user?.subscription?.type === "platinum");
+
   // Typing indicator events
   const handleTyping = () => {
     socket.emit("typing", { conversationId: currentConversationId, senderId: currentUserId });
@@ -589,7 +593,7 @@ return (
             <MessageModal
               isOpen={showBlockModal}
               title={isBlocked ? `Unblock ${receiverName[1]} ${receiverName[2]}?` : `Block ${receiverName[1]} ${receiverName[2]}?`}
-              text={`The person will not be able to message you and wont know that you blocked them`}
+              text={"The person will not be able to message you and won't know that you blocked them"}
               confirmText={isBlocked ? "Unblock" : "Block"}
               onClose={() => setShowBlockModal(false)}
               onConfirm={handleBlockConfirm}
@@ -715,6 +719,16 @@ return (
     {isBlocked ? (
       <div className="text-center text-gray-500 p-4 italic">
         You have blocked this user. You can't send messages or files.
+      </div>
+    ) : !canSendMessages ? (
+      <div className="text-center text-gray-500 p-4 italic">
+        <p className="mb-2">Messaging is available to Gold and Platinum members only.</p>
+        <Link
+          to="/subscribe"
+          className="inline-block mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+        >
+          Upgrade Your Plan
+        </Link>
       </div>
     ) : (
       <div className="md:p-10 flex items-center space-x-2 p-2">

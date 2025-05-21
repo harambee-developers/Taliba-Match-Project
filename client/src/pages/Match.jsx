@@ -169,7 +169,7 @@ const Match = () => {
                       }}
                     >
                       {/* Avatar */}
-                      <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden border">
+                      <div className="flex-shrink-0 w-20 h-auto rounded-full overflow-hidden">
                         <img src={photo} alt="avatar" className="w-full h-full object-cover" loading="lazy" />
                       </div>
 
