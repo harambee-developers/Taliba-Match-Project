@@ -31,7 +31,7 @@ function ProfileImage({ src, alt, fallback }) {
           setErrored(true);
         }
       }}
-      className="w-24 h-24 rounded-full object-cover"
+      className="w-24 h-auto rounded-full object-cover"
       loading="lazy"
     />
   );
@@ -46,7 +46,6 @@ const Search = () => {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
-  const [remainingConnects, setRemainingConnects] = useState(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const { user } = useAuth()
@@ -217,8 +216,8 @@ const Search = () => {
 
   const fallbackUrl =
     user?.gender === "Male"
-      ? "/icon_woman6.png"
-      : "/icon_man5.png";
+      ? "/icon_woman.png"
+      : "/icon_man.png";
 
   // Helper function to get proper image URL
   const getProfileImageUrl = (profile) => {

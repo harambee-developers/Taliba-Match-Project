@@ -1421,7 +1421,7 @@ const RegisterPage = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
+                  {[1, 2, 3, 4].map((num) => (
                     <div 
                       key={`woman${num}`}
                       className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${formData.avatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
@@ -1457,17 +1457,17 @@ const RegisterPage = () => {
                 </div>
               )}
               
-              <div className="w-full text-center mb-4">
+              {/* <div className="w-full text-center mb-4">
                 <div className="relative">
                   <hr className="border-t border-gray-300" />
                   <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FFF1FE] px-4 text-gray-500">
                     or upload your own
                   </span>
                 </div>
-              </div>
+              </div> */}
               
               {/* Custom image upload option - now after the avatars */}
-              <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
+              {/* <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
                 <h3 className="text-[#1A495D] font-semibold mb-3">Upload your own image</h3>
                 <input 
                   type="file" 
@@ -1475,18 +1475,18 @@ const RegisterPage = () => {
                   onChange={handleImageChange} 
                   className="mb-2"
                 />
-                <p className="text-xs text-gray-500">For best results, use a square image</p>
+                <p className="text-xs text-gray-500">For best results, use a square image</p> */}
                 
                 {/* Show preview of cropped image if available */}
-                {formData.avatar === 'custom' && (
+                {/* {formData.avatar === 'custom' && (
                   <div className="mt-3 inline-block">
                     <div className="relative w-24 h-24 bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D] rounded-lg p-2">
                       <div className="text-center text-sm text-[#1A495D] font-medium">Custom</div>
                       <div className="text-xs text-green-600 mt-2">✓ Ready to upload</div>
                     </div>
                   </div>
-                )}
-              </div>
+                )} */}
+              {/* </div> */}
             </div>
             
             <div className="flex justify-between space-x-4 mt-8">

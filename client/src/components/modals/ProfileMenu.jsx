@@ -28,12 +28,12 @@ export default function ProfileMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="focus:outline-none rounded-full overflow-hidden theme-border"
+        className="focus:outline-none rounded-full overflow-hidden"
       >
         <img
           src={useAuth().user?.photos?.[0]?.url || '/default.png'}
           alt="Profile"
-          className="h-16 w-16 object-cover rounded-full"
+          className="h-auto w-16 object-cover rounded-full"
         />
       </button>
 

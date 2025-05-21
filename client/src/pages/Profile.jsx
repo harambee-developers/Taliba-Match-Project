@@ -1130,7 +1130,7 @@ const Profile = () => {
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center">
                 <div className="relative mr-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden theme-border bg-gray-100 flex items-center justify-center">
+                  <div className="w-24 h-auto rounded-full overflow-hidden theme-border bg-gray-100 flex items-center justify-center">
                     {profilePhoto ? (
                       <img
                         src={profilePhoto.startsWith('http') ? profilePhoto : `/${profilePhoto}`}
@@ -1243,7 +1243,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-4 col-span-full">
-                      {[1, 2, 3, 4, 5, 6].map((num) => (
+                      {[1, 2, 3, 4].map((num) => (
                         <div
                           key={`woman${num}`}
                           className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${selectedAvatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
@@ -1264,7 +1264,7 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="w-full text-center mb-6">
+            {/* <div className="w-full text-center mb-6">
               <div className="relative">
                 <hr className="border-t border-gray-300" />
                 <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-gray-500">
@@ -1282,7 +1282,7 @@ const Profile = () => {
                 className="mb-2"
               />
               <p className="text-xs text-gray-500">For best results, use a square image</p>
-            </div>
+            </div> */}
 
             <div className="flex justify-end space-x-3">
               <button

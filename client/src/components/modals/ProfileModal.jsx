@@ -111,7 +111,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Profile Image and Name */}
             <div className="flex items-center space-x-4">
-              <div className="w-32 h-32 rounded-full overflow-hidden theme-border">
+              <div className="w-32 h-auto rounded-full overflow-hidden">
                 <img
                   src={photoUrl}
                   alt={`${profileData.firstName} ${profileData.lastName}`}

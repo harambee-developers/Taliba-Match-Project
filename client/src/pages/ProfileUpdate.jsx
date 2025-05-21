@@ -924,7 +924,7 @@ const ProfileUpdate = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4, 5, 6].map((num) => (
+            {[1, 2, 3, 4].map((num) => (
               <div 
                 key={`woman${num}`}
                 className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${profileData.avatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
