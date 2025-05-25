@@ -11,6 +11,7 @@ const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [readConversations, setReadConversations] = useState(new Set());
 
   const { isTyping } = useChatEvents();
   const { user } = useAuth();
@@ -91,7 +92,7 @@ const Match = () => {
 
     const conversation = getConversationWithMatch(selectedMatch);
     const photoUrl = selectedMatch.photos?.[0]?.url ||
-      (user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png');
+      (user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png');
 
     if (!conversation) {
       return (
@@ -126,7 +127,7 @@ const Match = () => {
                   const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
                   const conversation = getConversationWithMatch(opponent);
                   const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';
-                  const fallback = user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png';
+                  const fallback = user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png';
                   const photo = opponent.photos?.[0]?.url || fallback;
 
                   function attachmentEmoji(conv) {
@@ -161,6 +162,9 @@ const Match = () => {
                           await fetchConversations();
                           return;
                         }
+
+                        // Mark conversation as read locally
+                        setReadConversations(prev => new Set([...prev, conversation._id]));
                         if (window.innerWidth < 768) {
                           navigate(`/chat/${conversation._id}`, { state: { photoUrl: photo } });
                         } else {
@@ -179,7 +183,9 @@ const Match = () => {
                           <h3 className="font-semibold truncate text-base">
                             {opponent.firstName} {opponent.lastName}
                           </h3>
-                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 ? "font-bold theme-btn-text" : ""}`}>{lastTime}</p>
+                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 && !readConversations.has(conversation._id) ? "font-bold theme-btn-text" : ""}`}>
+                            {lastTime}
+                          </p>
                         </div>
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-gray-500 truncate flex items-center">
@@ -207,11 +213,13 @@ const Match = () => {
                               </>
                             )}
                           </p>
-                          {conversation?.unreadCount > 0 && conversation && conversation?.last_sender_id !== user?.userId && (
-                            <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                              {conversation.unreadCount}
-                            </span>
-                          )}
+                          {conversation?.unreadCount > 0 &&
+                            !readConversations.has(conversation._id) &&
+                            conversation?.last_sender_id !== user?.userId && (
+                              <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                {conversation.unreadCount}
+                              </span>
+                            )}
                         </div>
                       </div>
                     </div>

@@ -144,8 +144,8 @@ const Subscription = () => {
     };
 
     return (
-        <>
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 theme-bg">
+        <main className="min-h-screen overflow-y-auto">
+            <div className="flex flex-col items-center justify-start p-6 theme-bg">
                 {/* Plans */}
                 <div className={`grid grid-cols-1 md:grid-cols-2 ${user ? "lg:grid-cols-2" : "lg:grid-cols-3"
                     } gap-6 max-w-7xl mb-10`}>
@@ -262,7 +262,7 @@ const Subscription = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </main>
     );
 };
 

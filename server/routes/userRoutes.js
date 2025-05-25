@@ -144,11 +144,29 @@ router.get("/search", authMiddleware, async (req, res) => {
 
     const pendingReceiverIds = new Set(pendingRequests.map(m => m.receiver_id.toString()));
 
+    // Get matched (interested/blocked) users to exclude
+    const matchedUsers = await Match.find({
+      $or: [
+        { sender_id: senderId },
+        { receiver_id: senderId }
+      ],
+      match_status: { $in: ['Interested', 'Blocked'] }
+    }).select('sender_id receiver_id').lean();
+
+    const matchedUserIds = new Set();
+    matchedUsers.forEach(m => {
+      if (m.sender_id.toString() !== senderId) matchedUserIds.add(m.sender_id.toString());
+      if (m.receiver_id.toString() !== senderId) matchedUserIds.add(m.receiver_id.toString());
+    });
+
+    // Filter out matched users
+    const filteredUsers = users.filter(user => !matchedUserIds.has(user._id.toString()));
+
     // Get the current user's location
     const currentUser = await User.findById(senderId).select('location').lean();
     const currentUserLocation = currentUser?.location;
 
-    const profiles = users.map(user => {
+    const profiles = filteredUsers.map(user => {
       try {
         const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
         const hasPendingRequest = pendingReceiverIds.has(user._id.toString());

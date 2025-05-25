@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Icon27 from './icons/Icon27';
-import Icon52 from './icons/Icon52';
-import Icon51 from './icons/Icon51';
 import Icon29 from './icons/Icon29';
 import Icon30 from './icons/Icon30';
 import { useAuth } from "./contexts/AuthContext";
+import ChatIcon from "./icons/ChatIcon";
+import PuzzleIcon from "./icons/PuzzleIcon";
 
 const Sidebar = ({ isOpen, toggleMenu }) => {
 
@@ -46,8 +46,10 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   onClick={toggleMenu}
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
-                  <span>Speak to your Match</span>
-                  <Icon52 width={24} height={24} gender={user?.gender} />
+                  <span>Speak to your match</span>
+                  {/* <Icon52 width={24} height={24} gender={user?.gender} /> */}
+
+                  <ChatIcon width={24} height={24} gender={user?.gender} />
                 </Link>
               </li>
               <li>
@@ -57,7 +59,7 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
                 >
                   <span>Matches & Requests</span>
-                  <Icon51 width={24} height={24} gender={user?.gender} />
+                  <PuzzleIcon width={24} height={24} gender={user?.gender} />
                 </Link>
               </li>
               <li>

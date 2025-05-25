@@ -1,7 +1,5 @@
 // pages/Search.js
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import Icon47 from "../components/icons/Icon47";
-import Icon48 from "../components/icons/Icon48";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Icon49 from "../components/icons/Icon49";
 import Icon50 from "../components/icons/Icon50";
 import { ethnicityOptions, countries } from "../data/fieldData";
@@ -47,6 +45,7 @@ const Search = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [pendingMatchIds, setPendingMatchIds] = useState(new Set());
 
   const { user } = useAuth()
   const { socket } = useSocket()
@@ -54,10 +53,10 @@ const Search = () => {
   const navigate = useNavigate()
 
   const initialFilters = {
-    ageRange: "", 
-    location: "", 
-    ethnicity: "", 
-    senderId: user?._id, 
+    ageRange: "",
+    location: "",
+    ethnicity: "",
+    senderId: user?._id,
     alreadyMatched: false,
     revert: "",
     salahPattern: "",
@@ -70,28 +69,11 @@ const Search = () => {
 
   const [filters, setFilters] = useState(initialFilters);
   const [pendingFilters, setPendingFilters] = useState(filters);
+  const [upgradeContext, setUpgradeContext] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(12); // initial visible profiles
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const abortControllerRef = useRef(null);
-
-  // Fetch remaining when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    fetchRemaining()
-  }, [isOpen]);
-
-  const fetchRemaining = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/match/remaining-requests/${user?.userId}`,
-        { credentials: 'include' }
-      );
-      const { remaining } = await res.json();
-      setRemainingConnects(remaining);
-      return remaining;
-    } catch {
-      setRemainingConnects(0);
-      return 0;
-    }
-  };
+  const sentinelRef = useRef(null);
 
   const fetchProfiles = useCallback(async () => {
     // Cancel any previous request
@@ -166,6 +148,7 @@ const Search = () => {
       }
 
       showAlert("Match request sent", 'success')
+      setPendingMatchIds(prev => new Set([...prev, profileId]));
       console.log("Match request sent:", data);
     } catch (error) {
       showAlert("Error sending match request", 'error')
@@ -173,6 +156,43 @@ const Search = () => {
     }
 
   }
+
+  const filteredProfiles = useMemo(() => {
+    return user?.gender
+      ? profiles.filter(profile => profile.gender !== user.gender)
+      : profiles;
+  }, [profiles, user?.gender]);
+
+  // Slice visible profiles
+  const visibleProfiles = useMemo(() => {
+    return filteredProfiles.slice(0, visibleCount);
+  }, [filteredProfiles, visibleCount]);
+
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setIsFetchingMore(true);
+      }
+    });
+  
+    const sentinel = sentinelRef.current;
+    if (sentinel) observer.observe(sentinel);
+  
+    return () => {
+      if (sentinel) observer.unobserve(sentinel);
+    };
+  }, []);
+  useEffect(() => {
+    if (isFetchingMore) {
+      const timer = setTimeout(() => {
+        setVisibleCount(prev => prev + 6); // load 6 more
+        setIsFetchingMore(false);
+      }, 500); // delay to simulate loading
+
+      return () => clearTimeout(timer);
+    }
+  }, [isFetchingMore])
 
   useEffect(() => {
     debouncedFetch();
@@ -206,13 +226,6 @@ const Search = () => {
       .filter(([key, value]) => !systemFields.includes(key) && value !== "")
       .length;
   };
-
-  // Filter profiles based on logged-in user gender
-  // Assumption: Each profile has a 'gender' property.
-  const visibleProfiles =
-    user && user.gender
-      ? profiles.filter(profile => profile.gender !== user.gender)
-      : profiles;
 
   const fallbackUrl =
     user?.gender === "Male"
@@ -273,8 +286,8 @@ const Search = () => {
       backgroundColor: state.isSelected
         ? '#E01D42'
         : state.isFocused
-        ? '#FFE1F3'
-        : '#FFF6FB',
+          ? '#FFE1F3'
+          : '#FFF6FB',
       color: state.isSelected
         ? '#FFF'
         : '#4A0635',
@@ -305,8 +318,8 @@ const Search = () => {
       backgroundColor: state.isSelected
         ? '#1A495D'
         : state.isFocused
-        ? '#B3D8FF'
-        : '#F0F6FF',
+          ? '#B3D8FF'
+          : '#F0F6FF',
       color: state.isSelected
         ? '#FFF'
         : '#1A495D',
@@ -401,9 +414,12 @@ const Search = () => {
             <button
               className="relative flex items-center gap-2 text-base px-3 py-2"
               onClick={() => {
-                setPendingFilters({...filters}); // Reset pending filters to current filters
+                setPendingFilters({ ...filters }); // Reset pending filters to current filters
                 if (!isBasic && user?.subscription.type === "platinum") setIsFilterModalOpen(true);
-                else setIsUpgradeModalOpen(true)
+                else {
+                  setUpgradeContext('filters');
+                  setIsUpgradeModalOpen(true);
+                }
               }
               }
             >
@@ -457,35 +473,35 @@ const Search = () => {
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
-                    {locationCountry?.code ? (
-                      <img
-                        src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
-                        alt={`${locationCountry.label} flag`}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    ) : (
-                      <span>🌍</span>
-                    )}
+                      {locationCountry?.code ? (
+                        <img
+                          src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
+                          alt={`${locationCountry.label} flag`}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                      ) : (
+                        <span>🌍</span>
+                      )}
                       <span className="truncate">
-                        {typeof profile.location === 'object' 
+                        {typeof profile.location === 'object'
                           ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
                           : profile.location || 'Location not specified'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 truncate">
-                    {nationalityCountry?.code ? (
-                      <img
-                        src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
-                        alt={`${nationalityCountry.label} flag`}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    ) : (
-                      <span>🌐</span>
-                    )}
+                      {nationalityCountry?.code ? (
+                        <img
+                          src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
+                          alt={`${nationalityCountry.label} flag`}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                      ) : (
+                        <span>🌐</span>
+                      )}
                       <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
                     </div>
                   </div>
@@ -514,7 +530,7 @@ const Search = () => {
                       <span>🌍</span>
                     )}
                     <span className="truncate">
-                      {typeof profile.location === 'object' 
+                      {typeof profile.location === 'object'
                         ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
                         : profile.location || 'Location not specified'}
                     </span>
@@ -541,8 +557,12 @@ const Search = () => {
                   <div className="flex items-center w-full sm:w-auto gap-2">
                     <button
                       onClick={() => {
-                        if (!isBasic) handleViewBio(profile)
-                        else setIsUpgradeModalOpen(true)
+                        if (!isBasic) {
+                          handleViewBio(profile);
+                        } else {
+                          setUpgradeContext('bio');
+                          setIsUpgradeModalOpen(true);
+                        }
                       }}
                       className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
                     >
@@ -551,27 +571,27 @@ const Search = () => {
                     <Icon50 width={20} height={20} color="#1e5a8d" />
                   </div>
 
-                  {/* Request Match */}
                   <button
                     onClick={async () => {
                       setSelectedProfile(profile.id);
                       setIsOpen(true);
                     }}
-                    disabled={profile.hasPendingRequest}
+                    disabled={profile.hasPendingRequest || pendingMatchIds.has(profile.id)}
                     className={`
-      text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
-      ${profile.hasPendingRequest
+    text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
+    ${(profile.hasPendingRequest || pendingMatchIds.has(profile.id))
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'theme-btn'
-                      }
-    `}
+                        : 'theme-btn'}
+  `}
                   >
-                    {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
+                    {(profile.hasPendingRequest || pendingMatchIds.has(profile.id)) ? 'Pending...' : 'Request Match'}
                   </button>
                 </div>
               </div>
             )
           })}
+          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-10" />
+          {isFetchingMore && <div className="text-center py-4 text-gray-500">Loading more...</div>}
         </div>
       )}
 
@@ -607,7 +627,13 @@ const Search = () => {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="Restricted Feature!"
-        text="Upgrade to a Gold or Platinum plan to use this feature."
+        text={
+          upgradeContext === 'filters'
+            ? 'Upgrade to a Platinum plan to use advanced filters.'
+            : upgradeContext === 'bio'
+              ? 'Upgrade to a Gold or Platinum plan to view full bios.'
+              : 'Upgrade to access this feature.'
+        }
         onConfirm={() => {
           // send them to /subscribe
           navigate('/subscribe');

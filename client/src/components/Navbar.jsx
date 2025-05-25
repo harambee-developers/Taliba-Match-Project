@@ -150,7 +150,7 @@ const Navbar = () => {
           </div>
         ) : (
           // When user is not logged in, show navigation links
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
 
             <button
               onClick={toggleLoginModal}
