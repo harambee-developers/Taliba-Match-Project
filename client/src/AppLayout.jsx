@@ -60,14 +60,7 @@ function AppLayout() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/pending-matches" element={<PendingMatches />} />
           <Route element={<ChatLayout />}>
-            <Route
-              path="/matches"
-              element={
-                <SubscriptionProtectedRoute>
-                  <Match />
-                </SubscriptionProtectedRoute>
-              }
-            />
+            <Route path="/matches" element={<Match />} />
             <Route path="/chat/:conversationId" element={<ChatApp />} />
           </Route>
           <Route path="/profile" element={<Profile />} />
