@@ -71,7 +71,7 @@ const Search = () => {
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [upgradeContext, setUpgradeContext] = useState(null);
   const [skip, setSkip] = useState(0);
-  const [limit, setLimit] = useState(20);
+  const limit = 12;
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
@@ -181,21 +181,21 @@ const Search = () => {
   }, [profiles, user?.gender]);
 
   useEffect(() => {
+    if (!hasMore) return;          // don’t observe if there’s nothing left
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;         // not in the DOM yet
+  
     const observer = new IntersectionObserver(entries => {
-      console.log('IntersectionObserver entries:', entries);
       if (entries[0].isIntersecting) {
-        console.log('Sentinel is intersecting, fetching more...');
         setIsFetchingMore(true);
       }
     });
-
-    const sentinel = sentinelRef.current;
-    if (sentinel) observer.observe(sentinel);
-
+  
+    observer.observe(sentinel);
     return () => {
-      if (sentinel) observer.unobserve(sentinel);
+      observer.disconnect();
     };
-  }, []);
+  }, [hasMore, filteredProfiles.length]);
 
   useEffect(() => {
     if (isFetchingMore && hasMore) {
@@ -605,7 +605,7 @@ const Search = () => {
               </div>
             )
           })}
-          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-40 bg-red-200" />
+          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-10" />
           {isFetchingMore && <div className="text-center py-4 text-gray-500 justify-center">Loading more...</div>}
         </div>
       )}
