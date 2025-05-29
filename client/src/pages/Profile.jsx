@@ -168,17 +168,17 @@ const Profile = () => {
     setSelectedAvatar(avatarPath);
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result);
-        setShowCropper(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handleImageChange = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       setSelectedImage(reader.result);
+  //       setShowCropper(true);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   const handleCropComplete = (crop) => {
     console.log("Crop completed:", crop);

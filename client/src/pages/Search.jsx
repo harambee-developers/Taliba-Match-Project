@@ -70,16 +70,19 @@ const Search = () => {
   const [filters, setFilters] = useState(initialFilters);
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [upgradeContext, setUpgradeContext] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(12); // initial visible profiles
+  const [skip, setSkip] = useState(0);
+  const [limit, setLimit] = useState(20);
+  const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const abortControllerRef = useRef(null);
   const sentinelRef = useRef(null);
 
   const fetchProfiles = useCallback(async () => {
-    // Cancel any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -87,7 +90,12 @@ const Search = () => {
     setError(null);
 
     try {
-      const queryParams = new URLSearchParams(filters).toString();
+      const queryParams = new URLSearchParams({
+        ...filters,
+        skip: skip.toString(),
+        limit: limit.toString(),
+      });
+
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/search?${queryParams}`,
         {
@@ -103,9 +111,18 @@ const Search = () => {
       }
 
       const data = await response.json();
-      setProfiles(data);
+
+      if (skip === 0) {
+        setProfiles(data.results); // fresh load
+      } else {
+        setProfiles(prev => [...prev, ...data.results]);
+      }
+
+      // Determine if more data exists
+      if (data.results.length < limit) {
+        setHasMore(false); // no more data to load
+      }
     } catch (err) {
-      // Only treat real errors; ignore aborts
       if (err.name !== "AbortError") {
         console.error("Fetch error:", err);
         setError(err.message);
@@ -113,7 +130,7 @@ const Search = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, skip, limit]);
 
   // Wrap fetchProfiles so that it only actually runs after 300 ms of silence
   const debouncedFetch = useDebouncedCallback(fetchProfiles, 300);
@@ -163,36 +180,33 @@ const Search = () => {
       : profiles;
   }, [profiles, user?.gender]);
 
-  // Slice visible profiles
-  const visibleProfiles = useMemo(() => {
-    return filteredProfiles.slice(0, visibleCount);
-  }, [filteredProfiles, visibleCount]);
-
-
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
+      console.log('IntersectionObserver entries:', entries);
       if (entries[0].isIntersecting) {
+        console.log('Sentinel is intersecting, fetching more...');
         setIsFetchingMore(true);
       }
     });
-  
+
     const sentinel = sentinelRef.current;
     if (sentinel) observer.observe(sentinel);
-  
+
     return () => {
       if (sentinel) observer.unobserve(sentinel);
     };
   }, []);
+
   useEffect(() => {
-    if (isFetchingMore) {
+    if (isFetchingMore && hasMore) {
       const timer = setTimeout(() => {
-        setVisibleCount(prev => prev + 6); // load 6 more
+        setSkip(prev => prev + limit); // ✅ backend fetches next batch
         setIsFetchingMore(false);
-      }, 500); // delay to simulate loading
+      }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [isFetchingMore])
+  }, [isFetchingMore, hasMore, limit]);
 
   useEffect(() => {
     debouncedFetch();
@@ -200,11 +214,12 @@ const Search = () => {
       debouncedFetch.cancel();
       abortControllerRef.current?.abort();
     };
-  }, [filters, debouncedFetch]);
+  }, [filters, skip, limit]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setSkip(0); // Reset pagination
   };
 
   const handleViewBio = (profile) => {
@@ -443,10 +458,10 @@ const Search = () => {
       )}
 
       {/* Profiles */}
-      {!loading && !error && visibleProfiles.length > 0 && (
+      {!loading && !error && filteredProfiles.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 
-          {visibleProfiles.map((profile) => {
+          {filteredProfiles.map((profile) => {
 
             const locationCountry = countries.find(c => c.label === profile.location);
             const nationalityCountry = countries.find(c => c.label === profile.nationality);
@@ -590,8 +605,8 @@ const Search = () => {
               </div>
             )
           })}
-          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-10" />
-          {isFetchingMore && <div className="text-center py-4 text-gray-500">Loading more...</div>}
+          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-40 bg-red-200" />
+          {isFetchingMore && <div className="text-center py-4 text-gray-500 justify-center">Loading more...</div>}
         </div>
       )}
 
@@ -615,9 +630,12 @@ const Search = () => {
           }))
         }
         onApply={() => {
+          setSkip(0);            // reset pagination
+          setHasMore(true);      // allow loading again
+          setProfiles([]);       // clear old profiles
           setFilters(pendingFilters);
           setIsFilterModalOpen(false);
-          debouncedFetch();
+          debouncedFetch();      // fetch fresh results
         }}
         onClear={handleClearFilters}
       />
