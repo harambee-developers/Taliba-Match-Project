@@ -122,6 +122,8 @@ const Navbar = () => {
                             // 2️⃣ If it's a message, navigate to the chat
                             if (notif.type === "message" && notif.conversationId) {
                               navigate(`/matches`);
+                            } else if ((notif.type === "match")) {
+                              navigate(`/pending-matches`);  
                             } else {
                               // fallback for other types
                               setShowNotifications(false);

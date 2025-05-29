@@ -71,7 +71,7 @@ const Search = () => {
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [upgradeContext, setUpgradeContext] = useState(null);
   const [skip, setSkip] = useState(0);
-  const limit = 12;
+  const limit = 20;
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
