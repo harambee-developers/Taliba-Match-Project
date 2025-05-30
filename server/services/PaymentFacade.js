@@ -19,8 +19,7 @@ const priceIdMap = {
 
 const stripe = require("stripe")(STRIPE_PRIVATE_KEY);
 
-// Validate environment variables
-if (!STRIPE_PRIVATE_KEY || !STRIPE_WEBHOOK_SECRET_KEY) {
+if ((!STRIPE_PRIVATE_KEY || !STRIPE_WEBHOOK_SECRET_KEY) && process.env.NODE_ENV !== 'test') {
     logger.error("Missing required environment variables");
     process.exit(1);
   }
