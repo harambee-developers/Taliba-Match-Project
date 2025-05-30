@@ -32,7 +32,7 @@ const ProfileSchema = new Schema({
   yearsRevert: { type: Number },
 
   // Appearance
-  height: { type: Number, min: 100, max: 250 }, // in cm
+  height: { type: Number, min: 39, max: 99 }, // in inches
   weight: { type: Number, min: 30, max: 200 }, // in kg
   appearancePreference: { type: String },
 

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSocket } from './contexts/SocketContext';
 
 export default function MessageBubble({
     msg,
@@ -6,6 +7,31 @@ export default function MessageBubble({
     isFirstInRun,
     gender,
 }) {
+
+    const [showOptions, setShowOptions] = useState(false);
+    const { socket } = useSocket()
+    const bubbleRef = useRef(null); // <- Step 1
+
+    const handleDelete = () => {
+        socket.emit("delete_message", {
+            messageId: msg._id,
+            conversationId: msg.conversation_id,
+            senderId: msg.sender_id,
+        });
+
+        setShowOptions(false);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (bubbleRef.current && !bubbleRef.current.contains(e.target)) {
+                setShowOptions(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
+
     // choose background color
     const bgColorClass = isMine
         ? gender === "Male" ? "bg-[#203449]" : "bg-[#E01D42]"
@@ -19,6 +45,7 @@ export default function MessageBubble({
     return (
         <div
             style={{ "--bubble": bgColorClass.replace("bg-[", "").replace("]", "") }}
+            ref={bubbleRef}
             className={`
                 relative
                 p-2
@@ -29,6 +56,7 @@ export default function MessageBubble({
                 ${bgColorClass}
                 ${isFirstInRun ? (isMine ? "sender" : "receiver") : ""}
               `}
+            onClick={() => setShowOptions((prev) => !prev)}
         >
             {msg.attachment ? (
                 <div className="max-w-full w-full rounded-lg z-50">
@@ -61,12 +89,46 @@ export default function MessageBubble({
                 </div>
             ) : (
                 <>
-                    <p className="text-sm font-semibold break-words pr-14">{msg.text}</p>
-                    <span className="absolute bottom-1 right-2 text-xs text-white/70">
-                        {timestamp}
-                    </span>
-
+                    {msg.status === "Deleted" ? (
+                        <div className='flex gap-2'>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-5 h-5 text-gray-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <circle cx="12" cy="12" r="9" strokeWidth="2" />
+                                <line x1="6" y1="6" x2="18" y2="18" strokeWidth="2" />
+                            </svg>
+                            <em className="text-gray-500 italic">Message has been deleted</em>
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-sm font-semibold break-words pr-14">{msg.text}</p>
+                            <span className="absolute bottom-1 right-2 text-xs text-white/70">
+                                {timestamp}
+                            </span>
+                        </>
+                    )}
+                    {/* Dropdown for delete */}
+                    {isMine && showOptions && msg.type !== "deleted" && (
+                        <div className="absolute right-0 top-full mt-1 bg-white shadow-md rounded z-50 text-sm w-96">
+                            <button
+                                onClick={handleDelete}
+                                className="flex px-4 py-2 text-red-500 hover:bg-gray-100 w-full text-left gap-2 hover:text-red-600"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6" />
+                                </svg>
+                                Delete Message
+                            </button>
+                        </div>
+                    )}
                 </>
+
             )}
         </div>
     );

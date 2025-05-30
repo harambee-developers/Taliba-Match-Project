@@ -111,7 +111,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Profile Image and Name */}
             <div className="flex items-center space-x-4">
-              <div className="w-32 h-32 rounded-full overflow-hidden theme-border">
+              <div className="w-32 h-auto rounded-full overflow-hidden">
                 <img
                   src={photoUrl}
                   alt={`${profileData.firstName} ${profileData.lastName}`}
@@ -147,8 +147,8 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Languages
               </label>
               <div className={viewClasses}>
-                {Array.isArray(profileData.profile?.language) && profileData.profile.language.length > 0
-                  ? profileData.profile.language.join(', ')
+                {Array.isArray(profileData.profile?.language) && profileData.profile?.language.length > 0
+                  ? profileData.profile?.language.join(', ')
                   : profileData.profile?.language || "Not specified"}
               </div>
             </div>
@@ -215,7 +215,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Madhab
               </label>
               <div className={viewClasses}>
-                {madhabOptions.find(opt => opt.value === profileData.profile.madhab)?.label || "Not specified"}
+                {madhabOptions.find(opt => opt.value === profileData.profile?.madhab)?.label || "Not specified"}
               </div>
             </div>
 
@@ -224,7 +224,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Pattern of Salah
               </label>
               <div className={viewClasses}>
-                {salahPatternOptions.find(opt => opt.value === profileData.profile.salahPattern)?.label || "Not specified"}
+                {salahPatternOptions.find(opt => opt.value === profileData.profile?.salahPattern)?.label || "Not specified"}
               </div>
             </div>
 
@@ -233,7 +233,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Quran Memorisation
               </label>
               <div className={viewClasses}>
-                {quranMemorizationOptions.find(opt => opt.value === profileData.profile.quranMemorization)?.label || "Not specified"}
+                {quranMemorizationOptions.find(opt => opt.value === profileData.profile?.quranMemorization)?.label || "Not specified"}
               </div>
             </div>
 
@@ -242,7 +242,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Dressing Style
               </label>
               <div className={viewClasses}>
-                {dressStyleOptions.find(opt => opt.value === profileData.profile.dressingStyle)?.label || "Not specified"}
+                {dressStyleOptions.find(opt => opt.value === profileData.profile?.dressingStyle)?.label || "Not specified"}
               </div>
             </div>
 
@@ -251,7 +251,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Open to Polygamy
               </label>
               <div className={viewClasses}>
-                {polygamyOptions.find(opt => opt.value === profileData.profile.openToPolygamy)?.label || "Not specified"}
+                {polygamyOptions.find(opt => opt.value === profileData.profile?.openToPolygamy)?.label || "Not specified"}
               </div>
             </div>
 
@@ -260,7 +260,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Islamic Books/Mutuun Studied
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.profile.islamicBooks || "Not specified"}
+                {profileData.profile?.islamicBooks || "Not specified"}
               </div>
             </div>
 
@@ -269,7 +269,7 @@ const ProfileModal = ({ isOpen, onClose, userId, photoUrl }) => {
                 Islamic Ambitions
               </label>
               <div className={`${viewClasses} min-h-[100px]`}>
-                {profileData.profile.islamicAmbitions || "Not specified"}
+                {profileData.profile?.islamicAmbitions || "Not specified"}
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ const User = require("../model/User");
 const Match = require("../model/Match");
 const Subscription = require("../model/Subscription");
 const Message = require("../model/Message");
+const Report = require("../model/Report")
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware')
@@ -13,6 +14,7 @@ const logger = require('../logger')
 const mongoose = require('mongoose')
 
 router.use(express.json())
+router.use(cookieParser())
 
 // Setup the storage engine for multer
 const storage = multer.diskStorage({
@@ -44,14 +46,11 @@ const upload = multer({
   }
 });
 
-router.use(cookieParser())
-
-// Public routes
 router.get("/search", authMiddleware, async (req, res) => {
   try {
-    const { 
-      ageRange, 
-      location, 
+    const {
+      ageRange,
+      location,
       ethnicity,
       revert,
       salahPattern,
@@ -59,174 +58,137 @@ router.get("/search", authMiddleware, async (req, res) => {
       maritalStatus,
       sect,
       quranMemorization,
-      hasChildren,
-      locationProximity
+      hasChildren
     } = req.query;
-    
-    logger.info('Search params:', req.query);
-    
-    let query = { role: "user" };
 
-    if (location) {
-      // Always treat location as country filter
-      query['location.country'] = location;
-    }
+    logger.info("Search params:", req.query);
 
-    if (ethnicity && ethnicity.length > 0) {
-      query.ethnicity = { $in: ethnicity };
-    }
-
-    // Add filters for profile fields
-    if (revert) {
-      query['profile.revert'] = revert;
-    }
-
-    if (salahPattern) {
-      query['profile.salahPattern'] = salahPattern;
-    }
-
-    if (occupation) {
-      query.occupation = occupation;
-    }
-
-    if (maritalStatus) {
-      query.maritalStatus = maritalStatus;
-    }
-
-    if (sect) {
-      query.sect = sect;
-    }
-
-    if (quranMemorization) {
-      query['profile.quranMemorization'] = quranMemorization;
-    }
-
-    if (hasChildren) {
-      query['profile.children'] = hasChildren;
-    }
-
-    logger.info('MongoDB query:', query);
-
-    // Force senderId to come from the logged-in user
-    if (!req.user || !req.user.id) {
+    // 1) Ensure authenticated user
+    if (!req.user?.id) {
       return res.status(401).json({ message: "Authentication required" });
     }
     const senderId = req.user.id;
-
-    if (!senderId) {
-      return res.status(400).json({
-        message: "Missing senderId. Either authenticate or provide ?senderId=<yourId>"
-      });
-    }
-
-    // Optional: verify it's a valid ObjectId format
     if (!mongoose.Types.ObjectId.isValid(senderId)) {
       return res.status(400).json({ message: "Invalid senderId format" });
     }
 
-    const users = await User.find(query)
-      .select('userName dob location nationality photos profile gender firstName lastName occupation sect maritalStatus')
-      .lean()
-      .exec();
+    // 2) Base query + profile filters
+    const query = { role: "user" };
+    if (location)             query["location.country"]        = location;
+    if (ethnicity?.length)    query.ethnicity                  = { $in: ethnicity };
+    if (revert)               query["profile.revert"]          = revert;
+    if (salahPattern)         query["profile.salahPattern"]    = salahPattern;
+    if (occupation)           query.occupation                 = occupation;
+    if (maritalStatus)        query.maritalStatus              = maritalStatus;
+    if (sect)                 query.sect                       = sect;
+    if (quranMemorization)    query["profile.quranMemorization"]= quranMemorization;
+    if (hasChildren)          query["profile.children"]        = hasChildren;
 
-    logger.info('Found users:', users.length);
-    logger.info(req.query)
+    // 3) Exclude any user already pending/interested/blocked
+    const matches = await Match.find({
+      $or: [
+        { sender_id: senderId },
+        { receiver_id: senderId }
+      ],
+      match_status: { $in: ["pending", "Interested", "Blocked"] }
+    })
+    .select("sender_id receiver_id")
+    .lean();
 
-    if (!users) {
-      logger.warn('No users found');
-      return res.json([]);
+    const excludeIds = new Set();
+    matches.forEach(m => {
+      if (m.sender_id.toString() !== senderId)   excludeIds.add(m.sender_id.toString());
+      if (m.receiver_id.toString() !== senderId) excludeIds.add(m.receiver_id.toString());
+    });
+    if (excludeIds.size) {
+      query._id = { $nin: Array.from(excludeIds) };
     }
 
-    const pendingRequests = await Match.find({
-      sender_id: senderId,
-      match_status: "pending"
-    }).select("receiver_id");
+    // 4) Pagination parameters
+    const pageSize = parseInt(req.query.limit, 10) || 50;
+    const skip     = parseInt(req.query.skip,  10) || 0;
 
-    const pendingReceiverIds = new Set(pendingRequests.map(m => m.receiver_id.toString()));
+    // 5) Fetch one extra to compute `hasMore`
+    const rawUsers = await User.find(query)
+      .select("userName dob location nationality photos profile gender firstName lastName occupation sect maritalStatus")
+      .skip(skip)
+      .limit(pageSize + 1)
+      .lean();
 
-    // Get the current user's location
-    const currentUser = await User.findById(senderId).select('location').lean();
-    const currentUserLocation = currentUser?.location;
+    const hasMore = rawUsers.length > pageSize;
+    const usersPage = rawUsers.slice(0, pageSize);
 
-    const profiles = users.map(user => {
-      try {
-        const age = user.dob ? Math.floor((new Date() - new Date(user.dob)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
-        const hasPendingRequest = pendingReceiverIds.has(user._id.toString());
+    logger.info(`Fetched ${usersPage.length} users, hasMore=${hasMore}`);
 
-        // Calculate distance if both users have location data
-        let distance = null;
-        if (currentUserLocation && user.location && 
-            currentUserLocation.country && user.location.country &&
-            currentUserLocation.city && user.location.city) {
-          // Simple distance calculation based on city match
-          if (currentUserLocation.country === user.location.country) {
-            if (currentUserLocation.city === user.location.city) {
-              distance = 0; // Same city
-            } else {
-              distance = 50; // Different city, same country
-            }
-          } else {
-            distance = 100; // Different country
-          }
+    // 6) Load current user’s location for distance calc
+    const currentUser = await User.findById(senderId).select("location").lean();
+    const currentLoc = currentUser?.location;
+
+    // 7) Map to your “profile” shape
+    const profiles = usersPage.map(u => {
+      const age = u.dob
+        ? Math.floor((Date.now() - new Date(u.dob)) / (365.25*24*60*60*1000))
+        : null;
+
+      let distance = null;
+      if (currentLoc && u.location?.country && u.location?.city) {
+        if (currentLoc.country === u.location.country) {
+          distance = (currentLoc.city === u.location.city) ? 0 : 50;
+        } else {
+          distance = 100;
         }
-
-        return {
-          id: user._id,
-          name: user.userName,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          age,
-          location: user.location || 'Not specified',
-          nationality: user.nationality || 'Not specified',
-          image: user.photos && user.photos.length > 0 ? user.photos[0].url : null,
-          gender: user.gender,
-          hasPendingRequest,
-          distance,
-          // Add additional fields
-          revert: user.profile?.revert || 'Not specified',
-          salahPattern: user.profile?.salahPattern || 'Not specified',
-          occupation: user.occupation || 'Not specified',
-          maritalStatus: user.maritalStatus || 'Not specified',
-          sect: user.sect || 'Not specified',
-          quranMemorization: user.profile?.quranMemorization || 'Not specified',
-          hasChildren: user.profile?.children || 'Not specified'
-        };
-      } catch (err) {
-        console.error('Error processing user:', user._id, err);
-        return null;
       }
-    }).filter(Boolean);
 
-    let filteredProfiles = profiles;
+      return {
+        id:            u._id,
+        name:          u.userName,
+        firstName:     u.firstName,
+        lastName:      u.lastName,
+        age,
+        location:      u.location || "Not specified",
+        nationality:   u.nationality || "Not specified",
+        image:         u.photos?.[0]?.url || null,
+        gender:        u.gender,
+        distance,
+        revert:        u.profile?.revert           || "Not specified",
+        salahPattern:  u.profile?.salahPattern     || "Not specified",
+        occupation:    u.occupation                || "Not specified",
+        maritalStatus: u.maritalStatus             || "Not specified",
+        sect:          u.sect                      || "Not specified",
+        quranMemorization: u.profile?.quranMemorization || "Not specified",
+        hasChildren:   u.profile?.children         || "Not specified"
+      };
+    });
 
-    // Filter by age range after calculating ages
-    if (ageRange && ageRange !== '') {
+    // 8) Apply age‐range filter in JS (if requested)
+    let finalList = profiles;
+    if (ageRange) {
       const [minAge, maxAge] = ageRange.split("-").map(Number);
-      logger.info('Filtering by age range:', minAge, '-', maxAge);
-      filteredProfiles = profiles.filter(profile =>
-        profile.age && profile.age >= minAge && profile.age <= maxAge
-      );
+      finalList = finalList.filter(p => p.age >= minAge && p.age <= maxAge);
     }
 
-    // Always sort by distance
-    filteredProfiles.sort((a, b) => {
+    // 9) Sort by distance (nulls last)
+    finalList.sort((a,b) => {
       if (a.distance === null) return 1;
       if (b.distance === null) return -1;
       return a.distance - b.distance;
     });
 
-    logger.info('Filtered profiles:', filteredProfiles.length);
-    res.json(filteredProfiles.slice(0, 50));
+    // 10) Respond
+    res.json({
+      results: finalList,
+      hasMore
+    });
 
-  } catch (error) {
-    logger.error('Search error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+  } catch (err) {
+    logger.error("Search error details:", {
+      message: err.message,
+      stack:   err.stack,
+      name:    err.name
     });
     res.status(500).json({
       message: "Internal server error",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === "development" ? err.message : undefined
     });
   }
 });
@@ -297,7 +259,6 @@ router.get('/user/:id', async (req, res) => {
         sect: 1,
         maritalStatus: 1,
         photos: 1,
-        // entire profile object—but we'll project only the needed subfields
         profile: 1,
       })
       .lean()
@@ -307,7 +268,7 @@ router.get('/user/:id', async (req, res) => {
           sort: { current_period_end: -1, updatedAt: -1 },
           limit: 1,                // if you only want the latest subscription
         },
-        select: 'status_type current_period_start current_period_end customer_id',
+        select: 'status_type current_period_start current_period_end customer_id subscription_type',
         // pick only the fields frontend needs
       });
 
@@ -361,7 +322,8 @@ router.get('/user/:id', async (req, res) => {
         status: sub.status_type,
         currentPeriodStart: sub.current_period_start,
         currentPeriodEnd: sub.current_period_end,
-        customerId: sub.customer_id
+        customerId: sub.customer_id,
+        type: sub.subscription_type
       }
         : null
     };
@@ -585,6 +547,110 @@ router.post("/profile/upload/:userId", authMiddleware, upload.single('profileIma
   } catch (error) {
     logger.error("Error uploading profile image:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// /unblock/:targetId
+router.post('/unblock/:targetId', authMiddleware, async (req, res) => {
+  const unblockerId = req.user.id;
+  const { targetId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
+  try {
+    const match = await Match.findOne({
+      $or: [
+        { sender_id: unblockerId, receiver_id: targetId },
+        { sender_id: targetId, receiver_id: unblockerId }
+      ],
+      match_status: 'Blocked',
+      blocked_by: unblockerId // <-- ✅ Ensures only the blocker can unblock
+    });
+
+    if (!match) {
+      return res.status(404).json({ message: "No blocked relationship found, or you're not the blocker." });
+    }
+
+    match.match_status = 'Interested'; // or 'pending' if that's more appropriate
+    match.blocked_by = null; // <-- ✅ Clear blocked_by on unblock
+    match.matched_at = Date.now();
+    await match.save();
+
+    return res.json({ message: "User has been unblocked", match });
+  } catch (err) {
+    return res.status(500).json({ message: "Could not unblock user" });
+  }
+});
+
+// BLOCK USER
+// POST /user/block/:targetId
+router.post('/block/:targetId', authMiddleware, async (req, res) => {
+  const blockerId = req.user.id;
+  const { targetId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
+  try {
+    // find an existing match where current user is the sender
+    const match = await Match.findOne({
+      $or: [
+        { sender_id: blockerId, receiver_id: targetId },
+        { sender_id: targetId, receiver_id: blockerId }
+      ],
+      match_status: 'Interested',
+      blocked_by: null
+    });
+
+    if (!match) {
+      return res.status(404).json({
+        message: "No existing match found to block. You must have an active match first."
+      });
+    }
+
+    // update status & timestamp
+    match.match_status = 'Blocked';
+    match.blocked_by = blockerId; // <-- ✅ Add this line
+    match.matched_at = Date.now();
+    await match.save();
+
+    return res.json({
+      message: "User has been blocked",
+      match
+    });
+  } catch (err) {
+    console.error("Block error:", err);
+    return res.status(500).json({ message: "Could not block user" });
+  }
+});
+
+// REPORT USER
+// POST /user/report/:targetId
+// accepts { reason: string } in body
+router.post('/report/:targetId', authMiddleware, async (req, res) => {
+  const reporterId = req.user.id;
+  const { targetId } = req.params;
+  const { reason } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ message: "Invalid target user ID" });
+  }
+
+  try {
+    // create a new report
+    const report = new Report({
+      reporter_id: reporterId,
+      reported_id: targetId,
+      reason: reason || ''
+    });
+    await report.save();
+    return res.json({ message: "User reported", report });
+  } catch (err) {
+    console.error("Report error:", err);
+    return res.status(500).json({ message: "Could not report user" });
   }
 });
 

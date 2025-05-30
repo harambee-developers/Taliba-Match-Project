@@ -1,7 +1,5 @@
 // pages/Search.js
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import Icon47 from "../components/icons/Icon47";
-import Icon48 from "../components/icons/Icon48";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Icon49 from "../components/icons/Icon49";
 import Icon50 from "../components/icons/Icon50";
 import { ethnicityOptions, countries } from "../data/fieldData";
@@ -31,7 +29,7 @@ function ProfileImage({ src, alt, fallback }) {
           setErrored(true);
         }
       }}
-      className="w-24 h-24 rounded-full object-cover"
+      className="w-24 h-auto rounded-full object-cover"
       loading="lazy"
     />
   );
@@ -46,8 +44,8 @@ const Search = () => {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null)
-  const [remainingConnects, setRemainingConnects] = useState(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [pendingMatchIds, setPendingMatchIds] = useState(new Set());
 
   const { user } = useAuth()
   const { socket } = useSocket()
@@ -55,10 +53,10 @@ const Search = () => {
   const navigate = useNavigate()
 
   const initialFilters = {
-    ageRange: "", 
-    location: "", 
-    ethnicity: "", 
-    senderId: user?._id, 
+    ageRange: "",
+    location: "",
+    ethnicity: "",
+    senderId: user?._id,
     alreadyMatched: false,
     revert: "",
     salahPattern: "",
@@ -71,34 +69,20 @@ const Search = () => {
 
   const [filters, setFilters] = useState(initialFilters);
   const [pendingFilters, setPendingFilters] = useState(filters);
+  const [upgradeContext, setUpgradeContext] = useState(null);
+  const [skip, setSkip] = useState(0);
+  const limit = 20;
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const abortControllerRef = useRef(null);
-
-  // Fetch remaining when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    fetchRemaining()
-  }, [isOpen]);
-
-  const fetchRemaining = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/match/remaining-requests/${user?.userId}`,
-        { credentials: 'include' }
-      );
-      const { remaining } = await res.json();
-      setRemainingConnects(remaining);
-      return remaining;
-    } catch {
-      setRemainingConnects(0);
-      return 0;
-    }
-  };
+  const sentinelRef = useRef(null);
 
   const fetchProfiles = useCallback(async () => {
-    // Cancel any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -106,7 +90,12 @@ const Search = () => {
     setError(null);
 
     try {
-      const queryParams = new URLSearchParams(filters).toString();
+      const queryParams = new URLSearchParams({
+        ...filters,
+        skip: skip.toString(),
+        limit: limit.toString(),
+      });
+
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/search?${queryParams}`,
         {
@@ -122,9 +111,18 @@ const Search = () => {
       }
 
       const data = await response.json();
-      setProfiles(data);
+
+      if (skip === 0) {
+        setProfiles(data.results); // fresh load
+      } else {
+        setProfiles(prev => [...prev, ...data.results]);
+      }
+
+      // Determine if more data exists
+      if (data.results.length < limit) {
+        setHasMore(false); // no more data to load
+      }
     } catch (err) {
-      // Only treat real errors; ignore aborts
       if (err.name !== "AbortError") {
         console.error("Fetch error:", err);
         setError(err.message);
@@ -132,7 +130,7 @@ const Search = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, skip, limit]);
 
   // Wrap fetchProfiles so that it only actually runs after 300 ms of silence
   const debouncedFetch = useDebouncedCallback(fetchProfiles, 300);
@@ -167,6 +165,7 @@ const Search = () => {
       }
 
       showAlert("Match request sent", 'success')
+      setPendingMatchIds(prev => new Set([...prev, profileId]));
       console.log("Match request sent:", data);
     } catch (error) {
       showAlert("Error sending match request", 'error')
@@ -175,17 +174,52 @@ const Search = () => {
 
   }
 
+  const filteredProfiles = useMemo(() => {
+    return user?.gender
+      ? profiles.filter(profile => profile.gender !== user.gender)
+      : profiles;
+  }, [profiles, user?.gender]);
+
+  useEffect(() => {
+    if (!hasMore) return;          // don’t observe if there’s nothing left
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;         // not in the DOM yet
+  
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setIsFetchingMore(true);
+      }
+    });
+  
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, filteredProfiles.length]);
+
+  useEffect(() => {
+    if (isFetchingMore && hasMore) {
+      const timer = setTimeout(() => {
+        setSkip(prev => prev + limit); // ✅ backend fetches next batch
+        setIsFetchingMore(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isFetchingMore, hasMore, limit]);
+
   useEffect(() => {
     debouncedFetch();
     return () => {
       debouncedFetch.cancel();
       abortControllerRef.current?.abort();
     };
-  }, [filters, debouncedFetch]);
+  }, [filters, skip, limit]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setSkip(0); // Reset pagination
   };
 
   const handleViewBio = (profile) => {
@@ -198,12 +232,7 @@ const Search = () => {
   const isBasic = user?.subscription?.status !== 'active';
 
   // Build the modal text
-  const modalText = isBasic
-    ? `You are about to submit a match request.  
-Remaining connects: ${remainingConnects}.  
-Would you like to continue?`
-    : `You are about to submit a match request.  
-Would you like to continue?`;
+  const modalText = `You are about to submit a match request. Would you like to continue?`
 
   const countActiveFilters = () => {
     // Skip system-managed fields like senderId and alreadyMatched
@@ -213,17 +242,10 @@ Would you like to continue?`;
       .length;
   };
 
-  // Filter profiles based on logged-in user gender
-  // Assumption: Each profile has a 'gender' property.
-  const visibleProfiles =
-    user && user.gender
-      ? profiles.filter(profile => profile.gender !== user.gender)
-      : profiles;
-
   const fallbackUrl =
     user?.gender === "Male"
-      ? "/icon_woman6.png"
-      : "/icon_man5.png";
+      ? "/icon_woman.png"
+      : "/icon_man.png";
 
   // Helper function to get proper image URL
   const getProfileImageUrl = (profile) => {
@@ -279,8 +301,8 @@ Would you like to continue?`;
       backgroundColor: state.isSelected
         ? '#E01D42'
         : state.isFocused
-        ? '#FFE1F3'
-        : '#FFF6FB',
+          ? '#FFE1F3'
+          : '#FFF6FB',
       color: state.isSelected
         ? '#FFF'
         : '#4A0635',
@@ -311,8 +333,8 @@ Would you like to continue?`;
       backgroundColor: state.isSelected
         ? '#1A495D'
         : state.isFocused
-        ? '#B3D8FF'
-        : '#F0F6FF',
+          ? '#B3D8FF'
+          : '#F0F6FF',
       color: state.isSelected
         ? '#FFF'
         : '#1A495D',
@@ -407,9 +429,12 @@ Would you like to continue?`;
             <button
               className="relative flex items-center gap-2 text-base px-3 py-2"
               onClick={() => {
-                setPendingFilters({...filters}); // Reset pending filters to current filters
-                if (!isBasic) setIsFilterModalOpen(true);
-                else showAlert('Upgrade to a paid plan to use advanced filters', 'error')
+                setPendingFilters({ ...filters }); // Reset pending filters to current filters
+                if (!isBasic && user?.subscription.type === "platinum") setIsFilterModalOpen(true);
+                else {
+                  setUpgradeContext('filters');
+                  setIsUpgradeModalOpen(true);
+                }
               }
               }
             >
@@ -433,10 +458,10 @@ Would you like to continue?`;
       )}
 
       {/* Profiles */}
-      {!loading && !error && visibleProfiles.length > 0 && (
+      {!loading && !error && filteredProfiles.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 
-          {visibleProfiles.map((profile) => {
+          {filteredProfiles.map((profile) => {
 
             const locationCountry = countries.find(c => c.label === profile.location);
             const nationalityCountry = countries.find(c => c.label === profile.nationality);
@@ -463,35 +488,35 @@ Would you like to continue?`;
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
-                    {locationCountry?.code ? (
-                      <img
-                        src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
-                        alt={`${locationCountry.label} flag`}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    ) : (
-                      <span>🌍</span>
-                    )}
+                      {locationCountry?.code ? (
+                        <img
+                          src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
+                          alt={`${locationCountry.label} flag`}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                      ) : (
+                        <span>🌍</span>
+                      )}
                       <span className="truncate">
-                        {typeof profile.location === 'object' 
+                        {typeof profile.location === 'object'
                           ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
                           : profile.location || 'Location not specified'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 truncate">
-                    {nationalityCountry?.code ? (
-                      <img
-                        src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
-                        alt={`${nationalityCountry.label} flag`}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    ) : (
-                      <span>🌐</span>
-                    )}
+                      {nationalityCountry?.code ? (
+                        <img
+                          src={`https://flagcdn.com/w40/${nationalityCountry.code.toLowerCase()}.png`}
+                          alt={`${nationalityCountry.label} flag`}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                      ) : (
+                        <span>🌐</span>
+                      )}
                       <span className="truncate">{profile.nationality || 'Nationality not specified'}</span>
                     </div>
                   </div>
@@ -520,7 +545,7 @@ Would you like to continue?`;
                       <span>🌍</span>
                     )}
                     <span className="truncate">
-                      {typeof profile.location === 'object' 
+                      {typeof profile.location === 'object'
                         ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
                         : profile.location || 'Location not specified'}
                     </span>
@@ -546,7 +571,14 @@ Would you like to continue?`;
                   {/* View Bio + Icon */}
                   <div className="flex items-center w-full sm:w-auto gap-2">
                     <button
-                      onClick={() => handleViewBio(profile)}
+                      onClick={() => {
+                        if (!isBasic) {
+                          handleViewBio(profile);
+                        } else {
+                          setUpgradeContext('bio');
+                          setIsUpgradeModalOpen(true);
+                        }
+                      }}
                       className="flex-1 text-white text-sm px-3 py-1 rounded theme-btn text-center"
                     >
                       View Bio
@@ -554,35 +586,27 @@ Would you like to continue?`;
                     <Icon50 width={20} height={20} color="#1e5a8d" />
                   </div>
 
-                  {/* Request Match */}
                   <button
                     onClick={async () => {
                       setSelectedProfile(profile.id);
-
-                      // grab the up-to-date count
-                      const remaining = await fetchRemaining();
-                      // Basic user with no connects left?
-                      if (isBasic && remaining === 0) {
-                        setIsUpgradeModalOpen(true);
-                      } else {
-                        setIsOpen(true);
-                      }
+                      setIsOpen(true);
                     }}
-                    disabled={profile.hasPendingRequest}
+                    disabled={profile.hasPendingRequest || pendingMatchIds.has(profile.id)}
                     className={`
-      text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
-      ${profile.hasPendingRequest
+    text-white text-sm px-3 py-1 rounded w-full sm:w-[130px]
+    ${(profile.hasPendingRequest || pendingMatchIds.has(profile.id))
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'theme-btn'
-                      }
-    `}
+                        : 'theme-btn'}
+  `}
                   >
-                    {profile.hasPendingRequest ? 'Pending...' : 'Request Match'}
+                    {(profile.hasPendingRequest || pendingMatchIds.has(profile.id)) ? 'Pending...' : 'Request Match'}
                   </button>
                 </div>
               </div>
             )
           })}
+          <div ref={sentinelRef} id="infinite-scroll-sentinel" className="h-10" />
+          {isFetchingMore && <div className="text-center py-4 text-gray-500 justify-center">Loading more...</div>}
         </div>
       )}
 
@@ -606,9 +630,12 @@ Would you like to continue?`;
           }))
         }
         onApply={() => {
+          setSkip(0);            // reset pagination
+          setHasMore(true);      // allow loading again
+          setProfiles([]);       // clear old profiles
           setFilters(pendingFilters);
           setIsFilterModalOpen(false);
-          debouncedFetch();
+          debouncedFetch();      // fetch fresh results
         }}
         onClear={handleClearFilters}
       />
@@ -617,8 +644,14 @@ Would you like to continue?`;
       <MessageModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
-        title="Connects Limit Reached"
-        text="You've used up all 3 of your free match requests. Upgrade to a premium plan for unlimited connects."
+        title="Restricted Feature!"
+        text={
+          upgradeContext === 'filters'
+            ? 'Upgrade to a Platinum plan to use advanced filters.'
+            : upgradeContext === 'bio'
+              ? 'Upgrade to a Gold or Platinum plan to view full bios.'
+              : 'Upgrade to access this feature.'
+        }
         onConfirm={() => {
           // send them to /subscribe
           navigate('/subscribe');

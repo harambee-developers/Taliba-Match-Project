@@ -4,6 +4,7 @@ import { useAlert } from '../components/contexts/AlertContext';
 import Alert from '../components/Alert';
 import { useAuth } from '../components/contexts/AuthContext';
 import { useSocket } from '../components/contexts/SocketContext';
+import HourGlassIcon from '../assets/pngIcons/hourglass_icon.png'
 
 const PendingMatches = () => {
     const [pendingSentRequests, setPendingSentRequests] = useState([]);
@@ -61,14 +62,14 @@ const PendingMatches = () => {
                 text: `${user.firstName} accepted your match request!`,
                 type: "match",
                 receiver_id: senderId,
-                sender_id: user.userId 
+                sender_id: user.userId
             }
 
             if (socket) {
                 socket.emit("notification", requestObject);
-              } else {
+            } else {
                 console.warn("Socket is not connected, cannot send notification event.");
-              }
+            }
 
             showAlert('Match accepted!', 'success')
             console.log('Match accepted:', response.data);
@@ -143,7 +144,7 @@ const PendingMatches = () => {
                                             <p className="text-gray-500">{request.receiver.userName}</p>
                                         </div>
                                         <div className="flex justify-center items-center ml-4">
-                                            <span className="text-yellow-500 text-3xl">⌛</span>
+                                            <img src={HourGlassIcon} alt="Hourglass Icon" className="w-16 h-auto" />
                                         </div>
                                     </div>
                                 );

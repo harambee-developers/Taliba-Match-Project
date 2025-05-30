@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const Message = require('./model/Message');
 const User = require('./model/User');
+const Match = require('./model/Match');
 const Notifications = require('./model/Notifications');
 const Conversation = require('./model/Conversation');
 const logger = require('./logger');
@@ -99,25 +100,70 @@ function initializeSocket(server, corsOptions) {
       }
     });
 
+    socket.on("delete_message", async ({ messageId, conversationId, senderId }) => {
+      try {
+        const message = await Message.findById(messageId);
+
+        if (!message) return;
+        if (message.sender_id.toString() !== senderId) return; // Ensure sender is deleting their own message
+
+        // Update the message to indicate deletion
+        message.text = "Message has been deleted";
+        message.attachment = null;
+        message.status = "Deleted";
+        await message.save();
+
+        // Broadcast update to everyone in the conversation
+        io.to(conversationId).emit("message_deleted", {
+          messageId,
+          conversationId,
+          updatedMessage: message
+        });
+      } catch (error) {
+        logger.error("❌ Error deleting message:", error);
+      }
+    });
+
     socket.on("send_message", async ({ conversation_id, sender_id, receiver_id, text, attachment, type }) => {
       try {
-        const message = await Message.create({
-          conversation_id,
-          sender_id,
-          receiver_id,
-          text,
-          attachment,
-          type
+
+        // 👇 Check if sender or receiver has blocked the other
+        const blockExists = await Match.exists({
+          $or: [
+            {
+              sender_id: sender_id,
+              receiver_id: receiver_id,
+              match_status: 'Blocked',
+              blocked_by: receiver_id
+            },
+            {
+              sender_id: receiver_id,
+              receiver_id: sender_id,
+              match_status: 'Blocked',
+              blocked_by: receiver_id
+            }
+          ]
         });
 
-        const senderUser = await User.findById(sender_id);
-        const username = senderUser?.firstName || "Unknown";
+        
+        if (blockExists) {
+          // ─── only echo back to the sender ───
+          socket.emit("message", { message, username });
+          // (no io.to(...) and no notifications or delivered/read updates)
+          return;
+        }
+
+        // 2️⃣ always persist so sender sees it
+        const message = await Message.create({ conversation_id, sender_id, receiver_id, text, attachment, type });
 
         await Conversation.findByIdAndUpdate(conversation_id, {
           last_message: text,
           last_sender_id: sender_id,
           updatedAt: new Date(),
         });
+
+        const senderUser = await User.findById(sender_id);
+        const username = senderUser?.firstName || "Unknown";
 
         socket.emit("notification", {
           text: `${username} sent you a message!`,

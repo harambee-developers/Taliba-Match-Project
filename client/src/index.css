@@ -26,6 +26,16 @@
   @apply border-female-secondary border-2;
 }
 
+@media (min-width: 768px) {
+  [data-theme="Male"] .theme-border {
+    @apply border-male-secondary border-2;
+  }
+
+  [data-theme="Female"] .theme-border {
+    @apply border-female-secondary border-2;
+  }
+}
+
 [data-theme="Male"] .theme-btn {
   @apply bg-male-secondary hover:bg-[#174b75] text-white;
 }

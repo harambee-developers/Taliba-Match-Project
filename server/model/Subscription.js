@@ -7,7 +7,7 @@ const SubscriptionSchema = new Schema(
     customer_id: { type: String, required: true},
     subscription_type: {
       type: String,
-      enum: ["free", "premium"],
+      enum: ["free", "platinum", "gold"],
       required: true, 
     },
     start_date: { type: Date, required: true },

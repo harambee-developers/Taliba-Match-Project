@@ -72,7 +72,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Greeting Text */}
             <div className="hidden lg:block text-right">
-              <span className="block text-sm text-gray-600">Asalamu aleykum,</span>
+              <span className="block text-sm text-gray-600">As-salāmu ʿalaykum,</span>
               <span className="block text-base font-semibold text-gray-800">
                 Welcome {user.firstName}!
               </span>
@@ -122,6 +122,8 @@ const Navbar = () => {
                             // 2️⃣ If it's a message, navigate to the chat
                             if (notif.type === "message" && notif.conversationId) {
                               navigate(`/matches`);
+                            } else if ((notif.type === "match")) {
+                              navigate(`/pending-matches`);  
                             } else {
                               // fallback for other types
                               setShowNotifications(false);
@@ -150,7 +152,7 @@ const Navbar = () => {
           </div>
         ) : (
           // When user is not logged in, show navigation links
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
 
             <button
               onClick={toggleLoginModal}

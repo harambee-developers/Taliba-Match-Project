@@ -30,7 +30,7 @@ const getCustomSelectStyles = (gender) => ({
     borderColor: gender === 'Female' ? '#FFE6FB' : '#B6D4F5',
     borderWidth: '2px',
     boxShadow: 'none',
-    backgroundColor: 'white',   
+    backgroundColor: 'white',
     '&:hover': {
       borderColor: gender === 'Female' ? '#FFE6FB' : '#B6D4F5',
     },
@@ -79,7 +79,7 @@ const ProfileUpdate = () => {
   const [currentSection, setCurrentSection] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Add image cropping states
   const [selectedImage, setSelectedImage] = useState(null);
   const [crop, setCrop] = useState({
@@ -92,7 +92,7 @@ const ProfileUpdate = () => {
   const imgRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
-  
+
   // Add password validation states
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
@@ -104,7 +104,7 @@ const ProfileUpdate = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [availableCities, setAvailableCities] = useState([]);
-  
+
   const [profileData, setProfileData] = useState({
     // Section 1 - Basic Information
     firstName: "",
@@ -165,7 +165,7 @@ const ProfileUpdate = () => {
   const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => {
     const width = 50;
     const height = width / aspect;
-    
+
     return {
       unit: "%",
       width,
@@ -179,7 +179,7 @@ const ProfileUpdate = () => {
   const handleCropSave = async () => {
     if (selectedImage && imgRef.current && crop.width && crop.height) {
       setIsUploading(true);
-      
+
       const canvas = document.createElement("canvas");
       const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
       const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
@@ -219,13 +219,13 @@ const ProfileUpdate = () => {
       number: /[0-9]/.test(password),
       special: /[!@#$%^&*]/.test(password)
     };
-    
+
     setPasswordRequirements(requirements);
-    
+
     // Calculate password strength (0-5)
     const strength = Object.values(requirements).filter(Boolean).length;
     setPasswordStrength(strength);
-    
+
     return Object.values(requirements).every(Boolean);
   };
 
@@ -381,7 +381,7 @@ const ProfileUpdate = () => {
           <Select
             isMulti
             name="ethnicity"
-            value={ethnicityOptions.filter(option => 
+            value={ethnicityOptions.filter(option =>
               profileData.ethnicity.includes(option.value)
             )}
             onChange={handleMultiSelectChange}
@@ -400,7 +400,7 @@ const ProfileUpdate = () => {
           <Select
             isMulti
             name="language"
-            value={languages.filter(lang => 
+            value={languages.filter(lang =>
               profileData.language.includes(lang)
             ).map(lang => ({ value: lang, label: lang }))}
             onChange={handleMultiSelectChange}
@@ -425,7 +425,7 @@ const ProfileUpdate = () => {
                   const selectedCountry = e.target.value;
                   const cities = selectedCountry ? citiesByCountry[selectedCountry] || [] : [];
                   setAvailableCities(cities);
-                  handleInputChange('location', { 
+                  handleInputChange('location', {
                     country: selectedCountry,
                     city: '' // Reset city when country changes
                   });
@@ -444,7 +444,7 @@ const ProfileUpdate = () => {
               <select
                 name="location.city"
                 value={profileData.location?.city || ""}
-                onChange={(e) => handleInputChange('location', { 
+                onChange={(e) => handleInputChange('location', {
                   ...profileData.location,
                   city: e.target.value
                 })}
@@ -471,7 +471,7 @@ const ProfileUpdate = () => {
       <p className="text-gray-600 mb-8">
         Let's dive deeper into who you are. Share your personality, preferences, and life situation to help others get to know you better.
       </p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -622,7 +622,7 @@ const ProfileUpdate = () => {
       <p className="text-gray-600 mb-8">
         Help us understand your religious practices and preferences. This information is crucial for finding compatible matches who share your values.
       </p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -804,11 +804,10 @@ const ProfileUpdate = () => {
                 handleInputChange('password', e.target.value);
                 validatePassword(e.target.value);
               }}
-              className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'} ${
-                passwordStrength >= 4 ? 'border-green-500' : 
-                passwordStrength >= 3 ? 'border-orange-500' : 
-                profileData.password ? 'border-red-500' : ''
-              }`}
+              className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-colors ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:border-[#FFE6FB]' : 'border-[#B6D4F5] focus:border-[#B6D4F5]'} ${passwordStrength >= 4 ? 'border-green-500' :
+                passwordStrength >= 3 ? 'border-orange-500' :
+                  profileData.password ? 'border-red-500' : ''
+                }`}
               placeholder="Enter your new password..."
             />
             <button
@@ -819,7 +818,7 @@ const ProfileUpdate = () => {
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-          
+
           {/* Password requirements helper text */}
           <div className="mt-2 text-sm text-gray-600">
             <p className="mb-2">Choose a strong password. It must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one digit, and one special character (e.g., !@#$%^&*).</p>
@@ -858,11 +857,10 @@ const ProfileUpdate = () => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    passwordStrength <= 2 ? 'bg-red-500' :
+                  className={`h-2 rounded-full transition-all duration-300 ${passwordStrength <= 2 ? 'bg-red-500' :
                     passwordStrength === 3 ? 'bg-orange-500' :
-                    'bg-green-500'
-                  }`}
+                      'bg-green-500'
+                    }`}
                   style={{ width: `${(passwordStrength / 5) * 100}%` }}
                 ></div>
               </div>
@@ -894,20 +892,20 @@ const ProfileUpdate = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-[#4A0635] mb-6">How Would You Like to Present Yourself?</h2>
       <p className="text-gray-600 mb-8">
-        Your avatar is your first impression on the platform. Choose a new avatar or upload your own image to represent yourself authentically.
+        Your avatar is your first impression on the platform. Choose a new avatar to represent yourself authentically.
       </p>
 
       <div className="flex flex-col items-center">
         {profileData.gender === 'Male' ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((num) => (
-              <div 
+              <div
                 key={`man${num}`}
                 className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${profileData.avatar === `icon_man${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
                 onClick={() => handleInputChange('avatar', `icon_man${num === 1 ? '' : num}.png`)}
               >
-                <img 
-                  src={`/icon_man${num === 1 ? '' : num}.png`} 
+                <img
+                  src={`/icon_man${num === 1 ? '' : num}.png`}
                   alt={`Male Avatar ${num}`}
                   className="w-full h-auto"
                 />
@@ -924,14 +922,14 @@ const ProfileUpdate = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4, 5, 6].map((num) => (
-              <div 
+            {[1, 2, 3, 4].map((num) => (
+              <div
                 key={`woman${num}`}
                 className={`cursor-pointer rounded-lg p-2 transition-all duration-300 ${profileData.avatar === `icon_woman${num === 1 ? '' : num}.png` ? 'bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D]' : 'hover:bg-gray-100'}`}
                 onClick={() => handleInputChange('avatar', `icon_woman${num === 1 ? '' : num}.png`)}
               >
-                <img 
-                  src={`/icon_woman${num === 1 ? '' : num}.png`} 
+                <img
+                  src={`/icon_woman${num === 1 ? '' : num}.png`}
                   alt={`Female Avatar ${num}`}
                   className="w-full h-auto"
                 />
@@ -947,24 +945,24 @@ const ProfileUpdate = () => {
             ))}
           </div>
         )}
-        
+
         {!profileData.gender && (
           <div className="text-center text-red-500 mt-4 mb-8">
             Please select your gender in the first section before choosing an avatar.
           </div>
         )}
-        
-        <div className="w-full text-center mb-4">
+
+        {/* <div className="w-full text-center mb-4">
           <div className="relative">
             <hr className="border-t border-gray-300" />
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-gray-500">
               or upload your own
             </span>
           </div>
-        </div>
-        
+        </div> */}
+
         {/* Custom image upload option */}
-        <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
+        {/* <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
           <h3 className="text-[#1A495D] font-semibold mb-3">Upload your own image</h3>
           <input 
             type="file" 
@@ -975,15 +973,15 @@ const ProfileUpdate = () => {
           <p className="text-xs text-gray-500">For best results, use a square image</p>
           
           {/* Show preview of cropped image if available */}
-          {profileData.avatar === 'custom' && (
+        {/* {profileData.avatar === 'custom' && (
             <div className="mt-3 inline-block">
               <div className="relative w-24 h-24 bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D] rounded-lg p-2">
                 <div className="text-center text-sm text-[#1A495D] font-medium">Custom</div>
                 <div className="text-xs text-green-600 mt-2">✓ Ready to upload</div>
               </div>
             </div>
-          )}
-        </div>
+          )} */}
+        {/* </div> */}
       </div>
     </div>
   );
@@ -991,7 +989,13 @@ const ProfileUpdate = () => {
   const handleSubmit = async () => {
     try {
       setError(null);
-      
+
+      // Validate avatar selected
+      if (!profileData.avatar) {
+        setError("Please select an avatar before submitting.");
+        return;
+      }
+
       // Validate passwords match
       if (profileData.password && profileData.password !== profileData.confirmPassword) {
         setError("Passwords do not match");
@@ -1003,7 +1007,8 @@ const ProfileUpdate = () => {
         setError("Password does not meet the requirements");
         return;
       }
-      
+
+
       // If there's a password in the form and we have a resetToken, update the password first
       if (profileData.password && resetToken) {
         await axios.post(
@@ -1012,6 +1017,13 @@ const ProfileUpdate = () => {
           { withCredentials: true }
         );
       }
+
+      // ✅ Submit avatar separately before profile update (optional)
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile/avatar/${user?.userId}`,
+        { avatar: profileData.avatar },
+        { withCredentials: true }
+      );
 
       // Update the rest of the profile
       const response = await axios.put(
@@ -1104,7 +1116,7 @@ const ProfileUpdate = () => {
               Previous
             </button>
           )}
-          
+
           {currentSection < 5 ? (
             <button
               onClick={() => setCurrentSection(prev => prev + 1)}

@@ -16,10 +16,10 @@ import ViewProfile from "./pages/ViewProfile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import OnlineUserNotification from "./components/OnlineUserNotification";
-import MessageNotification from "./components/MessageNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
 import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SubscriptionProtectedRoute from "./components/SubscriptionProtectedRoute";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
@@ -44,7 +44,6 @@ function AppLayout() {
     <>
       {!hideNavbar && <Navbar />} {/* Conditionally render Navbar */}
       <OnlineUserNotification />
-      <MessageNotification />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -61,8 +60,8 @@ function AppLayout() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/pending-matches" element={<PendingMatches />} />
           <Route element={<ChatLayout />}>
-            <Route path="/chat/:conversationId" element={<ChatApp />} />
             <Route path="/matches" element={<Match />} />
+            <Route path="/chat/:conversationId" element={<ChatApp />} />
           </Route>
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />

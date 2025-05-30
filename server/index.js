@@ -19,6 +19,7 @@ logger.info(`Environment: ${envFile}`)
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messagesRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const notificationsRoutes = require('./routes/notificationsRoutes');
 
@@ -40,7 +41,7 @@ app.use('/uploads', express.static('public/uploads'));
 
 
 // Modularized routes
-// app.use("/api/payments", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);

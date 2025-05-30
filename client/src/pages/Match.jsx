@@ -11,6 +11,7 @@ const Match = () => {
   const [matches, setMatches] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [readConversations, setReadConversations] = useState(new Set());
 
   const { isTyping } = useChatEvents();
   const { user } = useAuth();
@@ -91,7 +92,7 @@ const Match = () => {
 
     const conversation = getConversationWithMatch(selectedMatch);
     const photoUrl = selectedMatch.photos?.[0]?.url ||
-      (user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png');
+      (user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png');
 
     if (!conversation) {
       return (
@@ -112,9 +113,9 @@ const Match = () => {
   }, [selectedMatch, conversations, user]);
 
   return (
-    <div className="h-screen flex flex-col p-4 md:p-8">
-      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md">
-        <div className="w-full md:w-1/3 theme-border min-h-screen">
+    <div className="min-h-screen flex flex-col p-4 md:p-8">
+      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md h-[85vh]">
+        <div className="w-full md:w-1/3 theme-border">
           <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
             Marriage Meeting
           </h1>
@@ -126,7 +127,7 @@ const Match = () => {
                   const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
                   const conversation = getConversationWithMatch(opponent);
                   const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';
-                  const fallback = user.gender === 'Male' ? '/icon_woman6.png' : '/icon_man5.png';
+                  const fallback = user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png';
                   const photo = opponent.photos?.[0]?.url || fallback;
 
                   function attachmentEmoji(conv) {
@@ -161,6 +162,9 @@ const Match = () => {
                           await fetchConversations();
                           return;
                         }
+
+                        // Mark conversation as read locally
+                        setReadConversations(prev => new Set([...prev, conversation._id]));
                         if (window.innerWidth < 768) {
                           navigate(`/chat/${conversation._id}`, { state: { photoUrl: photo } });
                         } else {
@@ -169,7 +173,7 @@ const Match = () => {
                       }}
                     >
                       {/* Avatar */}
-                      <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden border">
+                      <div className="flex-shrink-0 w-20 h-auto rounded-full overflow-hidden">
                         <img src={photo} alt="avatar" className="w-full h-full object-cover" loading="lazy" />
                       </div>
 
@@ -179,7 +183,9 @@ const Match = () => {
                           <h3 className="font-semibold truncate text-base">
                             {opponent.firstName} {opponent.lastName}
                           </h3>
-                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 ? "font-bold theme-btn-text" : ""}`}>{lastTime}</p>
+                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 && !readConversations.has(conversation._id) ? "font-bold theme-btn-text" : ""}`}>
+                            {lastTime}
+                          </p>
                         </div>
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-gray-500 truncate flex items-center">
@@ -207,11 +213,13 @@ const Match = () => {
                               </>
                             )}
                           </p>
-                          {conversation?.unreadCount > 0 && conversation && conversation?.last_sender_id !== user?.userId && (
-                            <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                              {conversation.unreadCount}
-                            </span>
-                          )}
+                          {conversation?.unreadCount > 0 &&
+                            !readConversations.has(conversation._id) &&
+                            conversation?.last_sender_id !== user?.userId && (
+                              <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                {conversation.unreadCount}
+                              </span>
+                            )}
                         </div>
                       </div>
                     </div>
