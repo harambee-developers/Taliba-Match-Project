@@ -363,19 +363,28 @@ const Search = () => {
           <div className="flex flex-col flex-1">
             <label className="text-sm mb-1">Age Range</label>
             <div className="relative">
-              <select
+              <Select
                 name="ageRange"
-                value={filters.ageRange}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
-              >
-                <option value="">Select</option>
-                <option value="18-25">18-25</option>
-                <option value="26-35">26-35</option>
-                <option value="36-45">36-45</option>
-                <option value="46-55">46-55</option>
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
+                value={filters.ageRange ? { value: filters.ageRange, label: filters.ageRange } : null}
+                onChange={(selectedOption) => handleFilterChange({
+                  target: {
+                    name: 'ageRange',
+                    value: selectedOption ? selectedOption.value : ''
+                  }
+                })}
+                options={[
+                  { value: '18-25', label: '18-25' },
+                  { value: '26-35', label: '26-35' },
+                  { value: '36-45', label: '36-45' },
+                  { value: '46-55', label: '46-55' },
+                  { value: '56+', label: '56+' }
+                ]}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select age range..."
+                isSearchable={true}
+                styles={genderSelectStyles}
+              />
             </div>
           </div>
 
@@ -383,20 +392,26 @@ const Search = () => {
           <div className="flex flex-col flex-1">
             <label className="text-sm mb-1">Location</label>
             <div className="relative">
-              <select
+              <Select
+                isMulti
                 name="location"
-                value={filters.location}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
-              >
-                <option value="">Select</option>
-                {countries.map(country => (
-                  <option key={country.code} value={country.label}>
-                    {country.label}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
+                value={filters.location ? filters.location.map(loc => ({ value: loc, label: loc })) : null}
+                onChange={(selectedOptions) => handleFilterChange({
+                  target: {
+                    name: 'location',
+                    value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                  }
+                })}
+                options={countries.map(country => ({
+                  value: country.label,
+                  label: country.label
+                }))}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select locations..."
+                isSearchable={true}
+                styles={genderSelectStyles}
+              />
             </div>
           </div>
 

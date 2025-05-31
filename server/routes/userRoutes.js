@@ -74,15 +74,15 @@ router.get("/search", authMiddleware, async (req, res) => {
 
     // 2) Base query + profile filters
     const query = { role: "user" };
-    if (location)             query["location.country"]        = location;
-    if (ethnicity?.length)    query.ethnicity                  = { $in: ethnicity };
-    if (revert)               query["profile.revert"]          = revert;
-    if (salahPattern)         query["profile.salahPattern"]    = salahPattern;
-    if (occupation)           query.occupation                 = occupation;
-    if (maritalStatus)        query.maritalStatus              = maritalStatus;
-    if (sect)                 query.sect                       = sect;
-    if (quranMemorization)    query["profile.quranMemorization"]= quranMemorization;
-    if (hasChildren)          query["profile.children"]        = hasChildren;
+    if (location?.length)     query["location.country"] = { $in: location };
+    if (ethnicity?.length)    query.ethnicity          = { $in: ethnicity };
+    if (revert)               query["profile.revert"]  = revert;
+    if (salahPattern)         query["profile.salahPattern"] = salahPattern;
+    if (occupation)           query.occupation         = occupation;
+    if (maritalStatus)        query.maritalStatus      = maritalStatus;
+    if (sect)                 query.sect               = sect;
+    if (quranMemorization)    query["profile.quranMemorization"] = quranMemorization;
+    if (hasChildren)          query["profile.children"] = hasChildren;
 
     // 3) Exclude any user already pending/interested/blocked
     const matches = await Match.find({
@@ -120,11 +120,11 @@ router.get("/search", authMiddleware, async (req, res) => {
 
     logger.info(`Fetched ${usersPage.length} users, hasMore=${hasMore}`);
 
-    // 6) Load current user’s location for distance calc
+    // 6) Load current user's location for distance calc
     const currentUser = await User.findById(senderId).select("location").lean();
     const currentLoc = currentUser?.location;
 
-    // 7) Map to your “profile” shape
+    // 7) Map to your "profile" shape
     const profiles = usersPage.map(u => {
       const age = u.dob
         ? Math.floor((Date.now() - new Date(u.dob)) / (365.25*24*60*60*1000))
@@ -163,8 +163,11 @@ router.get("/search", authMiddleware, async (req, res) => {
     // 8) Apply age‐range filter in JS (if requested)
     let finalList = profiles;
     if (ageRange) {
-      const [minAge, maxAge] = ageRange.split("-").map(Number);
-      finalList = finalList.filter(p => p.age >= minAge && p.age <= maxAge);
+      finalList = finalList.filter(p => {
+        if (!p.age) return false;
+        const [minAge, maxAge] = ageRange.split("-").map(Number);
+        return p.age >= minAge && (maxAge ? p.age <= maxAge : true);
+      });
     }
 
     // 9) Sort by distance (nulls last)
