@@ -1,11 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaBook, FaHeart, FaChild, FaRing, FaQuestionCircle, FaBookOpen } from "react-icons/fa";
+import { FaBook, FaHeart, FaFileAlt, FaRing, FaQuestionCircle, FaBookOpen } from "react-icons/fa";
 import { GiRose } from "react-icons/gi";
 
 const LibraryCard = ({ icon: Icon, title, to }) => (
-  <Link 
-    to={to} 
+  <a 
+    href={to} 
+    target="_blank"
+    rel="noopener noreferrer"
     className="theme-btn rounded-3xl p-8 flex items-center gap-6 
     transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl 
     theme-border min-h-[120px] relative overflow-hidden group"
@@ -18,7 +20,7 @@ const LibraryCard = ({ icon: Icon, title, to }) => (
     </div>
     <h3 className="text-xl lg:text-2xl font-bold group-hover:translate-x-2 
     transition-transform duration-300">{title}</h3>
-  </Link>
+  </a>
 );
 
 const Library = () => {
@@ -26,32 +28,32 @@ const Library = () => {
     {
       title: "Fatwas",
       icon: FaBook,
-      to: "/library/fatwas"
+      to: "https://sistersofhadith.com/talibah-library-fatwas"
     },
     {
       title: "Questions to Ask Your Spouse",
       icon: FaHeart,
-      to: "/library/questions"
+      to: "https://sistersofhadith.com/talibah-library-questions"
     },
     {
-      title: "Parenting",
-      icon: FaChild,
-      to: "/library/parenting"
+      title: "Nikah Certificates",
+      icon: FaFileAlt,
+      to: "https://sistersofhadith.com/talibah-library-nikah-certificate"
     },
     {
       title: "Rights of Husband and Wife",
       icon: GiRose,
-      to: "/library/rights"
+      to: "https://sistersofhadith.com/talibah-library-rights"
     },
     {
       title: "Fiqh: Nikah in the 4 Madhāhib",
       icon: FaBookOpen,
-      to: "/library/fiqh"
+      to: "https://sistersofhadith.com/talibah-library-nikah"
     },
     {
       title: "FAQ",
       icon: FaQuestionCircle,
-      to: "/library/faq"
+      to: "https://sistersofhadith.com/talibah-library-faq"
     }
   ];
 
