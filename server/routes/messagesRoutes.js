@@ -1,0 +1,279 @@
+const express = require("express");
+const router = express.Router();
+const Message = require("../model/Message");
+const Conversation = require("../model/Conversation");
+const mongoose = require('mongoose');
+const User = require("../model/User");
+const multer = require('multer')
+const path = require('path')
+const logger = require('../logger')
+
+router.use(express.json())
+
+// Setup the storage engine for multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Use __dirname to get the path of the current directory (routes/) and then go one level up
+        const uploadPath = path.join(__dirname, '..', 'public', 'uploads');  // Go one level up from 'routes'
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        // Use current timestamp to ensure unique filenames
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+// Set up multer with the storage engine
+const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }) // 10 MB limit);
+
+// 🔹 GET all conversations for a user
+router.get("/user/:userId", async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        // 1) Fetch all conversations for this user
+        const conversations = await Conversation
+            .find({ participants: userObjectId })
+            .populate("participants", "userName email")
+            .lean();
+
+        // 2) For each conversation:
+        //    a) count unread
+        //    b) fetch last message doc
+        const withExtras = await Promise.all(
+            conversations.map(async convo => {
+                // a) unreadCount
+                const unreadCount = await Message.countDocuments({
+                    conversation_id: convo._id,
+                    receiver_id: userObjectId,
+                    status: { $ne: 'Read' }
+                });
+
+                // b) most recent message
+                const lastMsg = await Message.findOne(
+                    { conversation_id: convo._id },
+                    { text: 1, type: 1, attachment: 1, sender_id: 1 }
+                )
+                    .sort({ createdAt: -1 })
+                    .lean();
+
+                return {
+                    ...convo,
+
+                    // unread badge
+                    unreadCount,
+
+                    // last‐message fields
+                    last_message: lastMsg?.text || "",
+                    last_message_type: lastMsg?.type || "text",
+                    last_message_attachment: lastMsg?.attachment || null,
+                    last_sender_id: lastMsg?.sender_id || convo.last_sender_id
+                };
+            })
+        );
+
+        // 3) return enriched array
+        res.status(200).json(withExtras);
+
+    } catch (error) {
+        logger.error("Error fetching conversations:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/:conversationId/details', async (req, res) => {
+    const { conversationId } = req.params;
+
+    try {
+        const conversation = await Conversation.findById(conversationId,
+            // Project only fields you actually need:
+            {
+                participants: 1,
+                last_message: 1,
+                last_sender_id: 1,
+                updatedAt: 1
+            }
+        )
+            .lean()  // Return a plain JS object
+            .populate({
+                path: 'participants',
+                select: 'userName email firstName lastName photos'
+            });
+
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found' });
+        }
+
+        return res.status(200).json(conversation);
+    } catch (error) {
+        logger.error('Error fetching conversation details:', error);
+        return res.status(500).json({ error: 'Server error' });
+    }
+});
+
+router.get('/:conversationId/messages', async (req, res) => {
+    const { conversationId } = req.params;
+    const { before, limit = 50 } = req.query;
+
+    // Enforce sane limits
+    const pageSize = Math.min(parseInt(limit, 10) || 50, 100);
+
+    try {
+        // Build filter
+        const filter = { conversation_id: conversationId };
+        if (before) {
+            const beforeDate = new Date(before);
+            if (!isNaN(beforeDate)) {
+                // Only messages older than the cursor
+                filter.createdAt = { $lt: beforeDate };
+            }
+        }
+
+        // Fetch messages: newest first, limited, lean + projection
+        let messages = await Message.find(filter, {
+            conversation_id: 1,
+            sender_id: 1,
+            receiver_id: 1,
+            text: 1,
+            attachment: 1,
+            type: 1,
+            status: 1,
+            createdAt: 1,
+        })
+            .sort({ createdAt: -1 })
+            .limit(pageSize)
+            .lean();
+
+        // Reverse to chronological order before returning
+        messages = messages.reverse();
+
+        // If no messages found and this was the first page, you might still return empty array
+        return res.status(200).json({ messages });
+    } catch (error) {
+        logger.error('Error fetching messages:', error);
+        return res.status(500).json({ error: 'Server error fetching messages' });
+    }
+});
+
+router.post("/new-conversation", async (req, res) => {
+    try {
+        const { user1, user2 } = req.body;
+
+        // Check if a conversation already exists between the users
+        let conversation = await Conversation.findOne({
+            participants: { $all: [user1, user2] }
+        });
+
+        if (!conversation) {
+            // If no conversation exists, create a new one
+            conversation = new Conversation({
+                participants: [user1, user2],
+                last_message: "",
+            });
+
+            await conversation.save();
+        }
+
+        res.status(201).json({ conversation });
+    } catch (error) {
+        logger.error("Error creating conversation:", error);
+        res.status(500).json({ error: "Error creating conversation" });
+    }
+});
+
+router.get("/fetch-status/:receiverId", async (req, res) => {
+    try {
+        const { receiverId } = req.params;
+
+        if (!receiverId) {
+            return res.status(400).json({ message: "Receiver ID is required!" });
+        }
+
+        // Find user by ID and select only isOnline and lastSeen fields
+        const user = await User.findById(receiverId).select("isOnline lastSeen");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found!" });
+        }
+
+        res.status(200).json({ isOnline: user.isOnline, lastSeen: user.lastSeen });
+    } catch (error) {
+        logger.error("Error fetching user status:", error);
+        res.status(500).json({ error: "Error fetching user status" });
+    }
+});
+
+router.post("/upload", upload.single("file"), async (req, res) => {
+    if (!req.file.filename) {
+        return res.status(400).json({ message: "filename is missing!" });
+    }
+    try {
+        // Save the file to storage, build the message object, etc.
+        const fileUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+        // Get mimetype, e.g., 'image/png', 'video/mp4'
+        const mimeType = req.file.mimetype;
+        // Determine file type based on mimetype
+        let type = "file";
+        if (mimeType.startsWith("image")) {
+            type = "image";
+        } else if (mimeType.startsWith("video")) {
+            type = "video";
+        }
+        const message = ({
+            text: "attachment", // or any caption if provided
+            sender_id: req.body.senderId,
+            receiver_id: req.body.receiverId,
+            conversation_id: req.body.conversationId,
+            attachment: fileUrl,
+            type: type,
+            createdAt: new Date().toISOString(),
+        });
+
+        // Save the message to your DB here...
+        res.status(200).json({ message });
+    } catch (error) {
+        logger.error("Error uploading attachments: ", error)
+        res.status(500).json({ error: "Error uploading attachments" });
+    }
+});
+
+// Get modal status for a conversation
+router.get('/:conversationId/modal-status', async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) {
+            return res.status(404).json({ message: 'Conversation not found' });
+        }
+        
+        res.json({
+            initial_modal_shown: conversation.initial_modal_shown || []
+        });
+    } catch (error) {
+        logger.error('Error fetching modal status:', error);
+        res.status(500).json({ message: 'Error fetching modal status' });
+    }
+});
+
+// Mark modal as shown for a user in a conversation
+router.post('/:conversationId/mark-modal-shown', async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        if (!conversation) {
+            return res.status(404).json({ message: 'Conversation not found' });
+        }
+
+        // Add user to initial_modal_shown if not already present
+        if (!conversation.initial_modal_shown.includes(req.body.userId)) {
+            conversation.initial_modal_shown.push(req.body.userId);
+            await conversation.save();
+        }
+
+        res.json({ message: 'Modal marked as shown' });
+    } catch (error) {
+        logger.error('Error marking modal as shown:', error);
+        res.status(500).json({ message: 'Error marking modal as shown' });
+    }
+});
+
+module.exports = router;

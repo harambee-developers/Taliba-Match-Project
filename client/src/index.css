@@ -1,3 +1,122 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+[data-theme="Male"] .theme-bg {
+  @apply bg-male-primary text-black;
+}
+
+[data-theme="Female"] .theme-bg {
+  @apply bg-female-primary text-black;
+}
+
+[data-theme="Male"] .theme-sidebar {
+  @apply bg-male-secondary text-male-secondary; 
+}
+
+[data-theme="Female"] .theme-sidebar {
+  @apply bg-female-secondary text-female-secondary;
+}
+
+[data-theme="Male"] .theme-border {
+  @apply border-male-secondary border-2;
+}
+
+[data-theme="Female"] .theme-border {
+  @apply border-female-secondary border-2;
+}
+
+@media (min-width: 768px) {
+  [data-theme="Male"] .theme-border {
+    @apply border-male-secondary border-2;
+  }
+
+  [data-theme="Female"] .theme-border {
+    @apply border-female-secondary border-2;
+  }
+}
+
+[data-theme="Male"] .theme-btn {
+  @apply bg-male-secondary hover:bg-[#174b75] text-white;
+}
+
+[data-theme="Female"] .theme-btn {
+  @apply bg-female-secondary hover:bg-[#FF1F5A] text-white;
+}
+
+[data-theme="Male"] .theme-btn-text {
+  @apply text-male-secondary hover:text-[#174b75];
+}
+
+[data-theme="Female"] .theme-btn-text {
+  @apply text-female-secondary hover:text-[#FF1F5A];
+}
+
+[data-theme="Male"] {
+  --icon-fill: theme(colors.male.secondary);      /* e.g. #1E90FF */
+  --bg-fill:   theme(colors.male.primary);    /* e.g. #D0E8FF */
+}
+[data-theme="Female"] {
+  --icon-fill: theme(colors.female.secondary);    /* e.g. #FF1493 */
+  --bg-fill:   theme(colors.female.primary);  /* e.g. #FFD0E8 */
+}
+
+/* Single .sender:before rule: */
+.sender:before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: -1.2rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-top: 0.75rem solid transparent;
+  border-right: 1rem solid transparent;
+  border-left: 0.75rem solid var(--bubble);
+  border-bottom-left-radius: 2.75rem;
+  border-bottom-right-radius: 0.8rem 0.7rem;
+}
+
+/* "received" bubble tail on the left */
+.receiver::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -1.2rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-top: 0.75rem solid transparent;
+  border-right: 0.75rem solid var(--bubble);
+  border-left: 1rem solid transparent;
+  border-bottom-right-radius: 3rem;
+  border-bottom-left-radius: 0.8rem 0.7rem;
+}
+
+[data-theme="Female"] .react-select__control {
+  background-color: #FFF6FB !important; /* light pink */
+  border-color: #E01D42 !important;     /* pink border */
+}
+
+[data-theme="Male"] .react-select__control {
+  background-color: #F0F6FF !important; /* light blue */
+  border-color: #1A495D !important;     /* blue border */
+}
+
+[data-theme="Female"] .react-select__menu {
+  background-color: #FFF6FB !important;
+}
+[data-theme="Male"] .react-select__menu {
+  background-color: #F0F6FF !important;
+}
+
+[data-theme="Female"] .react-select__option {
+  background-color: #FFF6FB !important; /* light pink for options */
+  color: #4A0635 !important;            /* dark pink text for contrast */
+}
+[data-theme="Female"] .react-select__option--is-focused {
+  background-color: #FFE1F3 !important; /* slightly darker pink on hover/focus */
+  color: #4A0635 !important;
+}
+[data-theme="Female"] .react-select__option--is-selected {
+  background-color: #E01D42 !important; /* strong pink for selected */
+  color: #FFF !important;
+}

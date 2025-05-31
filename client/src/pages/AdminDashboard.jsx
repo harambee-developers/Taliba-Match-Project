@@ -10,15 +10,8 @@ const AdminDashboard = () => {
   const [selectedTab, setSelectedTab] = useState("Dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
   const tabs = ["Dashboard", "Settings", "Users", "Logout"];
-
-  useEffect(() => {
-    if (user?.role !== 'admin' || !user) {
-      navigate('/admin')
-      console.error("Unauthorized User!")
-    }
-  }, [user, navigate])
 
   const handleOnClick = async (value) => {
     if (value === "Logout") {
@@ -61,7 +54,7 @@ const AdminDashboard = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#FFF1FE]">
       {/* Mobile Toggle Button */}
-      <div className="lg:hidden w-full bg-[#E01D42] text-white p-4 flex justify-between items-center z-20 rounded-md">
+      <div className="lg:hidden w-full bg-[#E01D42] text-white p-4 flex justify-between items-center z-20">
         <h2 className="text-lg font-semibold">Admin Dashboard</h2>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
           <FaBars size={20} />
@@ -71,7 +64,7 @@ const AdminDashboard = () => {
       {/* Sidebar */}
       <nav
         className={`${isSidebarOpen ? "block" : "hidden"
-          } lg:block bg-[#E01D42] text-white flex-shrink-0 w-full lg:w-64 absolute lg:static z-10 rounded-md`}
+          } lg:block bg-[#E01D42] text-white flex-shrink-0 w-full lg:w-64 absolute lg:static z-10`}
       >
         <div className="p-6">
           <h2 className="text-lg font-semibold">Admin Dashboard</h2>
@@ -98,7 +91,7 @@ const AdminDashboard = () => {
       <main className="flex-1 p-4 lg:p-6">
         <header className="bg-white shadow p-4 lg:p-6 rounded-md mb-4 lg:mb-6">
           <h2 className="text-xl lg:text-2xl font-semibold text-[#E01D42]">
-            <p>Welcome {user.userName}</p>
+            <p>Welcome {user?.userName}</p>
           </h2>
         </header>
         <section className="flex-1">{renderComponent()}</section>

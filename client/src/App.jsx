@@ -1,4 +1,5 @@
 import React from "react";
+<<<<<<< HEAD
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Subscription from "./pages/Subscription";
 import LandingPage from "./pages/LandingPage";
@@ -22,6 +23,16 @@ function App() {
           <Route path="/admin" element={<AdminLogin />} />{" "}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />{" "}
         </Routes>
+=======
+import { BrowserRouter} from "react-router-dom";
+import AppLayout from "./AppLayout";
+
+function App() {
+
+  return (
+    <BrowserRouter>
+      <AppLayout/>
+>>>>>>> UAT
     </BrowserRouter>
   );
 }

@@ -403,7 +403,6 @@ FodyWeavers.xsd
 # mongo_data file
 mongo_data
 
-
 # docker ignore
 .dockerignore
 
@@ -411,4 +410,4 @@ mongo_data
 seed*
 
 # ignore public uploaded files
-**/*public*
+**/*upload*

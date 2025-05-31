@@ -1,0 +1,239 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../components/contexts/AuthContext';
+import { format, isToday } from 'date-fns';
+import ChatApp from '../components/ChatApp';
+import { useChatEvents } from '../components/contexts/ChatEventsContext';
+import { getCachedData, cacheData } from '../utils/cacheUtil';
+
+const Match = () => {
+  const [matches, setMatches] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [readConversations, setReadConversations] = useState(new Set());
+
+  const { isTyping } = useChatEvents();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const chatCache = 'chat-cache';
+  const CACHE_MATCHES = 'chat_matches';
+  const CACHE_CONVERSATION = 'chat_conversations';
+
+  useEffect(() => {
+    if (user) {
+      fetchMatches();
+      fetchConversations();
+    }
+  }, [user]);
+
+  const fetchMatches = useCallback(async () => {
+    const cached = await getCachedData(CACHE_MATCHES, chatCache);
+    if (cached) setMatches(cached);
+
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/match/matches/${user.userId}`
+      );
+      setMatches(data);
+      await cacheData(CACHE_MATCHES, data, chatCache);
+    } catch (err) {
+      console.error('Error fetching matches:', err);
+    }
+  }, [user]);
+
+  const fetchConversations = useCallback(async () => {
+    const cached = await getCachedData(CACHE_CONVERSATION, chatCache);
+    if (cached) setConversations(cached);
+
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/message/user/${user.userId}`
+      );
+      setConversations(data);
+      await cacheData(CACHE_CONVERSATION, data, chatCache);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+    }
+  }, [user]);
+
+  const handleLastMessageUpdate = (convId, msg, sender) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv._id === convId
+          ? { ...conv, last_message: msg, last_sender_id: sender, updatedAt: new Date().toISOString() }
+          : conv
+      )
+    );
+  };
+
+  const getConversationWithMatch = useCallback(
+    match =>
+      conversations.find(conv =>
+        conv?.participants?.some(p => p?._id === match?._id)
+      ) || null,
+    [conversations]
+  );
+
+  const formatTimestamp = ts => {
+    if (!ts) return '';
+    return isToday(new Date(ts))
+      ? format(new Date(ts), 'HH:mm')
+      : format(new Date(ts), 'dd/MM/yyyy');
+  };
+
+  const chatComponent = useMemo(() => {
+    if (!selectedMatch) return (
+      <div className="flex text-center justify-center h-screen text-gray-500">
+        <p>Select a match to view the conversation.</p>
+      </div>
+    );
+
+    const conversation = getConversationWithMatch(selectedMatch);
+    const photoUrl = selectedMatch.photos?.[0]?.url ||
+      (user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png');
+
+    if (!conversation) {
+      return (
+        <div className="flex text-center justify-center min-h-screen text-gray-500">
+          <p>Creating a new conversation...</p>
+        </div>
+      );
+    }
+
+    return (
+      <ChatApp
+        conversation={conversation._id}
+        user_id={user.userId}
+        onLastMessageUpdate={handleLastMessageUpdate}
+        photoUrl={photoUrl}
+      />
+    );
+  }, [selectedMatch, conversations, user]);
+
+  return (
+    <div className="min-h-screen flex flex-col p-4 md:p-8">
+      <div className="flex flex-col md:flex-row theme-border items-stretch rounded-lg shadow-md h-[85vh]">
+        <div className="w-full md:w-1/3 theme-border">
+          <h1 className="theme-bg bg-opacity-60 text-3xl font-bold p-[1.48rem] theme-border">
+            Marriage Meeting
+          </h1>
+          <div className="p-4">
+            {matches.length ? (
+              matches
+                .filter(m => m.sender && m.receiver)
+                .map((match, idx) => {
+                  const opponent = match.sender._id !== user.userId ? match.sender : match.receiver;
+                  const conversation = getConversationWithMatch(opponent);
+                  const lastTime = conversation ? formatTimestamp(conversation.updatedAt) : '';
+                  const fallback = user.gender === 'Male' ? '/icon_woman.png' : '/icon_man.png';
+                  const photo = opponent.photos?.[0]?.url || fallback;
+
+                  function attachmentEmoji(conv) {
+                    if (!conv?.last_message_attachment) return null;
+                    if (conv?.last_message_type === 'image') return '🖼️';
+                    if (conv?.last_message_type === 'video') return '📹';
+                    return '📎';
+                  }
+
+                  return (
+                    <div
+                      key={idx}
+                      className="
+                          flex flex-wrap
+                          items-center
+                          p-4 mb-2
+                          cursor-pointer
+                          rounded-lg
+                          theme-border
+                          bg-white
+                          hover:bg-[#FFF1FE]
+                          transition
+                          duration-300
+                        "
+                      onClick={async () => {
+                        if (!conversation) {
+                          const newConv = await axios.post(
+                            `${import.meta.env.VITE_BACKEND_URL}/api/message/new-conversation`,
+                            { user1: opponent._id, user2: user.userId }
+                          );
+                          setSelectedMatch(opponent);
+                          await fetchConversations();
+                          return;
+                        }
+
+                        // Mark conversation as read locally
+                        setReadConversations(prev => new Set([...prev, conversation._id]));
+                        if (window.innerWidth < 768) {
+                          navigate(`/chat/${conversation._id}`, { state: { photoUrl: photo } });
+                        } else {
+                          setSelectedMatch(opponent);
+                        }
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 w-20 h-auto rounded-full overflow-hidden">
+                        <img src={photo} alt="avatar" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+
+                      {/* Spacer & Text */}
+                      <div className="ml-4 flex-1 min-w-[120px]">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold truncate text-base">
+                            {opponent.firstName} {opponent.lastName}
+                          </h3>
+                          <p className={`text-xs text-gray-500 ${conversation?.unreadCount > 0 && !readConversations.has(conversation._id) ? "font-bold theme-btn-text" : ""}`}>
+                            {lastTime}
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-500 truncate flex items-center">
+                            {conversation?._id === isTyping.conversationId && isTyping.isTyping ? (
+                              <span className="text-gray-500 font-semibold">
+                                {opponent.firstName} is typing...
+                              </span>
+                            ) : (
+                              <>
+                                {/* "You:" or "Name:" label */}
+                                <span className="mr-1 font-semibold">
+                                  {conversation?.last_sender_id === user?.userId
+                                    ? 'You:'
+                                    : opponent.firstName + ':'}
+                                </span>
+                                {/* attachment icon only if not typing */}
+                                {attachmentEmoji(conversation) && (
+                                  <span className="mr-1" role="img" aria-label="attachment">
+                                    {attachmentEmoji(conversation)}
+                                  </span>
+                                )}
+                                <span className={conversation?.last_message_type !== 'text' ? 'italic text-gray-600' : ''}>
+                                  {conversation?.last_message || 'No messages yet'}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                          {conversation?.unreadCount > 0 &&
+                            !readConversations.has(conversation._id) &&
+                            conversation?.last_sender_id !== user?.userId && (
+                              <span className="ml-2 theme-btn text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                {conversation.unreadCount}
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <p className="text-center text-gray-500">No Connections found.</p>
+            )}
+          </div>
+        </div>
+        <div className="hidden md:block w-2/3">{chatComponent}</div>
+      </div>
+    </div>
+  );
+};
+
+export default Match;
