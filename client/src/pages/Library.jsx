@@ -1,16 +1,19 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBook, FaHeart, FaFileAlt, FaRing, FaQuestionCircle, FaBookOpen } from "react-icons/fa";
 import { GiRose } from "react-icons/gi";
+import { useAuth } from "../components/contexts/AuthContext";
+import MessageModal from "../components/modals/MessageModal";
 
-const LibraryCard = ({ icon: Icon, title, to }) => (
-  <a 
-    href={to} 
+const LibraryCard = ({ icon: Icon, title, to, onClick}) => (
+  <a
+    href={to}
     target="_blank"
     rel="noopener noreferrer"
     className="theme-btn rounded-3xl p-8 flex items-center gap-6 
     transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl 
     theme-border min-h-[120px] relative overflow-hidden group"
+    onClick={onClick}
   >
     <div className="absolute inset-0 bg-gradient-to-r from-pink-100/50 to-transparent opacity-0 
     group-hover:opacity-100 transition-opacity duration-300" />
@@ -24,6 +27,12 @@ const LibraryCard = ({ icon: Icon, title, to }) => (
 );
 
 const Library = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
+  const hasPlatinumAccess = user?.subscription?.type === "platinum" && user?.subscription?.status === "active";
+
   const libraryItems = [
     {
       title: "Fatwas",
@@ -57,6 +66,16 @@ const Library = () => {
     }
   ];
 
+  // Handle click on library card: open modal if no platinum access
+  const handleCardClick = (e, to) => {
+    if (!hasPlatinumAccess) {
+      e.preventDefault(); // prevent opening the link
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    // If has access, let the link work normally
+  };
+
   return (
     <div className="min-h-screen theme-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -69,11 +88,25 @@ const Library = () => {
               icon={item.icon}
               title={item.title}
               to={item.to}
+              onClick={(e) => handleCardClick(e, item.to)}
             />
           ))}
         </div>
       </div>
+      {/* Upgrade Prompt Modal */}
+      <MessageModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Restricted Feature!"
+        text="Upgrade to a Platinum plan to access the Library."
+        onConfirm={() => {
+          setIsUpgradeModalOpen(false);
+          navigate("/subscribe");
+        }}
+        confirmText="View Pricing"
+      />
     </div>
+
   );
 };
 
