@@ -8,6 +8,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../components/contexts/AlertContext';
 import citiesByCountry from '../data/citiesByCountry';
+import TermsModal from '../components/TermsModal';
 
 const usePageTitle = (title) => {
   useEffect(() => {
@@ -114,6 +115,7 @@ const RegisterPage = () => {
     avatar: '',
     customImage: null,
     language: [],
+    acceptedTerms: false,
   };
   const [formData, setFormData] = useState(() => {
     // Local Storage allows us to persist data even after refresh and page change. Enhances user experience by allowing data to still be there in case of 
@@ -159,34 +161,21 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   
-  // Password validation function
-  const validatePassword = (password) => {
-    const requirements = {
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /[0-9]/.test(password),
-      special: /[!@#$%^&*]/.test(password)
-    };
-    
-    setPasswordRequirements(requirements);
-    
-    // Calculate password strength (0-5)
-    const strength = Object.values(requirements).filter(Boolean).length;
-    setPasswordStrength(strength);
-    
-    return Object.values(requirements).every(Boolean);
-  };
-
-  // Function to get password strength label and color
-  const getPasswordStrengthInfo = () => {
-    if (passwordStrength <= 2) return { label: 'Weak', color: 'red' };
-    if (passwordStrength === 3) return { label: 'Fair', color: 'orange' };
-    return { label: 'Strong', color: 'green' };
-  };
-  
   // Add state for city selection
   const [availableCities, setAvailableCities] = useState([]);
+
+  // Add state for terms viewing
+  const [termsViewed, setTermsViewed] = useState(false);
+
+  // Add state for TermsModal
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  // Function to handle terms link click
+  const handleTermsClick = (e) => {
+    e.preventDefault();
+    setTermsViewed(true);
+    setIsTermsModalOpen(true);
+  };
 
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -561,6 +550,11 @@ const RegisterPage = () => {
       errors.avatar = "Please select an avatar or upload your own image";
     }
     
+    // Check if terms are accepted
+    if (!formData.acceptedTerms) {
+      errors.acceptedTerms = "You must accept the Terms and Conditions and Privacy Policy to continue";
+    }
+    
     // Check if dob is provided
     if (!formData.dob) {
       errors.dob = "Date of Birth is required";
@@ -635,8 +629,40 @@ const RegisterPage = () => {
     { value: '4+', label: '4+' },
   ];
 
+  // Function to get password strength label and color
+  const getPasswordStrengthInfo = () => {
+    if (passwordStrength <= 2) return { label: 'Weak', color: 'red' };
+    if (passwordStrength === 3) return { label: 'Fair', color: 'orange' };
+    return { label: 'Strong', color: 'green' };
+  };
+
+  // Function to validate password
+  const validatePassword = (password) => {
+    const requirements = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*]/.test(password)
+    };
+
+    setPasswordRequirements(requirements);
+
+    // Calculate password strength (0-5)
+    const strength = Object.values(requirements).filter(Boolean).length;
+    setPasswordStrength(strength);
+
+    return Object.values(requirements).every(Boolean);
+  };
+
   return (
     <div className="min-h-screen bg-[#FFF1FE] flex items-center justify-center relative">
+      {/* Add TermsModal */}
+      <TermsModal 
+        isOpen={isTermsModalOpen} 
+        onClose={() => setIsTermsModalOpen(false)} 
+      />
+
       {/* Modal for image cropping */}
       {showCropper && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
@@ -1456,37 +1482,49 @@ const RegisterPage = () => {
                   {errors.avatar}
                 </div>
               )}
-              
-              {/* <div className="w-full text-center mb-4">
-                <div className="relative">
-                  <hr className="border-t border-gray-300" />
-                  <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FFF1FE] px-4 text-gray-500">
-                    or upload your own
-                  </span>
+            </div>
+
+            {/* Terms and Conditions Checkbox */}
+            <div className="mt-8 mb-6">
+              <div className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    checked={formData.acceptedTerms}
+                    onChange={(e) => {
+                      if (!termsViewed) {
+                        showAlert("Please read the Terms and Conditions and Privacy Policy first", "warning");
+                        return;
+                      }
+                      handleInputChange('acceptedTerms', e.target.checked);
+                    }}
+                    className={`w-4 h-4 border-2 rounded focus:ring-2 focus:ring-offset-0 ${
+                      formData.gender === 'Female' ? 'border-[#FFE6FB] focus:ring-[#FFE6FB]' : 'border-[#B6D4F5] focus:ring-[#B6D4F5]'
+                    } ${!termsViewed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    required
+                    disabled={!termsViewed}
+                  />
                 </div>
-              </div> */}
-              
-              {/* Custom image upload option - now after the avatars */}
-              {/* <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
-                <h3 className="text-[#1A495D] font-semibold mb-3">Upload your own image</h3>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageChange} 
-                  className="mb-2"
-                />
-                <p className="text-xs text-gray-500">For best results, use a square image</p> */}
-                
-                {/* Show preview of cropped image if available */}
-                {/* {formData.avatar === 'custom' && (
-                  <div className="mt-3 inline-block">
-                    <div className="relative w-24 h-24 bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D] rounded-lg p-2">
-                      <div className="text-center text-sm text-[#1A495D] font-medium">Custom</div>
-                      <div className="text-xs text-green-600 mt-2">✓ Ready to upload</div>
-                    </div>
-                  </div>
-                )} */}
-              {/* </div> */}
+                <div className="ml-3 text-sm">
+                  <label htmlFor="terms" className="font-medium text-gray-700">
+                    I agree to the{' '}
+                    <a 
+                      href="#" 
+                      onClick={handleTermsClick}
+                      className="text-[#1A495D] hover:underline"
+                    >
+                      Terms and Conditions and Privacy Policy
+                    </a>
+                    {!termsViewed && (
+                      <span className="text-red-500 ml-1">(Please read before accepting)</span>
+                    )}
+                  </label>
+                  {errors.acceptedTerms && (
+                    <p className="mt-1 text-sm text-red-600">{errors.acceptedTerms}</p>
+                  )}
+                </div>
+              </div>
             </div>
             
             <div className="flex justify-between space-x-4 mt-8">

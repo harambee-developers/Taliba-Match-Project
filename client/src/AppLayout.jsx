@@ -24,6 +24,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
 import Settings from "./pages/Settings";
+import Terms from "./pages/Terms";
 
 function ChatLayout() {
   // Wrap only the chat-related routes in ChatEventsProvider
@@ -55,6 +56,7 @@ function AppLayout() {
         <Route path="/profile-update/:resetToken" element={<ProfileUpdate />} />
         <Route path="/change-password/:resetToken" element={<ChangePasswordPage />} />
         <Route path="/payment-success" element={<PaymentConfirmation />} />
+        <Route path="/terms" element={<Terms />} />
         {/* Protected Routes */}
         <Route element={<ProtectedRoute user={user} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
