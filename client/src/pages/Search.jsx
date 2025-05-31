@@ -181,7 +181,7 @@ const Search = () => {
   }, [profiles, user?.gender]);
 
   useEffect(() => {
-    if (!hasMore) return;          // don’t observe if there’s nothing left
+    if (!hasMore) return;          // don't observe if there's nothing left
     const sentinel = sentinelRef.current;
     if (!sentinel) return;         // not in the DOM yet
   
@@ -472,9 +472,9 @@ const Search = () => {
                 className="relative flex flex-col sm:flex-row items-start sm:items-center rounded-lg p-4 theme-bg theme-border space-y-4 sm:space-y-0 sm:space-x-4"
               >
                 {/* Age badge */}
-                <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
+                {/* <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
                   {profile.age || 'N/A'}
-                </div>
+                </div> */}
 
                 {/* MOBILE: avatar + name & stacked subtext */}
                 <div className="flex flex-col w-full sm:hidden">
@@ -484,7 +484,9 @@ const Search = () => {
                       alt="Profile"
                       fallback={fallbackUrl}
                     />
-                    <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold truncate">{profile.firstName}{profile.age && `, ${profile.age}`}</h3>
+                    </div>
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
@@ -531,7 +533,7 @@ const Search = () => {
                   />
                 </div>
                 <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
-                  <h3 className="text-base font-semibold truncate">{profile.name}</h3>
+                  <h3 className="text-base font-semibold truncate">{profile.firstName}{profile.age && `, ${profile.age}`}</h3>
                   <div className="flex items-center gap-2 text-sm truncate">
                     {locationCountry?.code ? (
                       <img
