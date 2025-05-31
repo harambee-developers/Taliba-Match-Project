@@ -76,7 +76,7 @@
   border-bottom-right-radius: 0.8rem 0.7rem;
 }
 
-/* “received” bubble tail on the left */
+/* "received" bubble tail on the left */
 .receiver::before {
   content: "";
   position: absolute;
@@ -89,4 +89,34 @@
   border-left: 1rem solid transparent;
   border-bottom-right-radius: 3rem;
   border-bottom-left-radius: 0.8rem 0.7rem;
+}
+
+[data-theme="Female"] .react-select__control {
+  background-color: #FFF6FB !important; /* light pink */
+  border-color: #E01D42 !important;     /* pink border */
+}
+
+[data-theme="Male"] .react-select__control {
+  background-color: #F0F6FF !important; /* light blue */
+  border-color: #1A495D !important;     /* blue border */
+}
+
+[data-theme="Female"] .react-select__menu {
+  background-color: #FFF6FB !important;
+}
+[data-theme="Male"] .react-select__menu {
+  background-color: #F0F6FF !important;
+}
+
+[data-theme="Female"] .react-select__option {
+  background-color: #FFF6FB !important; /* light pink for options */
+  color: #4A0635 !important;            /* dark pink text for contrast */
+}
+[data-theme="Female"] .react-select__option--is-focused {
+  background-color: #FFE1F3 !important; /* slightly darker pink on hover/focus */
+  color: #4A0635 !important;
+}
+[data-theme="Female"] .react-select__option--is-selected {
+  background-color: #E01D42 !important; /* strong pink for selected */
+  color: #FFF !important;
 }
