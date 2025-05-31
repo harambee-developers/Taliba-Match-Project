@@ -1,31 +1,30 @@
-const nodemailer = require("nodemailer");
+// emailService.js
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+const logger = require('../logger')
 
+/**
+ * Send an email via SendGrid
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} textContent - Plain text content
+ * @param {string} htmlContent - HTML content
+ */
 const sendEmail = async (to, subject, textContent, htmlContent) => {
-    try {
-        const transporter = nodemailer.createTransport({
-            host: "smtp.privateemail.com",
-            port: 465, // or 587 if you prefer STARTTLS
-            secure: true, // Set to true for 465 (SSL), false for 587 (STARTTLS)
-            auth: {
-                user: process.env.EMAIL_USER, // Your PrivateEmail email address
-                pass: process.env.EMAIL_PASS, // Your PrivateEmail password
-            },
-            logger: true,  // Enable debugging logs
-            debug: true,
-        });
+  const msg = {
+    to,
+    from: 'noreply@talibah.co.uk', // Your authenticated domain email
+    subject,
+    text: textContent,
+    html: htmlContent,
+  }
 
-        await transporter.sendMail({
-            from: '"SimpleGeoAPI" <info@simplegeoapi.com>', // Ensure this matches your domain
-            to,
-            subject,
-            text: textContent,
-            html: htmlContent
-        });
+  try {
+    await sgMail.send(msg)
+    logger.info(`✅ Email sent to ${to}`)
+  } catch (error) {
+    logger.error("❌ SendGrid Error:", error.response?.body || error.message)
+  }
+}
 
-        console.log(`📧 Email sent to ${to}`);
-    } catch (error) {
-        console.error("❌ Email sending failed:", error);
-    }
-};
-
-module.exports = sendEmail;
+module.exports = sendEmail
