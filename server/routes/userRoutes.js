@@ -380,6 +380,7 @@ router.put("/profile/:userId", async (req, res) => {
       ethnicity,
       nationality,
       language,
+      gender,
 
       // About Yourself
       bio,
@@ -428,6 +429,7 @@ router.put("/profile/:userId", async (req, res) => {
       location,
       maritalStatus,
       sect,
+      gender,
 
       // Profile object fields
       'profile.language': language,
