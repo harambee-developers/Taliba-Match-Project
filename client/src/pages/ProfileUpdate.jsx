@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../components/contexts/AuthContext";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Select from 'react-select';
 import ReactCrop from "react-image-crop";
@@ -20,6 +20,7 @@ import {
   dressStyleOptions
 } from "../data/fieldData";
 import citiesByCountry from '../data/citiesByCountry';
+import TermsModal from '../components/TermsModal';
 
 // Gender-based custom select styles
 const getCustomSelectStyles = (gender) => ({
@@ -79,6 +80,10 @@ const ProfileUpdate = () => {
   const [currentSection, setCurrentSection] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  // Add state for terms viewing
+  const [termsViewed, setTermsViewed] = useState(false);
 
   // Add image cropping states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -138,8 +143,17 @@ const ProfileUpdate = () => {
 
     // Section 5 - Avatar
     avatar: "",
-    customImage: null
+    customImage: null,
+    acceptedTerms: false,
   });
+
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  const handleTermsClick = (e) => {
+    e.preventDefault();
+    setTermsViewed(true);
+    setIsTermsModalOpen(true);
+  };
 
   // Function to handle image file selection
   const handleImageChange = (event) => {
@@ -952,36 +966,48 @@ const ProfileUpdate = () => {
           </div>
         )}
 
-        {/* <div className="w-full text-center mb-4">
-          <div className="relative">
-            <hr className="border-t border-gray-300" />
-            <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-gray-500">
-              or upload your own
-            </span>
-          </div>
-        </div> */}
-
-        {/* Custom image upload option */}
-        {/* <div className="w-full mt-4 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
-          <h3 className="text-[#1A495D] font-semibold mb-3">Upload your own image</h3>
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageChange} 
-            className="mb-2"
-          />
-          <p className="text-xs text-gray-500">For best results, use a square image</p>
-          
-          {/* Show preview of cropped image if available */}
-        {/* {profileData.avatar === 'custom' && (
-            <div className="mt-3 inline-block">
-              <div className="relative w-24 h-24 bg-[#1A495D] bg-opacity-20 ring-2 ring-[#1A495D] rounded-lg p-2">
-                <div className="text-center text-sm text-[#1A495D] font-medium">Custom</div>
-                <div className="text-xs text-green-600 mt-2">✓ Ready to upload</div>
-              </div>
+        {/* Terms and Conditions Checkbox */}
+        <div className="mt-8 mb-6">
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="terms"
+                type="checkbox"
+                checked={profileData.acceptedTerms}
+                onChange={(e) => {
+                  if (!termsViewed) {
+                    setError("Please read the Terms and Conditions and Privacy Policy first");
+                    return;
+                  }
+                  handleInputChange('acceptedTerms', e.target.checked);
+                }}
+                className={`w-4 h-4 border-2 rounded focus:ring-2 focus:ring-offset-0 ${
+                  profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:ring-[#FFE6FB]' : 'border-[#B6D4F5] focus:ring-[#B6D4F5]'
+                } ${!termsViewed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                required
+                disabled={!termsViewed}
+              />
             </div>
-          )} */}
-        {/* </div> */}
+            <div className="ml-3 text-sm">
+              <label htmlFor="terms" className="font-medium text-gray-700">
+                I agree to the{' '}
+                <a 
+                  href="#" 
+                  onClick={handleTermsClick}
+                  className="text-[#1A495D] hover:underline"
+                >
+                  Terms and Conditions and Privacy Policy
+                </a>
+                {!termsViewed && (
+                  <span className="text-red-500 ml-1">(Please read before accepting)</span>
+                )}
+              </label>
+              {error && !profileData.acceptedTerms && (
+                <p className="mt-1 text-sm text-red-600">{error}</p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -996,6 +1022,12 @@ const ProfileUpdate = () => {
         return;
       }
 
+      // Validate terms acceptance
+      if (!profileData.acceptedTerms) {
+        setError("You must accept the Terms and Conditions and Privacy Policy to continue");
+        return;
+      }
+
       // Validate passwords match
       if (profileData.password && profileData.password !== profileData.confirmPassword) {
         setError("Passwords do not match");
@@ -1007,7 +1039,6 @@ const ProfileUpdate = () => {
         setError("Password does not meet the requirements");
         return;
       }
-
 
       // If there's a password in the form and we have a resetToken, update the password first
       if (profileData.password && resetToken) {
@@ -1047,6 +1078,12 @@ const ProfileUpdate = () => {
 
   return (
     <div className="min-h-screen theme-bg px-4 py-6 sm:p-6">
+      {/* Add TermsModal */}
+      <TermsModal 
+        isOpen={isTermsModalOpen} 
+        onClose={() => setIsTermsModalOpen(false)} 
+      />
+
       {/* Modal for image cropping */}
       {showCropper && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">

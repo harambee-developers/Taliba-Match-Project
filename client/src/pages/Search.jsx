@@ -181,7 +181,7 @@ const Search = () => {
   }, [profiles, user?.gender]);
 
   useEffect(() => {
-    if (!hasMore) return;          // don’t observe if there’s nothing left
+    if (!hasMore) return;          // don't observe if there's nothing left
     const sentinel = sentinelRef.current;
     if (!sentinel) return;         // not in the DOM yet
   
@@ -363,19 +363,28 @@ const Search = () => {
           <div className="flex flex-col flex-1">
             <label className="text-sm mb-1">Age Range</label>
             <div className="relative">
-              <select
+              <Select
                 name="ageRange"
-                value={filters.ageRange}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
-              >
-                <option value="">Select</option>
-                <option value="18-25">18-25</option>
-                <option value="26-35">26-35</option>
-                <option value="36-45">36-45</option>
-                <option value="46-55">46-55</option>
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
+                value={filters.ageRange ? { value: filters.ageRange, label: filters.ageRange } : null}
+                onChange={(selectedOption) => handleFilterChange({
+                  target: {
+                    name: 'ageRange',
+                    value: selectedOption ? selectedOption.value : ''
+                  }
+                })}
+                options={[
+                  { value: '18-25', label: '18-25' },
+                  { value: '26-35', label: '26-35' },
+                  { value: '36-45', label: '36-45' },
+                  { value: '46-55', label: '46-55' },
+                  { value: '56+', label: '56+' }
+                ]}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select age range..."
+                isSearchable={true}
+                styles={genderSelectStyles}
+              />
             </div>
           </div>
 
@@ -383,20 +392,26 @@ const Search = () => {
           <div className="flex flex-col flex-1">
             <label className="text-sm mb-1">Location</label>
             <div className="relative">
-              <select
+              <Select
+                isMulti
                 name="location"
-                value={filters.location}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none theme-bg"
-              >
-                <option value="">Select</option>
-                {countries.map(country => (
-                  <option key={country.code} value={country.label}>
-                    {country.label}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">▼</span>
+                value={filters.location ? filters.location.map(loc => ({ value: loc, label: loc })) : null}
+                onChange={(selectedOptions) => handleFilterChange({
+                  target: {
+                    name: 'location',
+                    value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                  }
+                })}
+                options={countries.map(country => ({
+                  value: country.label,
+                  label: country.label
+                }))}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                placeholder="Select locations..."
+                isSearchable={true}
+                styles={genderSelectStyles}
+              />
             </div>
           </div>
 
@@ -472,9 +487,9 @@ const Search = () => {
                 className="relative flex flex-col sm:flex-row items-start sm:items-center rounded-lg p-4 theme-bg theme-border space-y-4 sm:space-y-0 sm:space-x-4"
               >
                 {/* Age badge */}
-                <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
+                {/* <div className="absolute left-4 -top-4 bg-white border-2 text-black w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm">
                   {profile.age || 'N/A'}
-                </div>
+                </div> */}
 
                 {/* MOBILE: avatar + name & stacked subtext */}
                 <div className="flex flex-col w-full sm:hidden">
@@ -484,7 +499,9 @@ const Search = () => {
                       alt="Profile"
                       fallback={fallbackUrl}
                     />
-                    <h3 className="text-base font-semibold truncate flex-1">{profile.name}</h3>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold truncate">{profile.firstName}{profile.age && `, ${profile.age}`}</h3>
+                    </div>
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
@@ -531,7 +548,7 @@ const Search = () => {
                   />
                 </div>
                 <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
-                  <h3 className="text-base font-semibold truncate">{profile.name}</h3>
+                  <h3 className="text-base font-semibold truncate">{profile.firstName}{profile.age && `, ${profile.age}`}</h3>
                   <div className="flex items-center gap-2 text-sm truncate">
                     {locationCountry?.code ? (
                       <img
