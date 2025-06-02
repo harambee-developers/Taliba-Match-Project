@@ -96,12 +96,6 @@ class PaymentFacade {
 
     await newSubscription.save();
 
-    await this.createPaymentRecord({
-        subscription: newSubscription,
-        amount: session.amount_total ? session.amount_total / 100 : 0,
-        date: new Date(session.created * 1000),
-      });
-
     logger.info(`Subscription record and payment created for user ${userId}: ${subscriptionType}`);
   }
 
