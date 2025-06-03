@@ -21,6 +21,7 @@ import {
 } from "../data/fieldData";
 import citiesByCountry from '../data/citiesByCountry';
 import TermsModal from '../components/TermsModal';
+import PrivacyPolicyModal from '../components/PrivacyPolicyModal';
 
 // Gender-based custom select styles
 const getCustomSelectStyles = (gender) => ({
@@ -84,6 +85,7 @@ const ProfileUpdate = () => {
 
   // Add state for terms viewing
   const [termsViewed, setTermsViewed] = useState(false);
+  const [privacyViewed, setPrivacyViewed] = useState(false);
 
   // Add image cropping states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -109,6 +111,8 @@ const ProfileUpdate = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [availableCities, setAvailableCities] = useState([]);
+
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
   const [profileData, setProfileData] = useState({
     // Section 1 - Basic Information
@@ -145,14 +149,25 @@ const ProfileUpdate = () => {
     avatar: "",
     customImage: null,
     acceptedTerms: false,
+    confirmedAge: false,
   });
 
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  const [showTermsAlert, setShowTermsAlert] = useState(false);
 
   const handleTermsClick = (e) => {
     e.preventDefault();
     setTermsViewed(true);
     setIsTermsModalOpen(true);
+    setShowTermsAlert(false);
+  };
+
+  const handlePrivacyClick = (e) => {
+    e.preventDefault();
+    setPrivacyViewed(true);
+    setIsPrivacyModalOpen(true);
+    setShowTermsAlert(false);
   };
 
   // Function to handle image file selection
@@ -966,8 +981,24 @@ const ProfileUpdate = () => {
           </div>
         )}
 
-        {/* Terms and Conditions Checkbox */}
-        <div className="mt-8 mb-6">
+        {/* Terms and Conditions & Privacy Policy Checkboxes */}
+        <div className="mt-8 mb-6 space-y-4">
+          {showTermsAlert && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">
+                    Please read both the Terms & Conditions and Privacy Policy before accepting.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
@@ -975,34 +1006,56 @@ const ProfileUpdate = () => {
                 type="checkbox"
                 checked={profileData.acceptedTerms}
                 onChange={(e) => {
-                  if (!termsViewed) {
-                    setError("Please read the Terms and Conditions and Privacy Policy first");
+                  if (!termsViewed || !privacyViewed) {
+                    setShowTermsAlert(true);
+                    setError("Please read both the Terms and Conditions and Privacy Policy first");
                     return;
                   }
                   handleInputChange('acceptedTerms', e.target.checked);
+                  setShowTermsAlert(false);
                 }}
-                className={`w-4 h-4 border-2 rounded focus:ring-2 focus:ring-offset-0 ${
-                  profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:ring-[#FFE6FB]' : 'border-[#B6D4F5] focus:ring-[#B6D4F5]'
-                } ${!termsViewed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={(e) => {
+                  if (!termsViewed || !privacyViewed) {
+                    e.preventDefault();
+                    setShowTermsAlert(true);
+                    setError("Please read both the Terms and Conditions and Privacy Policy first");
+                  }
+                }}
+                className={`w-4 h-4 border-2 rounded focus:ring-2 focus:ring-offset-0 ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:ring-[#FFE6FB]' : 'border-[#B6D4F5] focus:ring-[#B6D4F5]'} ${(!termsViewed || !privacyViewed) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 required
-                disabled={!termsViewed}
+                disabled={!termsViewed || !privacyViewed}
               />
             </div>
             <div className="ml-3 text-sm">
               <label htmlFor="terms" className="font-medium text-gray-700">
-                I agree to the{' '}
-                <a 
-                  href="#" 
-                  onClick={handleTermsClick}
-                  className="text-[#1A495D] hover:underline"
-                >
-                  Terms and Conditions and Privacy Policy
-                </a>
-                {!termsViewed && (
-                  <span className="text-red-500 ml-1">(Please read before accepting)</span>
-                )}
+                I have read and agree to the{' '}
+                <a href="#" onClick={handleTermsClick} className="text-[#1A495D] hover:underline">Terms & Conditions</a> and{' '}
+                <a href="#" onClick={handlePrivacyClick} className="text-[#1A495D] hover:underline">Privacy Policy</a>, and I'm happy to receive updates and marketing from Talibah.
               </label>
+              {(!termsViewed || !privacyViewed) && (
+                <span className="text-red-500 ml-1">(Please read both documents before accepting)</span>
+              )}
               {error && !profileData.acceptedTerms && (
+                <p className="mt-1 text-sm text-red-600">{error}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="age"
+                type="checkbox"
+                checked={profileData.confirmedAge}
+                onChange={e => handleInputChange('confirmedAge', e.target.checked)}
+                className={`w-4 h-4 border-2 rounded focus:ring-2 focus:ring-offset-0 ${profileData.gender === 'Female' ? 'border-[#FFE6FB] focus:ring-[#FFE6FB]' : 'border-[#B6D4F5] focus:ring-[#B6D4F5]'}`}
+                required
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="age" className="font-medium text-gray-700">
+                I confirm that I am 18 years of age or older, and I agree to use Talibah with sincere intentions for the purpose of marriage.
+              </label>
+              {error && !profileData.confirmedAge && (
                 <p className="mt-1 text-sm text-red-600">{error}</p>
               )}
             </div>
@@ -1025,6 +1078,12 @@ const ProfileUpdate = () => {
       // Validate terms acceptance
       if (!profileData.acceptedTerms) {
         setError("You must accept the Terms and Conditions and Privacy Policy to continue");
+        return;
+      }
+
+      // Validate age confirmation
+      if (!profileData.confirmedAge) {
+        setError("You must confirm you are 18 years or older and agree to use Talibah with sincere intentions for the purpose of marriage.");
         return;
       }
 
@@ -1082,6 +1141,12 @@ const ProfileUpdate = () => {
       <TermsModal 
         isOpen={isTermsModalOpen} 
         onClose={() => setIsTermsModalOpen(false)} 
+      />
+
+      {/* Add PrivacyPolicyModal */}
+      <PrivacyPolicyModal 
+        isOpen={isPrivacyModalOpen} 
+        onClose={() => setIsPrivacyModalOpen(false)} 
       />
 
       {/* Modal for image cropping */}
