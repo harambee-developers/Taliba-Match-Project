@@ -75,7 +75,9 @@ router.get("/payment-success", async (req, res) => {
       return res.status(400).json({ error: "Missing session ID" });
     }
     const result = await PaymentFacade.handlePaymentSuccess(sessionId)
-    res.json({result})
+    // Assuming payment was successful, redirect to frontend
+    const redirectUrl = `${process.env.FRONTEND_URL}/payment-success`; // Set FRONTEND_URL in your .env
+    res.redirect(302, redirectUrl);
   } catch (error) {
     logger.error("🚨 Error in payment-success:", error);
     return res.status(500).json({ error: "Internal Server Error" });
