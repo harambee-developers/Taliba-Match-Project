@@ -49,12 +49,12 @@ const Subscription = () => {
         },
         {
             name: "Gold",
-            description: "Ideal for serious individuals ready for a halal, intentional marriage journey.",
+            description: "Perfect for those beginning their halal marriage journey — with full profiles and unlimited connections.",
             price: 9.99,
             features: [, ,
-                "Send unlimited connection requests",
-                "In-app chat with approvied matches",
-                "Can access full match profiles", ,
+                "All the features of free",
+                "In-app chat with approved matches",
+                "Can access full match profiles",
             ],
             bgColor: "bg-[#D4AF37]",
             hoverColor: "hover:bg-[#B8962E]",
@@ -65,13 +65,12 @@ const Subscription = () => {
         },
         {
             name: "Platinum",
-            description: "Ideal for serious individuals ready for a halal, intentional marriage journey.",
+            description: "Designed for highly committed individuals seeking tailored matches with advanced tools and full Library access.",
             price: 14.99,
             features: [
                 "Priority profile visibility",
-                "In-app chat",
-                "Can access full profiles",
                 "Detailed compatibility filters",
+                "Access full Library resources"
             ],
             bgColor: "bg-[#E5E4E2]",
             hoverColor: "hover:bg-[#D1D0CE]",
@@ -93,16 +92,16 @@ const Subscription = () => {
     const benefitsData = {
         "Standard": [
             "Unlimited",
+            "Limited",
             "X",
-            "X",
-            "Yes",
+            "No",
             "No",
         ],
         "Gold": [
             "Unlimited",
             "Unlimited",
             "Full Access",
-            "Yes",
+            "No",
             "No",
         ],
         "Premium": [
@@ -120,16 +119,12 @@ const Subscription = () => {
             answer: "Yes, you can upgrade or downgrade your plan at any time from your account settings.",
         },
         {
-            question: "What happens if I reach my request limit?",
-            answer: "If you reach your request limit, your access will be temporarily paused until the next billing cycle or until you upgrade your plan.",
-        },
-        {
             question: "Are there any hidden fees?",
             answer: "No, all fees are transparent and listed in the subscription pricing.",
         },
         {
             question: "Do you offer refunds?",
-            answer: "We offer a 30-day money-back guarantee for first-time subscribers.",
+            answer: "No, refunds are not offered",
         },
         {
             question: "How is support provided?",

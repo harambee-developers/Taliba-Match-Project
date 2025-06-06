@@ -8,7 +8,8 @@ const jwt = require("jsonwebtoken");
 const router = express();
 const rateLimit = require("express-rate-limit");
 const logger = require('../logger')
-const sendEmail = require('../utils/sendEmail')
+const FORGOT_TEMPLATE_ID = "d-ec3effa98a894db2b85e9034223f4efe"
+const { sendEmails } = require('../utils/sendEmail')
 
 router.use(cookieParser())
 router.use(express.json())
@@ -80,8 +81,8 @@ router.post("/register", async (req, res) => {
         // Validate password requirements
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
         if (!passwordRegex.test(password)) {
-            return res.status(400).json({ 
-                message: "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character" 
+            return res.status(400).json({
+                message: "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character"
             });
         }
 
@@ -340,91 +341,18 @@ router.post("/reset-password", async (req, res) => {
         await user.save();
 
         // Construct the reset password link (update the URL to match your frontend route)
-        const resetLink = `${process.env.FRONT_END}/change-password/${token}`;
+        const resetLink = `${process.env.FRONTEND_URL}/change-password/${token}`;
 
-        // Define the email content
-        const subject = "Reset Your Password";
-        const textContent = `You requested a password reset. Please click the link to reset your password: ${resetLink}`;
-        const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Reset Your Password</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      color: #333333;
-    }
-    .container {
-      width: 100%;
-      max-width: 600px;
-      margin: 30px auto;
-      background-color: #ffffff;
-      border: 1px solid #dddddd;
-      padding: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #dddddd;
-    }
-    .header h2 {
-      margin: 0;
-      color: #007BFF;
-    }
-    .content {
-      margin: 20px 0;
-      line-height: 1.6;
-      font-size: 16px;
-    }
-    .button {
-      display: inline-block;
-      background-color: #007BFF;
-      color: #ffffff;
-      text-decoration: none;
-      padding: 12px 25px;
-      border-radius: 5px;
-      font-size: 16px;
-      margin: 20px 0;
-    }
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #777777;
-      border-top: 1px solid #dddddd;
-      padding-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h2>Reset Your Password</h2>
-    </div>
-    <div class="content">
-      <p>Hi,</p>
-      <p>You recently requested to reset your password. Click the button below to proceed:</p>
-      <p style="text-align: center;">
-        <a href="${resetLink}" class="button">Reset Password</a>
-      </p>
-      <p>If you did not request a password reset, please ignore this email or contact our support team.</p>
-      <p>Thank you,<br>The Talibah match team</p>
-    </div>
-    <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Talibah. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-        // Send the reset email
-        await sendEmail(email, subject, textContent, htmlContent);
+        await sendEmails(
+            [
+                {
+                    email: user.email,
+                    reset_link: resetLink
+                }
+            ],
+            FORGOT_TEMPLATE_ID,
+            "info@talibah.co.uk"
+        );
 
         // Always respond with a success message to prevent email enumeration
         res.status(200).json({ message: "If an account with that email exists, a reset email has been sent." });

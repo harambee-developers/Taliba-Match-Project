@@ -82,6 +82,10 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [availableCities, setAvailableCities] = useState([]);
 
+  const isActivePlatinum =
+    user?.subscription?.type === "platinum" &&
+    user?.subscription?.status === "active";
+
   useEffect(() => {
     if (user) {
       console.log("User data:", user);
@@ -168,17 +172,17 @@ const Profile = () => {
     setSelectedAvatar(avatarPath);
   };
 
-  // const handleImageChange = (event) => {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onload = () => {
-  //       setSelectedImage(reader.result);
-  //       setShowCropper(true);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result);
+        setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleCropComplete = (crop) => {
     console.log("Crop completed:", crop);
@@ -301,7 +305,7 @@ const Profile = () => {
     handleInputChange({
       target: {
         name: 'location',
-        value: { 
+        value: {
           country: selectedCountry,
           city: '' // Reset city when country changes
         }
@@ -384,7 +388,7 @@ const Profile = () => {
                 <Select
                   isMulti
                   name="ethnicity"
-                  value={ethnicityOptions.filter(option => 
+                  value={ethnicityOptions.filter(option =>
                     Array.isArray(profileData.ethnicity) && profileData.ethnicity.includes(option.value)
                   )}
                   onChange={handleEthnicityChange}
@@ -398,9 +402,9 @@ const Profile = () => {
               ) : (
                 <div className={viewClasses}>
                   {Array.isArray(profileData.ethnicity) && profileData.ethnicity.length > 0
-                    ? profileData.ethnicity.map(value => 
-                        ethnicityOptions.find(opt => opt.value === value)?.label
-                      ).filter(Boolean).join(', ')
+                    ? profileData.ethnicity.map(value =>
+                      ethnicityOptions.find(opt => opt.value === value)?.label
+                    ).filter(Boolean).join(', ')
                     : "Not specified"}
                 </div>
               )}
@@ -487,7 +491,7 @@ const Profile = () => {
                       onChange={(e) => handleInputChange({
                         target: {
                           name: 'location',
-                          value: { 
+                          value: {
                             ...profileData.location,
                             city: e.target.value
                           }
@@ -507,7 +511,7 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className={viewClasses}>
-                  {profileData.location?.city && profileData.location?.country 
+                  {profileData.location?.city && profileData.location?.country
                     ? `${profileData.location.city}, ${profileData.location.country}`
                     : "Not specified"}
                 </div>
@@ -1159,7 +1163,7 @@ const Profile = () => {
                 السَّلامُ عَلَيْكُم
               </div>
             </div>
-            
+
             {/* Card content */}
             <div className="mb-6 sm:mb-8">
               <h3 className="text-lg sm:text-xl font-semibold text-[#4A0635] mb-3 sm:mb-4">
@@ -1167,15 +1171,15 @@ const Profile = () => {
               </h3>
               {renderCardContent()}
             </div>
-            
+
             {/* Navigation controls */}
             <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-6 sm:mt-8 gap-4">
               <button
                 onClick={prevCard}
                 disabled={currentCard === 0}
                 className={`px-4 py-2 rounded-full text-sm sm:text-base ${currentCard === 0
-                    ? "bg-gray-200 cursor-not-allowed"
-                    : "theme-btn"
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "theme-btn"
                   } transition-colors`}
               >
                 Previous
@@ -1195,8 +1199,8 @@ const Profile = () => {
                 onClick={nextCard}
                 disabled={currentCard === 4}
                 className={`px-4 py-2 rounded-full text-sm sm:text-base ${currentCard === 4
-                    ? "bg-gray-200 cursor-not-allowed"
-                    : "theme-btn"
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "theme-btn"
                   } transition-colors`}
               >
                 Next
@@ -1264,25 +1268,32 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* <div className="w-full text-center mb-6">
-              <div className="relative">
-                <hr className="border-t border-gray-300" />
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-gray-500">
-                  or upload your own
-                </span>
+            {!isActivePlatinum && (
+              <div className="mb-6 p-4 border border-red-300 rounded bg-red-50 text-center">
+                <p className="text-sm text-red-700">
+                  Custom Image uploads are only available to “Platinum” subscribers.{" "}
+                  <a href="/subscribe" className="font-medium text-blue-600">
+                    Upgrade now
+                  </a>
+                  .
+                </p>
               </div>
-            </div>
+            )}
 
-            <div className="mb-6 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
-              <h4 className="text-lg font-medium mb-3">Upload your own image</h4>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="mb-2"
-              />
-              <p className="text-xs text-gray-500">For best results, use a square image</p>
-            </div> */}
+            {isActivePlatinum && (
+              <div className="mb-6 p-4 border-2 border-dashed border-[#1A495D] rounded-lg text-center">
+                <h4 className="text-lg font-medium mb-3">Upload your own image</h4>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="mb-2"
+                />
+                <p className="text-xs text-gray-500">
+                  For best results, use a square image
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-3">
               <button

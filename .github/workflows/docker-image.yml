@@ -2,7 +2,7 @@ name: Deploy Production
 
 on:
   push:
-    branches: [ UAT ]
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -18,14 +18,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Create frontend env file
-        run: echo "${{ secrets.FRONTEND_ENV_FILE_UAT }}" > ./client/.env.production
+        run: echo "${{ secrets.FRONTEND_ENV_FILE }}" > ./client/.env.production
       
       - name: Create backend env file
-        run: echo "${{ secrets.BACKEND_ENV_FILE_UAT }}" > ./server/.env.UAT
+        run: echo "${{ secrets.BACKEND_ENV_FILE }}" > ./server/.env.production
 
       # Build and deploy your containers
       - name: Build and push images
-        run: docker compose -f docker-compose.uat.yml build && docker compose -f docker-compose.uat.yml push
+        run: docker compose -f docker-compose.prod.yml build && docker compose -f docker-compose.prod.yml push
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.5
@@ -35,6 +35,6 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             echo "Logged into VPS!"
-            cd /docker_projects/talibah-test.ddns.net/
+            cd /docker_projects/talibah.co.uk/
             docker compose down
-            docker compose up -d 
+            docker compose up -d

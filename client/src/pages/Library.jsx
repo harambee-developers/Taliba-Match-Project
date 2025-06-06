@@ -1,7 +1,9 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBook, FaHeart, FaFileAlt, FaRing, FaQuestionCircle, FaBookOpen } from "react-icons/fa";
 import { GiRose, GiLoveLetter } from "react-icons/gi";
+import { useAuth } from "../components/contexts/AuthContext";
+import MessageModal from "../components/modals/MessageModal";
 
 const LibraryCard = ({ icon: Icon, title, to, isInternal }) => (
   isInternal ? (
@@ -42,6 +44,12 @@ const LibraryCard = ({ icon: Icon, title, to, isInternal }) => (
 );
 
 const Library = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
+  const hasPlatinumAccess = user?.subscription?.type === "platinum" && user?.subscription?.status === "active";
+
   const libraryItems = [
     {
       title: "Guide to Intimacy",
@@ -81,6 +89,16 @@ const Library = () => {
     }
   ];
 
+  // Handle click on library card: open modal if no platinum access
+  const handleCardClick = (e, to) => {
+    if (!hasPlatinumAccess) {
+      e.preventDefault(); // prevent opening the link
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    // If has access, let the link work normally
+  };
+
   return (
     <div className="min-h-screen theme-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -98,7 +116,20 @@ const Library = () => {
           ))}
         </div>
       </div>
+      {/* Upgrade Prompt Modal */}
+      <MessageModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Restricted Feature!"
+        text="Upgrade to a Platinum plan to access the Library."
+        onConfirm={() => {
+          setIsUpgradeModalOpen(false);
+          navigate("/subscribe");
+        }}
+        confirmText="View Pricing"
+      />
     </div>
+
   );
 };
 
