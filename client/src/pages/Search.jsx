@@ -505,17 +505,7 @@ const Search = () => {
                   </div>
                   <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-1 truncate">
-                      {locationCountry?.code ? (
-                        <img
-                          src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
-                          alt={`${locationCountry.label} flag`}
-                          width={20}
-                          height={15}
-                          className="rounded-sm"
-                        />
-                      ) : (
-                        <span>🌍</span>
-                      )}
+                      <span>📍</span>
                       <span className="truncate">
                         {typeof profile.location === 'object'
                           ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
@@ -550,17 +540,7 @@ const Search = () => {
                 <div className="hidden sm:flex flex-1 flex-col gap-1 min-w-0">
                   <h3 className="text-base font-semibold truncate">{profile.firstName}{profile.age && `, ${profile.age}`}</h3>
                   <div className="flex items-center gap-2 text-sm truncate">
-                    {locationCountry?.code ? (
-                      <img
-                        src={`https://flagcdn.com/w40/${locationCountry.code.toLowerCase()}.png`}
-                        alt={`${locationCountry.label} flag`}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    ) : (
-                      <span>🌍</span>
-                    )}
+                    <span>📍</span>
                     <span className="truncate">
                       {typeof profile.location === 'object'
                         ? `${profile.location.city || ''}${profile.location.city && profile.location.country ? ', ' : ''}${profile.location.country || ''}`
