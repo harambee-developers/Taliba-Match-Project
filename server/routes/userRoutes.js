@@ -3,7 +3,8 @@ const User = require("../model/User");
 const Match = require("../model/Match");
 const Subscription = require("../model/Subscription");
 const Message = require("../model/Message");
-const Report = require("../model/Report")
+const Report = require("../model/Report");
+const Notifications = require("../model/Notifications");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware')
@@ -12,6 +13,8 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../logger')
 const mongoose = require('mongoose')
+const bcrypt = require("bcryptjs");
+const sendEmail = require("../utils/sendEmail");
 
 router.use(express.json())
 router.use(cookieParser())
@@ -338,32 +341,38 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-router.delete('/delete/:id', authMiddleware, async (req, res) => {
-  const userId = req.params.id;
-
+// Delete user account
+router.delete("/delete/:id", authMiddleware, async (req, res) => {
   try {
-    // 1) Delete the User document
-    const userResult = await User.deleteOne({ _id: userId });
-    if (userResult.deletedCount === 0) {
-      return res.status(404).json({ message: 'User not found' });
+    const userId = req.params.id;
+
+    // Verify the user is deleting their own account
+    if (userId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this account." });
     }
 
-    // 2) Delete related docs in parallel
-    await Promise.all([
-      Subscription.deleteMany({ user_id: userId }),
-      Message.deleteMany({ $or: [{ from: userId }, { to: userId }] }),
-      Match.deleteMany({ $or: [{ userA: userId }, { userB: userId }] }),
-      Notification.deleteMany({ user: userId }),
-      // …other collections…
-    ]);
+    // Delete all matches where the user is either user1 or user2
+    await Match.deleteMany({
+      $or: [{ user1: userId }, { user2: userId }]
+    });
 
-    // 3) Clear cookies and respond
-    res.clearCookie('token');
-    res.clearCookie('refreshToken');
-    return res.status(200).json({ message: 'Account and related data deleted.' });
-  } catch (err) {
-    console.error('Deletion error:', err);
-    return res.status(500).json({ message: 'Could not delete account.' });
+    // Delete all messages where the user is either sender or receiver
+    await Message.deleteMany({
+      $or: [{ sender: userId }, { receiver: userId }]
+    });
+
+    // Delete all notifications for the user
+    await Notifications.deleteMany({
+      $or: [{ userId: userId }, { senderId: userId }]
+    });
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ message: "Account deleted successfully." });
+  } catch (error) {
+    console.error("Deletion error:", error);
+    res.status(500).json({ message: "Error deleting account." });
   }
 });
 
@@ -656,6 +665,190 @@ router.post('/report/:targetId', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Report error:", err);
     return res.status(500).json({ message: "Could not report user" });
+  }
+});
+
+// Protected Route for changing password
+router.post("/change-password", authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Validate request body
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required." });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect." });
+    }
+
+    // Validate new password requirements
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ 
+        message: "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character" 
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully." });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+// Export user data
+router.get("/export-data", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Fetch user data
+    const user = await User.findById(userId)
+      .select('-password -refreshToken -resetToken -resetTokenExpiration -socketId')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Fetch related data - commented out for now
+    /*
+    const [matches, messages, subscriptions] = await Promise.all([
+      Match.find({
+        $or: [{ sender_id: userId }, { receiver_id: userId }]
+      }).lean(),
+      Message.find({
+        $or: [{ from: userId }, { to: userId }]
+      }).lean(),
+      Subscription.find({ user_id: userId }).lean()
+    ]);
+    */
+
+    // Compile all data - only user data for now
+    const userData = {
+      user: user
+      // matches: matches,
+      // messages: messages,
+      // subscriptions: subscriptions
+    };
+
+    // Set headers for JSON file download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=user-data.json');
+    
+    // Send the data
+    res.json(userData);
+  } catch (error) {
+    logger.error("Error exporting user data:", error);
+    res.status(500).json({ message: "Failed to export data" });
+  }
+});
+
+// Update kunya
+router.put("/kunya/:userId", authMiddleware, async (req, res) => {
+  try {
+    const { userName } = req.body;
+    const userId = req.params.userId;
+
+    logger.info("Updating kunya:", { userId, userName });
+
+    if (!userName) {
+      return res.status(400).json({ message: "Kunya is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { userName: userName } },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    logger.info("Kunya updated successfully:", { userId, newUserName: user.userName });
+    
+    // Send a consistent response format
+    return res.status(200).json({
+      success: true,
+      message: "Kunya updated successfully",
+      user: {
+        _id: user._id,
+        userName: user.userName
+      }
+    });
+  } catch (error) {
+    logger.error("Error updating kunya:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: "Internal server error" 
+    });
+  }
+});
+
+// Feedback/Support endpoint
+router.post('/support/feedback', async (req, res) => {
+  try {
+    const { email, message } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: 'Message is required.' });
+    }
+    const userEmail = email || 'anonymous@talibah.co.uk';
+    const subject = 'New Feedback/Support Message from Talibah User';
+    const textContent = `From: ${userEmail}\n\n${message}`;
+    const htmlContent = `<p><strong>From:</strong> ${userEmail}</p><p>${message.replace(/\n/g, '<br>')}</p>`;
+    await sendEmail('info@talibah.co.uk', subject, textContent, htmlContent);
+    res.status(200).json({ message: 'Feedback sent successfully.' });
+  } catch (error) {
+    console.error('Error sending feedback:', error);
+    res.status(500).json({ message: 'Failed to send feedback.' });
+  }
+});
+
+// Verify password for account deletion
+router.post("/verify-password", authMiddleware, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.id;
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    res.status(200).json({ message: "Password verified successfully." });
+  } catch (error) {
+    console.error("Error verifying password:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
