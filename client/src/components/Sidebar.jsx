@@ -6,6 +6,7 @@ import Icon30 from './icons/Icon30';
 import { useAuth } from "./contexts/AuthContext";
 import ChatIcon from "./icons/ChatIcon";
 import PuzzleIcon from "./icons/PuzzleIcon";
+import QuestionMarkIcon from "./icons/QuestionMarkIcon";
 
 const Sidebar = ({ isOpen, toggleMenu }) => {
 
@@ -81,6 +82,18 @@ const Sidebar = ({ isOpen, toggleMenu }) => {
                   <span>Library</span>
                   <Icon30 width={24} height={24} gender={user?.gender} />
                 </Link>
+              </li>
+              <li>
+                <a
+                  href="https://sistersofhadith.com/talibah-library-fatwas"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={toggleMenu}
+                  className="flex items-center justify-between p-2 rounded theme-btn transition-colors"
+                >
+                  <span>Fatwa</span>
+                  <QuestionMarkIcon width={24} height={24} color="#FFF" />
+                </a>
               </li>
             </ul>
           </div>

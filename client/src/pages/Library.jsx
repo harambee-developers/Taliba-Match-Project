@@ -1,59 +1,83 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaBook, FaHeart, FaFileAlt, FaRing, FaQuestionCircle, FaBookOpen } from "react-icons/fa";
-import { GiRose } from "react-icons/gi";
+import { GiRose, GiLoveLetter } from "react-icons/gi";
 
-const LibraryCard = ({ icon: Icon, title, to }) => (
-  <a 
-    href={to} 
-    target="_blank"
-    rel="noopener noreferrer"
-    className="theme-btn rounded-3xl p-8 flex items-center gap-6 
-    transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl 
-    theme-border min-h-[120px] relative overflow-hidden group"
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-pink-100/50 to-transparent opacity-0 
-    group-hover:opacity-100 transition-opacity duration-300" />
-    <div className="bg-white/80 p-4 rounded-2xl shadow-md">
-      <Icon className="text-[#14485A] text-4xl lg:text-5xl transition-transform duration-300 
-      group-hover:scale-110" />
-    </div>
-    <h3 className="text-xl lg:text-2xl font-bold group-hover:translate-x-2 
-    transition-transform duration-300">{title}</h3>
-  </a>
+const LibraryCard = ({ icon: Icon, title, to, isInternal }) => (
+  isInternal ? (
+    <Link
+      to={to}
+      className="theme-btn rounded-3xl p-8 flex items-center gap-6 \
+      transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl \
+      theme-border min-h-[120px] relative overflow-hidden group"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-100/50 to-transparent opacity-0 \
+      group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="bg-white/80 p-4 rounded-2xl shadow-md">
+        <Icon className="text-[#14485A] text-4xl lg:text-5xl transition-transform duration-300 \
+        group-hover:scale-110" />
+      </div>
+      <h3 className="text-xl lg:text-2xl font-bold group-hover:translate-x-2 \
+      transition-transform duration-300">{title}</h3>
+    </Link>
+  ) : (
+    <a
+      href={to}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="theme-btn rounded-3xl p-8 flex items-center gap-6 \
+      transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl \
+      theme-border min-h-[120px] relative overflow-hidden group"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-100/50 to-transparent opacity-0 \
+      group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="bg-white/80 p-4 rounded-2xl shadow-md">
+        <Icon className="text-[#14485A] text-4xl lg:text-5xl transition-transform duration-300 \
+        group-hover:scale-110" />
+      </div>
+      <h3 className="text-xl lg:text-2xl font-bold group-hover:translate-x-2 \
+      transition-transform duration-300">{title}</h3>
+    </a>
+  )
 );
 
 const Library = () => {
   const libraryItems = [
     {
-      title: "Fatwas",
-      icon: FaBook,
-      to: "https://sistersofhadith.com/talibah-library-fatwas"
+      title: "Guide to Intimacy",
+      icon: GiLoveLetter,
+      to: "/src/assets/pdf/A Guideline to Intimacy in Islam - Talibah.pdf",
+      isInternal: false
     },
     {
       title: "Questions to Ask Your Spouse",
       icon: FaHeart,
-      to: "https://sistersofhadith.com/talibah-library-questions"
+      to: "/library/questions",
+      isInternal: true
     },
     {
-      title: "Nikah Certificates",
+      title: "Nikkah Certificates",
       icon: FaFileAlt,
-      to: "https://sistersofhadith.com/talibah-library-nikah-certificate"
+      to: "/library/nikkah-certificates",
+      isInternal: true
     },
     {
       title: "Rights of Husband and Wife",
       icon: GiRose,
-      to: "https://sistersofhadith.com/talibah-library-rights"
+      to: "https://sistersofhadith.com/talibah-library-rights",
+      isInternal: false
     },
     {
       title: "Fiqh: Nikah in the 4 Madhāhib",
       icon: FaBookOpen,
-      to: "https://sistersofhadith.com/talibah-library-nikah"
+      to: "https://sistersofhadith.com/talibah-library-nikah",
+      isInternal: false
     },
     {
       title: "FAQ",
       icon: FaQuestionCircle,
-      to: "https://sistersofhadith.com/talibah-library-faq"
+      to: "/library/faq",
+      isInternal: true
     }
   ];
 
@@ -69,6 +93,7 @@ const Library = () => {
               icon={item.icon}
               title={item.title}
               to={item.to}
+              isInternal={item.isInternal}
             />
           ))}
         </div>

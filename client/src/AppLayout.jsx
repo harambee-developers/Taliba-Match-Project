@@ -15,16 +15,22 @@ import ProfileUpdate from "./pages/ProfileUpdate";
 import ViewProfile from "./pages/ViewProfile";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
+import Questions from "./pages/Questions";
 import OnlineUserNotification from "./components/OnlineUserNotification";
 import { ChatEventsProvider } from "./components/contexts/ChatEventsContext";
 import { useAuth } from "./components/contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SubscriptionProtectedRoute from "./components/SubscriptionProtectedRoute";
+import PlatinumProtectedRoute from "./components/PlatinumProtectedRoute";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
 import Settings from "./pages/Settings";
 import Terms from "./pages/Terms";
+import FAQ from "./pages/FAQ";
+import FiqhNikah from "./pages/FiqhNikah";
+import NikkahCertificates from "./pages/NikkahCertificates";
+import RightsOfSpouses from "./pages/RightsOfSpouses";
 
 function ChatLayout() {
   // Wrap only the chat-related routes in ChatEventsProvider
@@ -69,7 +75,14 @@ function AppLayout() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/library" element={<Library />} />
+          <Route element={<PlatinumProtectedRoute />}>
+            <Route path="/library" element={<Library />} />
+            <Route path="/library/questions" element={<Questions />} />
+            <Route path="/library/faq" element={<FAQ />} />
+            <Route path="/library/fiqh" element={<FiqhNikah />} />
+            <Route path="/library/nikkah-certificates" element={<NikkahCertificates />} />
+            <Route path="/library/rights" element={<RightsOfSpouses />} />
+          </Route>
         </Route>
       </Routes>
     </>
