@@ -5,6 +5,8 @@ const User = require('../model/User')
 const mongoose = require('mongoose')
 const logger = require('../logger');
 const authMiddleware = require('../middleware/authMiddleware');
+const MATCH_TEMPLATE_ID = "d-9419e4b8cb8c49b39be656cd4f99ac61"
+const { sendEmails } = require('../utils/sendEmail')
 
 router.use(express.json())
 
@@ -61,7 +63,7 @@ router.get('/matches/:userId', async (req, res) => {
     try {
         const matches = await Match.find({
             $or: [{ sender_id: userId }, { receiver_id: userId }],
-            match_status: { $in: ['Interested','Blocked'] },
+            match_status: { $in: ['Interested', 'Blocked'] },
         }, {
             sender_id: 1,
             receiver_id: 1,
@@ -86,23 +88,22 @@ router.get('/matches/:userId', async (req, res) => {
 
 // send match request
 router.post('/send-request', authMiddleware, async (req, res) => {
-    const { sender_id, receiver_id } = req.body
+    const { sender_id, receiver_id } = req.body;
 
     if (!sender_id || !receiver_id) {
         return res.status(400).json({ message: 'sender_id and receiver_id are required' });
     }
-    try {
 
+    try {
         const sender = await User.findById(sender_id);
-        if (!sender) {
-            return res.status(404).json({ message: 'Sender not found' });
+        const receiver = await User.findById(receiver_id); // ✅ Add this line
+
+        if (!sender || !receiver) {
+            return res.status(404).json({ message: 'Sender or receiver not found' });
         }
 
         // Prevent duplicate match requests
-        const existingMatch = await Match.findOne({
-            sender_id,
-            receiver_id,
-        });
+        const existingMatch = await Match.findOne({ sender_id, receiver_id });
         if (existingMatch) {
             return res.status(409).json({ message: 'Match request already sent' });
         }
@@ -114,12 +115,25 @@ router.post('/send-request', authMiddleware, async (req, res) => {
             matched_at: Date.now()
         });
 
+        // 📧 Send email notification to receiver
+        await sendEmails(
+            [
+                {
+                    email: receiver.email,
+                    name: receiver.firstName || 'User',
+                    sender_name: sender.firstName || 'Another user'
+                }
+            ],
+            MATCH_TEMPLATE_ID,
+            "info@talibah.co.uk"
+        );
+
         res.status(201).json({ message: 'Match request sent successfully', match });
     } catch (error) {
         logger.error('Error sending match:', error);
         res.status(500).json({ message: 'Server error' });
     }
-})
+});
 
 
 // Accept match
@@ -172,47 +186,47 @@ router.put('/reject/:matchId', async (req, res) => {
 router.get('/status/:targetId', authMiddleware, async (req, res) => {
     const currentUserId = req.user.id;
     const { targetId } = req.params;
-  
+
     if (!mongoose.Types.ObjectId.isValid(targetId)) {
-      return res.status(400).json({ message: "Invalid target user ID" });
+        return res.status(400).json({ message: "Invalid target user ID" });
     }
-  
+
     try {
-      const match = await Match.findOne({
-        $or: [
-          { sender_id: currentUserId, receiver_id: targetId },
-          { sender_id: targetId, receiver_id: currentUserId }
-        ]
-      });
-  
-      if (!match) {
-        return res.status(200).json({ match_status: 'none' });
-      }
-  
-      let status = match.match_status;
-      let blocked_by = null;
-  
-      if (status === 'Blocked') {
-        blocked_by = match.blocked_by?.toString();
-  
-        // Determine if current user is blocked
-        if (blocked_by && blocked_by !== currentUserId) {
-          status = 'YouAreBlocked';
-        } else if (blocked_by && blocked_by === currentUserId) {
-          status = 'Blocked';
+        const match = await Match.findOne({
+            $or: [
+                { sender_id: currentUserId, receiver_id: targetId },
+                { sender_id: targetId, receiver_id: currentUserId }
+            ]
+        });
+
+        if (!match) {
+            return res.status(200).json({ match_status: 'none' });
         }
-      }
-  
-      return res.status(200).json({
-        match_status: status,
-        blocked_by
-      });
-  
+
+        let status = match.match_status;
+        let blocked_by = null;
+
+        if (status === 'Blocked') {
+            blocked_by = match.blocked_by?.toString();
+
+            // Determine if current user is blocked
+            if (blocked_by && blocked_by !== currentUserId) {
+                status = 'YouAreBlocked';
+            } else if (blocked_by && blocked_by === currentUserId) {
+                status = 'Blocked';
+            }
+        }
+
+        return res.status(200).json({
+            match_status: status,
+            blocked_by
+        });
+
     } catch (error) {
-      console.error('Error fetching match status:', error);
-      return res.status(500).json({ message: 'Failed to fetch match status' });
+        console.error('Error fetching match status:', error);
+        return res.status(500).json({ message: 'Failed to fetch match status' });
     }
-  });
-  
+});
+
 
 module.exports = router;
