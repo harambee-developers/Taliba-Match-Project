@@ -72,6 +72,7 @@ const Subscription = () => {
                 "In-app chat",
                 "Can access full profiles",
                 "Detailed compatibility filters",
+                "Custom Image uploads"
             ],
             bgColor: "bg-[#E5E4E2]",
             hoverColor: "hover:bg-[#D1D0CE]",
@@ -88,29 +89,33 @@ const Subscription = () => {
         "In-App Chat",
         "Nikah Resource Library",
         "Advanced match filters",
+        "Custom Image Uploads"
     ];
 
     const benefitsData = {
         "Standard": [
             "Unlimited",
-            "X",
-            "X",
-            "Yes",
             "No",
+            "No",
+            "No",
+            "No",
+            "No"
         ],
         "Gold": [
             "Unlimited",
             "Unlimited",
-            "Full Access",
+            "Limited Access",
             "Yes",
             "No",
+            "No"
         ],
-        "Premium": [
+        "Platinum": [
             "Unlimited",
             "Unlimited",
             "Full Access",
             "Yes",
             "Yes",
+            "Yes"
         ],
     };
 
@@ -189,7 +194,7 @@ const Subscription = () => {
                                 <button
                                     className={`mt-6 w-full ${plan.bgColor} ${plan.textColor} py-2 px-4 rounded ${plan.hoverColor}`}
                                     onClick={() => {
-                                        if (plan.subscriptionType === "free") {
+                                        if (!user || plan.subscriptionType === "free") {
                                             navigate("/register");
                                         } else {
                                             handlePayment(plan.subscriptionType);
