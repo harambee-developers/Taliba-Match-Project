@@ -411,3 +411,5 @@ seed*
 
 # ignore public uploaded files
 **/*upload*
+
+emailSendTest.js
