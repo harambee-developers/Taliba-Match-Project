@@ -2,7 +2,6 @@
 const sgMail = require('@sendgrid/mail');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY); // store in .env
-const TEMPLATE_ID = 'd-e200c3a2b8dc4d30984a700e191b7c28';
 const MAX_BATCH_SIZE = 1000;
 
 function chunkArray(arr, size) {
