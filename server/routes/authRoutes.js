@@ -14,12 +14,6 @@ const { sendEmails } = require('../utils/sendEmail')
 router.use(cookieParser())
 router.use(express.json())
 
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 login attempts per windowMs
-    message: "Too many login attempts from this IP, please try again after 15 minutes."
-});
-
 if (!process.env.JWT_SECRET_TOKEN || !process.env.JWT_REFRESH_SECRET) {
     logger.error("Missing JWT_SECRET in environment variables.");
     process.exit(1);
@@ -145,7 +139,7 @@ router.post("/register", async (req, res) => {
 
 router.post(
     "/login",
-    [body("email").notEmpty(), body("password").notEmpty()], loginLimiter,
+    [body("email").notEmpty(), body("password").notEmpty()],
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
