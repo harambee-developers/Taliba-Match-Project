@@ -331,9 +331,9 @@ export default function Settings() {
     setFeedbackLoading(true);
     try {
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/support/feedback`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/feedback`,
         {
-          email: user?.email || '',
+          user_id: user?._id || '',  // send user ID as expected by backend
           message: feedbackMessage.trim(),
         },
         { withCredentials: true }
@@ -342,7 +342,7 @@ export default function Settings() {
       setFeedbackMessage('');
       setFeedbackModalOpen(false);
     } catch (error) {
-      showAlert(error.response?.data?.message || 'Failed to send feedback', 'error');
+      showAlert(error.response?.data?.error || 'Failed to send feedback', 'error');
     } finally {
       setFeedbackLoading(false);
     }

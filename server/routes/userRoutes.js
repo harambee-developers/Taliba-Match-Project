@@ -1,7 +1,7 @@
 const express = require("express");
 const User = require("../model/User");
 const Match = require("../model/Match");
-const Subscription = require("../model/Subscription");
+const Feedback = require("../model/Feedback");
 const Message = require("../model/Message");
 const Report = require("../model/Report");
 const Notifications = require("../model/Notifications");
@@ -849,6 +849,28 @@ router.post("/verify-password", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Error verifying password:", error);
     res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+router.post("/feedback", async (req, res) => {
+  try {
+    const { user_id, message } = req.body;
+
+    if (!user_id || !message) {
+      return res.status(400).json({ error: "User ID and message are required." });
+    }
+
+    const feedback = new Feedback({
+      user_id,
+      message,
+    });
+
+    await feedback.save();
+
+    res.status(201).json({ message: "Feedback submitted successfully", feedback });
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
