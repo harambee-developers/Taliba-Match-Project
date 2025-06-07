@@ -38,7 +38,6 @@ const Subscription = () => {
                 "Create a basic profile",
                 "Browse matches daily",
                 "Send and receive matches",
-                "Access to Nikkah Library",
             ],
             bgColor: "bg-gray-800",
             hoverColor: "hover:bg-gray-700",
