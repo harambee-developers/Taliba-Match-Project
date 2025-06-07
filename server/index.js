@@ -22,6 +22,7 @@ const messageRoutes = require("./routes/messagesRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const notificationsRoutes = require('./routes/notificationsRoutes');
+const adminRoutes = require('./routes/adminStats');
 
 const port = 7777;
 const app = express();
@@ -47,6 +48,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/match", matchRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Ensure public/uploads folder exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
