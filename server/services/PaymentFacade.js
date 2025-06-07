@@ -40,7 +40,7 @@ class PaymentFacade {
     }
   }
 
-  static async createCheckoutSession(userId, subscriptionType) {
+  static async createCheckoutSession(userId, subscriptionType, promotionCodeId = null) {
     const priceId = priceIdMap[subscriptionType];
     if (!priceId) throw new Error("Invalid subscription type");
 
@@ -60,6 +60,7 @@ class PaymentFacade {
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true, // <-- enable promo code field
       customer_email: user.email,
       success_url: `${BACKEND_URL}/api/payments/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/`,
